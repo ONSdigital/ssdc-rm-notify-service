@@ -1,0 +1,1 @@
+find /tmp/notify-service-healthy -mmin -1 | egrep '.*'
