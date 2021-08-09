@@ -9,6 +9,6 @@ import lombok.Data;
 public class PayloadDTO {
 
     private SmsFulfilment smsFulfilment;
-
+    private UacQidDTO uacQidDTO;
 
 }
