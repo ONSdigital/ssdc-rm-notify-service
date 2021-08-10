@@ -8,10 +8,10 @@ import lombok.Data;
 
 @Data
 @Entity
-public class ActionRuleSurveyPrintTemplate {
+public class FulfilmentSurveySmsTemplate {
   @Id private UUID id;
 
   @ManyToOne private Survey survey;
 
-  @ManyToOne private PrintTemplate printTemplate;
+  @ManyToOne private SmsTemplate smsTemplate;
 }

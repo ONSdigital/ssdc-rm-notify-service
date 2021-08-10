@@ -1,12 +1,11 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
-import lombok.Data;
-
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import lombok.Data;
 
 @Entity
 @Data

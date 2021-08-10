@@ -1,13 +1,12 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
-import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import javax.persistence.*;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Data
 @Entity

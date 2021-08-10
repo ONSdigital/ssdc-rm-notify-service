@@ -1,14 +1,13 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import java.util.Map;
+import java.util.UUID;
+import javax.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
-
-import javax.persistence.*;
-import java.util.Map;
-import java.util.UUID;
 
 @Data
 @Entity

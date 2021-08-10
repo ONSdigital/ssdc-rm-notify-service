@@ -1,11 +1,10 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
-import lombok.Data;
-
+import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import java.util.UUID;
+import lombok.Data;
 
 @Data
 @Entity

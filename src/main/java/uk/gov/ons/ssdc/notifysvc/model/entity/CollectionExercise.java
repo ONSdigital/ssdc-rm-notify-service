@@ -1,11 +1,10 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
-import lombok.Data;
-import lombok.ToString;
-
-import javax.persistence.*;
 import java.util.List;
 import java.util.UUID;
+import javax.persistence.*;
+import lombok.Data;
+import lombok.ToString;
 
 @ToString(onlyExplicitlyIncluded = true) // Bidirectional relationship causes IDE stackoverflow
 @Data

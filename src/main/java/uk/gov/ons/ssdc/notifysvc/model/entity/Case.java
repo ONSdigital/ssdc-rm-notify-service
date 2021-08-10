@@ -1,18 +1,17 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import lombok.Data;
-import lombok.ToString;
-import org.hibernate.annotations.*;
-
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
+import lombok.Data;
+import lombok.ToString;
+import org.hibernate.annotations.*;
 
 @ToString(onlyExplicitlyIncluded = true) // Bidirectional relationship causes IDE stackoverflow
 @Data

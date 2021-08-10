@@ -10,40 +10,28 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.ResponseManagementEvent;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping(value = "/smsfulfilment")
 public class SmsFulfilmentEndpoint {
 
-    private final SmsFulfilmentEndpoint smsFulfilmentEndpoint;
-    private final CaseRepository caseRepository;
+  private final SmsFulfilmentEndpoint smsFulfilmentEndpoint;
+  private final CaseRepository caseRepository;
 
+  public SmsFulfilmentEndpoint(
+      SmsFulfilmentEndpoint smsFulfilmentEndpoint, CaseRepository caseRepository) {
+    this.smsFulfilmentEndpoint = smsFulfilmentEndpoint;
+    this.caseRepository = caseRepository;
+  }
 
-    public SmsFulfilmentEndpoint(SmsFulfilmentEndpoint smsFulfilmentEndpoint, CaseRepository caseRepository) {
-        this.smsFulfilmentEndpoint = smsFulfilmentEndpoint;
-        this.caseRepository = caseRepository;
+  @PostMapping
+  public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent) {
+
+    SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
+
+    if (!caseRepository.existsById(smsFulfilment.getCaseId())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          String.format("CaseId %s does not exist", smsFulfilment.getCaseId()));
     }
-
-    @PostMapping
-    public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent) {
-
-        SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
-
-        if (!caseRepository.existsById(smsFulfilment.getCaseId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    String.format("CaseId %s does not exist", smsFulfilment.getCaseId()));
-        }
-
-
-
-
-
-
-
-
-
-
-    }
+  }
 }

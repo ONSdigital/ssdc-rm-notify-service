@@ -8,7 +8,6 @@ import lombok.Data;
 @JsonInclude(Include.NON_NULL)
 public class PayloadDTO {
 
-    private SmsFulfilment smsFulfilment;
-    private UacQidDTO uacQidDTO;
-
+  private SmsFulfilment smsFulfilment;
+  private EnrichedSmsFulfilment enrichedSmsFulfilment;
 }
