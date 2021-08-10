@@ -12,9 +12,5 @@ import org.hibernate.annotations.Type;
 public class SmsTemplate {
   @Id private String packCode;
 
-  @Type(type = "jsonb")
-  @Column(columnDefinition = "jsonb")
-  private String[] template;
-
   @Column private UUID templateId;
 }
