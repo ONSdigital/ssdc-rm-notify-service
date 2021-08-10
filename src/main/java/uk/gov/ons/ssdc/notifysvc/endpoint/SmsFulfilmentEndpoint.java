@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.notifysvc.model.dto.ResponseManagementEvent;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 
 @RestController
@@ -28,10 +29,12 @@ public class SmsFulfilmentEndpoint {
 
     SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
 
-    if (!caseRepository.existsById(smsFulfilment.getCaseId())) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          String.format("CaseId %s does not exist", smsFulfilment.getCaseId()));
-    }
+    Case caze =
+            caseRepository
+                    .findById(smsFulfilment.getCaseId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    caze.setId(smsFulfilment.getCaseId());
+    caze.setSample(smsFulfilment.getTelephoneNumber());
   }
 }
