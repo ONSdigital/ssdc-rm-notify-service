@@ -18,8 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.*;
+import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
 import uk.gov.ons.ssdc.notifysvc.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.notifysvc.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utility.ObjectMapperFactory;
 import uk.gov.service.notify.NotificationClientApi;
@@ -31,6 +34,7 @@ public class SmsFulfilmentEndpoint {
 
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
+  private final FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
   private final UacQidServiceClient uacQidServiceClient;
   private final PubSubTemplate pubSubTemplate;
   private final NotificationClientApi notificationClientApi;
@@ -51,11 +55,12 @@ public class SmsFulfilmentEndpoint {
   public SmsFulfilmentEndpoint(
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
-      UacQidServiceClient uacQidServiceClient,
+      FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository, UacQidServiceClient uacQidServiceClient,
       PubSubTemplate pubSubTemplate,
       NotificationClientApi notificationClientApi) {
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
+    this.fulfilmentSurveySmsTemplateRepository = fulfilmentSurveySmsTemplateRepository;
     this.uacQidServiceClient = uacQidServiceClient;
     this.pubSubTemplate = pubSubTemplate;
     this.notificationClientApi = notificationClientApi;
@@ -64,22 +69,9 @@ public class SmsFulfilmentEndpoint {
   @PostMapping
   public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent)
       throws InterruptedException {
+    SmsTemplate smsTemplate = validateEvent(responseManagementEvent);
 
     SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
-
-    if (!caseRepository.existsById(smsFulfilment.getCaseId())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Case does not exist");
-    }
-
-    SmsTemplate smsTemplate =
-        smsTemplateRepository
-            .findById(smsFulfilment.getPackCode())
-            .orElseThrow(
-                () ->
-                    new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template does not exist"));
-
-    // TODO validate tel. no
-
     String[] personalisationTemplate = smsTemplate.getTemplate();
     Map<String, String> personalisation = new HashMap<>();
 
@@ -131,6 +123,30 @@ public class SmsFulfilmentEndpoint {
       log.error("Error attempting to send SMS with notify client", e);
       throw new RuntimeException("Error attempting to send SMS with notify client", e);
     }
+  }
+
+  private SmsTemplate validateEvent(ResponseManagementEvent responseManagementEvent) {
+    SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
+    if (responseManagementEvent.getEvent().getType() != EventTypeDTO.SMS_FULFILMENT) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad event type, only accepts " + EventTypeDTO.SMS_FULFILMENT);
+    }
+
+    Case caze = caseRepository.findById(smsFulfilment.getCaseId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Case does not exist"));
+
+
+    SmsTemplate smsTemplate =
+        smsTemplateRepository
+            .findById(smsFulfilment.getPackCode())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template does not exist"));
+
+    if (!fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(smsTemplate, caze.getCollectionExercise().getSurvey())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template is not allowed on this survey");
+    }
+    // TODO validate tel. no
+    return smsTemplate;
   }
 
   private ResponseManagementEvent buildEnrichedSmsFulfilmentEvent(
