@@ -1,8 +1,13 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
 import org.springframework.http.HttpStatus;
@@ -16,6 +21,7 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.*;
 import uk.gov.ons.ssdc.notifysvc.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.utility.ObjectMapperFactory;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
@@ -28,8 +34,8 @@ public class SmsFulfilmentEndpoint {
   private final UacQidServiceClient uacQidServiceClient;
   private final PubSubTemplate pubSubTemplate;
   private final NotificationClientApi notificationClientApi;
+  private static final ObjectMapper objectMapper = ObjectMapperFactory.objectMapper();
 
-  private static final int QUESTIONNAIRE_TYPE = 1;
   private static final Logger log = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
   @Value("${queueconfig.sms-fulfilment-topic}")
@@ -37,6 +43,10 @@ public class SmsFulfilmentEndpoint {
 
   @Value("${notify.senderId}")
   private String senderId;
+
+  private static final int QID_TYPE = 1; // TODO replace hardcoded QID type
+  private static final String PERSONALISATION_UAC_KEY = "uac";
+  private static final String PERSONALISATION_QID_KEY = "qid";
 
   public SmsFulfilmentEndpoint(
       CaseRepository caseRepository,
@@ -52,45 +62,92 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent) {
+  public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent)
+      throws InterruptedException {
 
     SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
 
-    caseRepository
-        .findById(smsFulfilment.getCaseId())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+    if (!caseRepository.existsById(smsFulfilment.getCaseId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Case does not exist");
+    }
 
     SmsTemplate smsTemplate =
         smsTemplateRepository
             .findById(smsFulfilment.getPackCode())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template does not exist"));
 
     // TODO validate tel. no
 
-    UacQidCreatedPayloadDTO uacQidCreated = uacQidServiceClient.generateUacQid(QUESTIONNAIRE_TYPE);
+    String[] personalisationTemplate = smsTemplate.getTemplate();
+    Map<String, String> personalisation = new HashMap<>();
 
-    EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
-    enrichedSmsFulfilment.setCaseId(smsFulfilment.getCaseId());
-    enrichedSmsFulfilment.setQid(uacQidCreated.getQid());
-    enrichedSmsFulfilment.setUac(uacQidCreated.getUac());
+    UacQidCreatedPayloadDTO uacQidCreated = null;
+    for (String templateItem : personalisationTemplate) {
+      switch (templateItem) {
+        case "__uac__":
+          if (uacQidCreated == null) {
+            uacQidCreated = uacQidServiceClient.generateUacQid(QID_TYPE);
+          }
+          personalisation.put(PERSONALISATION_UAC_KEY, uacQidCreated.getUac());
+          break;
+        case "__qid__":
+          if (uacQidCreated == null) {
+            uacQidCreated = uacQidServiceClient.generateUacQid(QID_TYPE);
+          }
+          personalisation.put(PERSONALISATION_QID_KEY, uacQidCreated.getQid());
+          break;
+        default:
+          throw new NotImplementedException(
+              "SMS template item has not been implemented: " + templateItem);
+      }
+    }
 
-    ResponseManagementEvent enrichedRME = new ResponseManagementEvent();
-    enrichedRME.setEvent(responseManagementEvent.getEvent());
-    enrichedRME.setPayload(new PayloadDTO());
-    enrichedRME.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
+    ResponseManagementEvent enrichedRME =
+        buildEnrichedSmsFulfilmentEvent(responseManagementEvent, personalisation, uacQidCreated);
 
-    // TODO block until confirmed sent
-    pubSubTemplate.publish(smsFulfilmentTopic, enrichedRME);
+    try {
+      // Publish and block until it is complete to ensure the event is not lost
+      pubSubTemplate
+          .publish(smsFulfilmentTopic, objectMapper.writeValueAsBytes(enrichedRME))
+          .completable()
+          .get();
+    } catch (ExecutionException e) {
+      log.error("Error publishing enriched SMS fulfilment to PubSub topic " + smsFulfilmentTopic, e);
+      throw new RuntimeException("Error publishing enriched SMS fulfilment to PubSub", e);
+    } catch (JsonProcessingException e) {
+      log.error("Error serializing enriched SMS fulfilment to JSON", e);
+      throw new RuntimeException("Error serializing enriched SMS fulfilment to JSON", e);
+    }
 
     try {
       notificationClientApi.sendSms(
           smsTemplate.getTemplateId().toString(),
-          smsFulfilment.getTelephoneNumber(),
-          Map.of("UAC", enrichedSmsFulfilment.getUac()),
+          smsFulfilment.getPhoneNumber(),
+          personalisation,
           senderId);
     } catch (NotificationClientException e) {
-      log.error("Error with SMS", e);
-      throw new RuntimeException("Error with SMS", e);
+      log.error("Error attempting to send SMS with notify client", e);
+      throw new RuntimeException("Error attempting to send SMS with notify client", e);
     }
+  }
+
+  private ResponseManagementEvent buildEnrichedSmsFulfilmentEvent(
+      ResponseManagementEvent sourceEvent, Map<String, String> personalisation, UacQidCreatedPayloadDTO uacQidCreated) {
+    EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
+    enrichedSmsFulfilment.setCaseId(sourceEvent.getPayload().getSmsFulfilment().getCaseId());
+    enrichedSmsFulfilment.setPackCode(sourceEvent.getPayload().getSmsFulfilment().getPackCode());
+
+    if (uacQidCreated != null) {
+      enrichedSmsFulfilment.setUac(personalisation.get(PERSONALISATION_UAC_KEY));
+      enrichedSmsFulfilment.setQid(personalisation.get(PERSONALISATION_QID_KEY));
+    }
+
+    ResponseManagementEvent enrichedRME = new ResponseManagementEvent();
+    enrichedRME.setEvent(sourceEvent.getEvent());
+    enrichedRME.setPayload(new PayloadDTO());
+    enrichedRME.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
+    return enrichedRME;
   }
 }

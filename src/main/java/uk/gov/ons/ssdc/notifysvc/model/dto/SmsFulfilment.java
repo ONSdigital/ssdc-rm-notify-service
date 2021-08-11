@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 public class SmsFulfilment {
   private UUID caseId;
-  private String telephoneNumber;
+  private String phoneNumber;
   private String packCode;
 }

@@ -6,8 +6,8 @@ import lombok.Data;
 
 @Data
 public class EnrichedSmsFulfilment {
-  @Id private UUID caseId;
-  private String telephoneNumber;
+  private UUID caseId;
+  private String packCode;
   private String uac;
   private String qid;
 }
