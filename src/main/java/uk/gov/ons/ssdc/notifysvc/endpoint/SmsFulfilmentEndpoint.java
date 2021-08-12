@@ -8,8 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +58,7 @@ public class SmsFulfilmentEndpoint {
   private static final String PERSONALISATION_UAC_KEY = "uac";
   private static final String PERSONALISATION_QID_KEY = "qid";
 
+  @Autowired
   public SmsFulfilmentEndpoint(
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
@@ -72,8 +75,8 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent)
-      throws InterruptedException {
+  public ResponseEntity<?> smsFulfilment(
+      @RequestBody ResponseManagementEvent responseManagementEvent) throws InterruptedException {
     SmsTemplate smsTemplate = validateEventAndFetchSmsTemplate(responseManagementEvent);
 
     UacQidCreatedPayloadDTO newUacQidPair = null;
@@ -87,6 +90,7 @@ public class SmsFulfilmentEndpoint {
 
     sendSmsForFulfilment(
         responseManagementEvent.getPayload().getSmsFulfilment(), smsTemplate, smsTemplateValues);
+    return new ResponseEntity<>(HttpStatus.OK);
   }
 
   private ResponseManagementEvent buildEnrichedSmsFulfilmentEvent(
