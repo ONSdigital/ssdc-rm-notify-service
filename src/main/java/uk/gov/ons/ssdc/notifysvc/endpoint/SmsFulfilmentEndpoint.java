@@ -170,9 +170,7 @@ public class SmsFulfilmentEndpoint {
   }
 
   public void sendSmsForFulfilment(
-      SmsFulfilment smsFulfilment,
-      SmsTemplate smsTemplate,
-      Map<String, String> smsTemplateValues) {
+      SmsFulfilment smsFulfilment, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
     try {
       notificationClientApi.sendSms(
           smsTemplate.getNotifyId().toString(),
