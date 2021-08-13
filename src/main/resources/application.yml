@@ -1,3 +1,5 @@
+server:
+  port: 8162
 spring:
   task:
     scheduling:
