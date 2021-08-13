@@ -77,7 +77,7 @@ public class SmsFulfilmentEndpoint {
   @PostMapping
   public ResponseEntity<?> smsFulfilment(
       @RequestBody ResponseManagementEvent responseManagementEvent) throws InterruptedException {
-    SmsTemplate smsTemplate = validateEventAndFetchSmsTemplate(responseManagementEvent);
+    SmsTemplate smsTemplate = validateSmsFulfilmentEvent(responseManagementEvent);
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
@@ -112,8 +112,7 @@ public class SmsFulfilmentEndpoint {
     return enrichedRME;
   }
 
-  public SmsTemplate validateEventAndFetchSmsTemplate(
-      ResponseManagementEvent responseManagementEvent) {
+  public SmsTemplate validateSmsFulfilmentEvent(ResponseManagementEvent responseManagementEvent) {
     SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
     Case caze = findCaseById(smsFulfilment.getCaseId());
     SmsTemplate smsTemplate = findSmsTemplateByPackCode(smsFulfilment.getPackCode());

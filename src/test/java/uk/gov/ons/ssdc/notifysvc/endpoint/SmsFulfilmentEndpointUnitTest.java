@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -12,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,9 +24,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
@@ -234,6 +236,89 @@ class SmsFulfilmentEndpointUnitTest {
   }
 
   @Test
+  void testValidateSmsFulfilmentEventHappyPath() {
+    // Given
+    Case testCase = getTestCase();
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
+    ResponseManagementEvent validEvent =
+        buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
+
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(
+            smsTemplate, testCase.getCollectionExercise().getSurvey()))
+        .thenReturn(true);
+
+    // When validated, then no exception is thrown
+    smsFulfilmentEndpoint.validateSmsFulfilmentEvent(validEvent);
+  }
+
+  @Test
+  void testValidateSmsFulfilmentEventCaseNotFound() {
+    // Given
+    Case testCase = getTestCase();
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
+    ResponseManagementEvent invalidEvent =
+        buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
+
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.empty());
+
+    // When
+    ResponseStatusException thrown =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
+
+    // Then
+    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void testValidateSmsFulfilmentEventPackCodeNotFound() {
+    // Given
+    Case testCase = getTestCase();
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
+    ResponseManagementEvent invalidEvent =
+        buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
+
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode())).thenReturn(Optional.empty());
+
+    // When
+    ResponseStatusException thrown =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
+
+    // Then
+    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  void testValidateSmsFulfilmentEventTemplateNotAllowedOnSurvey() {
+    // Given
+    Case testCase = getTestCase();
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
+    ResponseManagementEvent invalidEvent =
+        buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
+
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(
+            smsTemplate, testCase.getCollectionExercise().getSurvey()))
+        .thenReturn(false);
+
+    // When
+    ResponseStatusException thrown =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
+
+    // Then
+    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
 
   private ResponseManagementEvent buildSmsFulfilmentEvent(
       UUID caseId, String packCode, String phoneNumber) {
