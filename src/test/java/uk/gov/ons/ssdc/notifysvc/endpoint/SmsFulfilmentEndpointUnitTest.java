@@ -131,7 +131,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getTemplateId().toString()),
+            eq(smsTemplate.getNotifyId().toString()),
             eq(smsFulfilmentEvent.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -184,7 +184,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getTemplateId().toString()),
+            eq(smsTemplate.getNotifyId().toString()),
             eq(smsFulfilmentEvent.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -226,7 +226,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getTemplateId().toString()),
+            eq(smsTemplate.getNotifyId().toString()),
             eq(smsFulfilmentEvent.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -345,7 +345,7 @@ class SmsFulfilmentEndpointUnitTest {
 
   private SmsTemplate getTestSmsTemplate(String[] template) {
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplateId(UUID.randomUUID());
+    smsTemplate.setNotifyId(UUID.randomUUID());
     smsTemplate.setPackCode("TEST");
     smsTemplate.setTemplate(template);
     return smsTemplate;

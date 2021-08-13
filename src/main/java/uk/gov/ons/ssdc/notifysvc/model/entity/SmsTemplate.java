@@ -17,5 +17,5 @@ public class SmsTemplate {
   private String[] template;
 
   @Column(nullable = false)
-  private UUID templateId;
+  private UUID notifyId;
 }

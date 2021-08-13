@@ -172,12 +172,12 @@ public class SmsFulfilmentEndpoint {
   public void sendSmsForFulfilment(
       SmsFulfilment smsFulfilment,
       SmsTemplate smsTemplate,
-      Map<String, String> smsPersonalisation) {
+      Map<String, String> smsTemplateValues) {
     try {
       notificationClientApi.sendSms(
-          smsTemplate.getTemplateId().toString(),
+          smsTemplate.getNotifyId().toString(),
           smsFulfilment.getPhoneNumber(),
-          smsPersonalisation,
+          smsTemplateValues,
           senderId);
     } catch (NotificationClientException e) {
       logger.error("Error attempting to send SMS with notify client", e);
