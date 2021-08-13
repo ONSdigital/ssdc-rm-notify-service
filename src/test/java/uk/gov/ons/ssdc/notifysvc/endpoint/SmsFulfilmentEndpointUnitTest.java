@@ -2,6 +2,7 @@ package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -19,6 +20,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -317,6 +320,41 @@ class SmsFulfilmentEndpointUnitTest {
             () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
 
     // Then
+    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        VALID_PHONE_NUMBER,
+        "+447123456789",
+        "0447123456789",
+        "(+44)7123456789",
+        "{+44}7123456789",
+        "[+44]7123456789",
+        "+44 7123456789",
+        "07123 456789",
+        "07123--456789",
+        "0-7-1-2-3-4-5-6-7-8-9",
+        "0 7 1 2 3 4 5 6 7 8 9",
+        "07123\t456789",
+        "0  7123    456789",
+      })
+  void testValidatePhoneNumberValid(String phoneNumber) {
+    try {
+      smsFulfilmentEndpoint.validatePhoneNumber(phoneNumber);
+    } catch (ResponseStatusException e) {
+      fail("Validation failed on valid phone number: " + phoneNumber);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"1", "foo", "007", "071234567890", "44+7123456789"})
+  void testValidatePhoneNumberInvalid(String phoneNumber) {
+    ResponseStatusException thrown =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> smsFulfilmentEndpoint.validatePhoneNumber(phoneNumber));
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 

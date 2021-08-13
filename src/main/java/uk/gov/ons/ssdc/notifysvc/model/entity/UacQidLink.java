@@ -16,8 +16,8 @@ public class UacQidLink {
   @Id private UUID id;
 
   @Column(
-      name = "qid",
-      nullable = false) // "name" annotation is required for index on this column to work
+      name = "qid", // "name" annotation is required for index on this column to work
+      nullable = false)
   private String qid;
 
   @Column(nullable = false)

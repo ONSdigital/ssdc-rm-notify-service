@@ -117,9 +117,21 @@ public class SmsFulfilmentEndpoint {
     Case caze = findCaseById(smsFulfilment.getCaseId());
     SmsTemplate smsTemplate = findSmsTemplateByPackCode(smsFulfilment.getPackCode());
     validateTemplateOnSurvey(smsTemplate, caze.getCollectionExercise().getSurvey());
-
-    // TODO validate tel. no
+    validatePhoneNumber(smsFulfilment.getPhoneNumber());
     return smsTemplate;
+  }
+
+  public void validatePhoneNumber(String phoneNumber) {
+    // String whitespace, full stops, commas, dashes, braces, brackets, and parentheses
+    String sanitisedPhoneNumber = phoneNumber.replaceAll("[\\s.,\\-\\[\\]{}()]", "");
+
+    // Remove valid leading country code or 0
+    sanitisedPhoneNumber = sanitisedPhoneNumber.replaceFirst("^(0{1,2}44|\\+44|0)", "");
+
+    // The sanitized number must then be 10 digits, starting with 7
+    if (sanitisedPhoneNumber.length() != 10 || !sanitisedPhoneNumber.matches("^7[0-9]+$")) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
+    }
   }
 
   public Map<String, String> buildTemplateValuesAndPopulateNewUacQidPair(
