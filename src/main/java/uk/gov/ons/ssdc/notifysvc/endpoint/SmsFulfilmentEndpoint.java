@@ -53,8 +53,8 @@ public class SmsFulfilmentEndpoint {
   private static final ObjectMapper objectMapper = ObjectMapperFactory.objectMapper();
 
   private static final int QID_TYPE = 1; // TODO replace hardcoded QID type
-  private static final String PERSONALISATION_UAC_KEY = "uac";
-  private static final String PERSONALISATION_QID_KEY = "qid";
+  private static final String SMS_TEMPLATE_UAC_KEY = "__uac__";
+  private static final String SMS_TEMPLATE_QID_KEY = "__qid__";
 
   public SmsFulfilmentEndpoint(
       CaseRepository caseRepository,
@@ -76,7 +76,8 @@ public class SmsFulfilmentEndpoint {
       throws InterruptedException {
     SmsTemplate smsTemplate = validateEventAndFetchSmsTemplate(responseManagementEvent);
 
-    UacQidCreatedPayloadDTO newUacQidPair = null;
+    UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
+
     Map<String, String> smsTemplateValues =
         buildTemplateValuesAndPopulateNewUacQidPair(smsTemplate, newUacQidPair);
 
@@ -125,17 +126,11 @@ public class SmsFulfilmentEndpoint {
 
     for (String templateItem : template) {
       switch (templateItem) {
-        case "__uac__":
-          if (newUacQidPair == null) {
-            newUacQidPair = uacQidServiceClient.generateUacQid(QID_TYPE);
-          }
-          templateValues.put(PERSONALISATION_UAC_KEY, newUacQidPair.getUac());
+        case SMS_TEMPLATE_UAC_KEY:
+          templateValues.put(SMS_TEMPLATE_UAC_KEY, newUacQidPair.getUac());
           break;
-        case "__qid__":
-          if (newUacQidPair == null) {
-            newUacQidPair = uacQidServiceClient.generateUacQid(QID_TYPE);
-          }
-          templateValues.put(PERSONALISATION_QID_KEY, newUacQidPair.getQid());
+        case SMS_TEMPLATE_QID_KEY:
+          templateValues.put(SMS_TEMPLATE_QID_KEY, newUacQidPair.getQid());
           break;
         default:
           throw new NotImplementedException(
@@ -143,6 +138,20 @@ public class SmsFulfilmentEndpoint {
       }
     }
     return templateValues;
+  }
+
+  public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] smsTemplate) {
+    for (String templateItem : smsTemplate) {
+      switch (templateItem) {
+        case SMS_TEMPLATE_UAC_KEY:
+        case SMS_TEMPLATE_QID_KEY:
+          return uacQidServiceClient.generateUacQid(QID_TYPE);
+        default:
+          throw new NotImplementedException(
+              "SMS template item has not been implemented: " + templateItem);
+      }
+    }
+    return null;
   }
 
   public void sendEnrichedSmsFulfilmentEvent(ResponseManagementEvent enrichedFulfilmentRME)
