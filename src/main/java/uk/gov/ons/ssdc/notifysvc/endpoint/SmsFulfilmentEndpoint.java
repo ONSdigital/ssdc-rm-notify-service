@@ -11,7 +11,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -75,8 +74,8 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public ResponseEntity<?> smsFulfilment(
-      @RequestBody ResponseManagementEvent responseManagementEvent) throws InterruptedException {
+  public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent)
+      throws InterruptedException {
     SmsTemplate smsTemplate = validateSmsFulfilmentEvent(responseManagementEvent);
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
@@ -84,14 +83,13 @@ public class SmsFulfilmentEndpoint {
     Map<String, String> smsTemplateValues =
         buildTemplateValuesAndPopulateNewUacQidPair(smsTemplate, newUacQidPair);
 
-    ResponseManagementEvent enrichedRME =
+    ResponseManagementEvent enrichedSmsFulfilmentEvent =
         buildEnrichedSmsFulfilmentEvent(responseManagementEvent, newUacQidPair);
 
-    sendEnrichedSmsFulfilmentEvent(enrichedRME);
+    sendEnrichedSmsFulfilmentEvent(enrichedSmsFulfilmentEvent);
 
     sendSmsForFulfilment(
         responseManagementEvent.getPayload().getSmsFulfilment(), smsTemplate, smsTemplateValues);
-    return new ResponseEntity<>(HttpStatus.OK);
   }
 
   private ResponseManagementEvent buildEnrichedSmsFulfilmentEvent(
