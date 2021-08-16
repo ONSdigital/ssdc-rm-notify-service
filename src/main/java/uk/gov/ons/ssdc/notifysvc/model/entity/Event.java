@@ -24,25 +24,28 @@ public class Event {
   @ManyToOne private Case caze;
 
   @Column(columnDefinition = "timestamp with time zone")
-  private OffsetDateTime eventDate;
+  private OffsetDateTime dateTime;
 
-  @Column private String eventDescription;
+  @Column private String description;
 
-  @Column(name = "rm_event_processed", columnDefinition = "timestamp with time zone")
-  private OffsetDateTime rmEventProcessed;
+  @Column(columnDefinition = "timestamp with time zone")
+  private OffsetDateTime processedAt;
 
-  @Column(name = "event_type")
   @Enumerated(EnumType.STRING)
-  private EventType eventType;
+  @Column
+  private EventType type;
 
-  @Column private String eventChannel;
-  @Column private String eventSource;
-  @Column private UUID eventTransactionId;
+  @Column private String channel;
+  @Column private String source;
+  @Column private UUID messageId;
+  @Column private UUID correlationId;
 
   @Type(type = "jsonb")
   @Column(columnDefinition = "jsonb")
-  private String eventPayload;
+  private String payload;
 
   @Column(columnDefinition = "Timestamp with time zone")
   private OffsetDateTime messageTimestamp;
+
+  @Column private String createdBy;
 }
