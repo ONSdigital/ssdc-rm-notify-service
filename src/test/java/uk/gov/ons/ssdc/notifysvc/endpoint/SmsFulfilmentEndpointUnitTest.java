@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -298,6 +299,38 @@ class SmsFulfilmentEndpointUnitTest {
   }
 
   @Test
+  void testSmsFulfilmentInvalidPhoneNumber() throws Exception {
+    // Given
+    Case testCase = getTestCase();
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
+    UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(
+            smsTemplate, testCase.getCollectionExercise().getSurvey()))
+        .thenReturn(true);
+
+    EventDTO smsFulfilmentEvent =
+        buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), "07123 INVALID");
+
+    // When we call with a bad phone number, we get a bad request response and descriptive reason
+    mockMvc
+        .perform(
+            post(SMS_FULFILMENT_ENDPOINT)
+                .content(objectMapper.writeValueAsBytes(smsFulfilmentEvent))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(status().reason(containsString("Invalid phone number")))
+        .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
+
+    // Then
+    verifyNoInteractions(uacQidServiceClient);
+    verifyNoInteractions(pubSubHelper);
+    verifyNoInteractions(notificationClientApi);
+  }
+
+  @Test
   void testValidateSmsFulfilmentEventHappyPath() {
     // Given
     Case testCase = getTestCase();
@@ -393,18 +426,21 @@ class SmsFulfilmentEndpointUnitTest {
         "[+44]7123456789",
         "+44 7123456789",
         "07123 456789",
+        "(07123) 456789",
+        "07123,456789",
         "07123--456789",
         "0-7-1-2-3-4-5-6-7-8-9",
         "0 7 1 2 3 4 5 6 7 8 9",
         "07123\t456789",
         "07123\n456789",
+        "0.7-123456789",
         "0  7123    456789",
       })
   void testValidatePhoneNumberValid(String phoneNumber) {
     try {
       smsFulfilmentEndpoint.validatePhoneNumber(phoneNumber);
     } catch (ResponseStatusException e) {
-      fail("Validation failed on valid phone number: " + phoneNumber);
+      fail("Validation failed on valid phone number: " + phoneNumber, e);
     }
   }
 

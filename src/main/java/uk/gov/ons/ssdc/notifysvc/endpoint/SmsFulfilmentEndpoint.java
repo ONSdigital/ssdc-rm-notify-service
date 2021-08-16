@@ -32,7 +32,6 @@ import uk.gov.ons.ssdc.notifysvc.utility.ObjectMapperFactory;
 import uk.gov.ons.ssdc.notifysvc.utility.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
-import uk.gov.service.notify.SendSmsResponse;
 
 @RestController
 @RequestMapping(value = "/sms-fulfilment")
@@ -122,7 +121,7 @@ public class SmsFulfilmentEndpoint {
   public void validatePhoneNumber(String phoneNumber) {
     // Throws a response status exception if the phone number does not pass validation
 
-    // String whitespace, full stops, commas, dashes, braces, brackets, and parentheses
+    // Strip out valid whitespace, full stops, commas, dashes, braces, brackets, and parentheses
     String sanitisedPhoneNumber = phoneNumber.replaceAll("[\\s.,\\-\\[\\]{}()]", "");
 
     // Remove valid leading country code or 0
@@ -183,9 +182,8 @@ public class SmsFulfilmentEndpoint {
   public void sendSms(
       String phoneNumber, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
     try {
-      SendSmsResponse response =
-          notificationClientApi.sendSms(
-              smsTemplate.getNotifyId().toString(), phoneNumber, smsTemplateValues, senderId);
+      notificationClientApi.sendSms(
+          smsTemplate.getNotifyId().toString(), phoneNumber, smsTemplateValues, senderId);
     } catch (NotificationClientException e) {
       logger.error("Error attempting to send SMS with notify client", e);
       throw new ResponseStatusException(
