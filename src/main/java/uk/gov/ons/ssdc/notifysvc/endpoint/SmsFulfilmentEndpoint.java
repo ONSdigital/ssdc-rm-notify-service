@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EnrichedSmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.ResponseManagementEvent;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
@@ -32,6 +32,7 @@ import uk.gov.ons.ssdc.notifysvc.utility.ObjectMapperFactory;
 import uk.gov.ons.ssdc.notifysvc.utility.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
+import uk.gov.service.notify.SendSmsResponse;
 
 @RestController
 @RequestMapping(value = "/sms-fulfilment")
@@ -74,26 +75,23 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public void smsFulfilment(@RequestBody ResponseManagementEvent responseManagementEvent)
-      throws InterruptedException {
-    SmsTemplate smsTemplate = validateSmsFulfilmentEvent(responseManagementEvent);
+  public void smsFulfilment(@RequestBody EventDTO event) throws InterruptedException {
+    SmsTemplate smsTemplate = validateEventAndFetchTemplate(event);
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
     Map<String, String> smsTemplateValues =
         buildTemplateValuesAndPopulateNewUacQidPair(smsTemplate, newUacQidPair);
 
-    ResponseManagementEvent enrichedSmsFulfilmentEvent =
-        buildEnrichedSmsFulfilmentEvent(responseManagementEvent, newUacQidPair);
+    EventDTO enrichedSmsFulfilmentEvent = buildEnrichedSmsFulfilmentEvent(event, newUacQidPair);
 
     sendEnrichedSmsFulfilmentEvent(enrichedSmsFulfilmentEvent);
 
-    sendSmsForFulfilment(
-        responseManagementEvent.getPayload().getSmsFulfilment(), smsTemplate, smsTemplateValues);
+    sendSms(event.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
   }
 
-  private ResponseManagementEvent buildEnrichedSmsFulfilmentEvent(
-      ResponseManagementEvent sourceEvent, UacQidCreatedPayloadDTO newUacQidPair) {
+  private EventDTO buildEnrichedSmsFulfilmentEvent(
+      EventDTO sourceEvent, UacQidCreatedPayloadDTO newUacQidPair) {
     EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
     enrichedSmsFulfilment.setCaseId(sourceEvent.getPayload().getSmsFulfilment().getCaseId());
     enrichedSmsFulfilment.setPackCode(sourceEvent.getPayload().getSmsFulfilment().getPackCode());
@@ -103,15 +101,17 @@ public class SmsFulfilmentEndpoint {
       enrichedSmsFulfilment.setQid(newUacQidPair.getQid());
     }
 
-    ResponseManagementEvent enrichedRME = new ResponseManagementEvent();
-    enrichedRME.setEvent(sourceEvent.getEvent());
-    enrichedRME.setPayload(new PayloadDTO());
-    enrichedRME.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
-    return enrichedRME;
+    EventDTO enrichedFulfilmentEvent = new EventDTO();
+    enrichedFulfilmentEvent.setEventHeader(sourceEvent.getEventHeader());
+    enrichedFulfilmentEvent.getEventHeader().setTopic(smsFulfilmentTopic);
+
+    enrichedFulfilmentEvent.setPayload(new PayloadDTO());
+    enrichedFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
+    return enrichedFulfilmentEvent;
   }
 
-  public SmsTemplate validateSmsFulfilmentEvent(ResponseManagementEvent responseManagementEvent) {
-    SmsFulfilment smsFulfilment = responseManagementEvent.getPayload().getSmsFulfilment();
+  public SmsTemplate validateEventAndFetchTemplate(EventDTO smsFulfilmentEvent) {
+    SmsFulfilment smsFulfilment = smsFulfilmentEvent.getPayload().getSmsFulfilment();
     Case caze = findCaseById(smsFulfilment.getCaseId());
     SmsTemplate smsTemplate = findSmsTemplateByPackCode(smsFulfilment.getPackCode());
     validateTemplateOnSurvey(smsTemplate, caze.getCollectionExercise().getSurvey());
@@ -120,6 +120,8 @@ public class SmsFulfilmentEndpoint {
   }
 
   public void validatePhoneNumber(String phoneNumber) {
+    // Throws a response status exception if the phone number does not pass validation
+
     // String whitespace, full stops, commas, dashes, braces, brackets, and parentheses
     String sanitisedPhoneNumber = phoneNumber.replaceAll("[\\s.,\\-\\[\\]{}()]", "");
 
@@ -160,36 +162,34 @@ public class SmsFulfilmentEndpoint {
         case SMS_TEMPLATE_QID_KEY:
           return uacQidServiceClient.generateUacQid(QID_TYPE);
         default:
-          throw new NotImplementedException(
-              "SMS template item has not been implemented: " + templateItem);
+          return null;
       }
     }
     return null;
   }
 
-  public void sendEnrichedSmsFulfilmentEvent(ResponseManagementEvent enrichedFulfilmentRME)
+  public void sendEnrichedSmsFulfilmentEvent(EventDTO enrichedSmsFulfilmentEvent)
       throws InterruptedException {
     try {
       // Publish and block until it is complete to ensure the event is not lost
       pubSubHelper.publishAndConfirm(
-          smsFulfilmentTopic, objectMapper.writeValueAsBytes(enrichedFulfilmentRME));
+          smsFulfilmentTopic, objectMapper.writeValueAsBytes(enrichedSmsFulfilmentEvent));
     } catch (JsonProcessingException e) {
       logger.error("Error serializing enriched SMS fulfilment to JSON", e);
       throw new RuntimeException("Error serializing enriched SMS fulfilment to JSON", e);
     }
   }
 
-  public void sendSmsForFulfilment(
-      SmsFulfilment smsFulfilment, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
+  public void sendSms(
+      String phoneNumber, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
     try {
-      notificationClientApi.sendSms(
-          smsTemplate.getNotifyId().toString(),
-          smsFulfilment.getPhoneNumber(),
-          smsTemplateValues,
-          senderId);
+      SendSmsResponse response =
+          notificationClientApi.sendSms(
+              smsTemplate.getNotifyId().toString(), phoneNumber, smsTemplateValues, senderId);
     } catch (NotificationClientException e) {
       logger.error("Error attempting to send SMS with notify client", e);
-      throw new RuntimeException("Error attempting to send SMS with notify client", e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Error attempting to send SMS with notify client", e);
     }
   }
 

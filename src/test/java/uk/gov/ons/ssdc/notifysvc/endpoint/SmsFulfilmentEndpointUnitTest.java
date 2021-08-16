@@ -34,8 +34,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.ResponseManagementEvent;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
@@ -47,6 +47,7 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRep
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utility.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
 class SmsFulfilmentEndpointUnitTest {
@@ -103,7 +104,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(uacQidServiceClient.generateUacQid(QID_TYPE)).thenReturn(newUacQid);
 
-    ResponseManagementEvent smsFulfilmentEvent =
+    EventDTO smsFulfilmentEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     // When
@@ -122,15 +123,14 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<byte[]> pubSubMessageCaptor = ArgumentCaptor.forClass(byte[].class);
     verify(pubSubHelper).publishAndConfirm(eq(smsFulfilmentTopic), pubSubMessageCaptor.capture());
     byte[] pubsubMessage = pubSubMessageCaptor.getValue();
-    ResponseManagementEvent actualEnrichedSmsEvent =
-        objectMapper.readValue(pubsubMessage, ResponseManagementEvent.class);
+    EventDTO actualEnrichedSmsEvent = objectMapper.readValue(pubsubMessage, EventDTO.class);
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment()).isNotNull();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getUac())
         .isEqualTo(newUacQid.getUac());
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getQid())
         .isEqualTo(newUacQid.getQid());
 
-    // Check the
+    // Check the SMS request
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
@@ -140,8 +140,9 @@ class SmsFulfilmentEndpointUnitTest {
             eq(senderId));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
-    assertThat(actualSmsTemplateValues).containsEntry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac());
-    assertThat(actualSmsTemplateValues).containsEntry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid());
+    assertThat(actualSmsTemplateValues)
+        .containsEntry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac())
+        .containsEntry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid());
   }
 
   @Test
@@ -158,7 +159,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(uacQidServiceClient.generateUacQid(QID_TYPE)).thenReturn(newUacQid);
 
-    ResponseManagementEvent smsFulfilmentEvent =
+    EventDTO smsFulfilmentEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     // When
@@ -176,8 +177,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<byte[]> pubSubMessageCaptor = ArgumentCaptor.forClass(byte[].class);
     verify(pubSubHelper).publishAndConfirm(eq(smsFulfilmentTopic), pubSubMessageCaptor.capture());
     byte[] pubsubMessage = pubSubMessageCaptor.getValue();
-    ResponseManagementEvent actualEnrichedSmsEvent =
-        objectMapper.readValue(pubsubMessage, ResponseManagementEvent.class);
+    EventDTO actualEnrichedSmsEvent = objectMapper.readValue(pubsubMessage, EventDTO.class);
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment()).isNotNull();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getUac())
         .isEqualTo(newUacQid.getUac());
@@ -211,7 +211,7 @@ class SmsFulfilmentEndpointUnitTest {
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
 
-    ResponseManagementEvent smsFulfilmentEvent =
+    EventDTO smsFulfilmentEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     // When
@@ -235,7 +235,66 @@ class SmsFulfilmentEndpointUnitTest {
             eq(senderId));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
-    assertThat(actualSmsTemplateValues).containsOnlyKeys();
+    assertThat(actualSmsTemplateValues).isEmpty();
+  }
+
+  @Test
+  void testSmsFulfilmentServerErrorFromNotify() throws Exception {
+    // Given
+    Case testCase = getTestCase();
+    SmsTemplate smsTemplate =
+        getTestSmsTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
+    UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(
+            smsTemplate, testCase.getCollectionExercise().getSurvey()))
+        .thenReturn(true);
+    when(uacQidServiceClient.generateUacQid(QID_TYPE)).thenReturn(newUacQid);
+
+    // Simulate an error when we attempt to send the SMS
+    when(notificationClientApi.sendSms(any(), any(), any(), any()))
+        .thenThrow(new NotificationClientException("Test"));
+
+    EventDTO smsFulfilmentEvent =
+        buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
+
+    // When we call with the SMS fulfilment and the notify client errors, we get an internal server
+    // error
+    mockMvc
+        .perform(
+            post(SMS_FULFILMENT_ENDPOINT)
+                .content(objectMapper.writeValueAsBytes(smsFulfilmentEvent))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError())
+        .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
+
+    // Then
+    // The event should still have been sent to be safe
+    ArgumentCaptor<byte[]> pubSubMessageCaptor = ArgumentCaptor.forClass(byte[].class);
+    verify(pubSubHelper).publishAndConfirm(eq(smsFulfilmentTopic), pubSubMessageCaptor.capture());
+    byte[] pubsubMessage = pubSubMessageCaptor.getValue();
+    EventDTO actualEnrichedSmsEvent = objectMapper.readValue(pubsubMessage, EventDTO.class);
+    assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment()).isNotNull();
+    assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getUac())
+        .isEqualTo(newUacQid.getUac());
+    assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getQid())
+        .isEqualTo(newUacQid.getQid());
+
+    // Check the SMS request did still happen as expected
+    ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(notificationClientApi)
+        .sendSms(
+            eq(smsTemplate.getNotifyId().toString()),
+            eq(smsFulfilmentEvent.getPayload().getSmsFulfilment().getPhoneNumber()),
+            templateValuesCaptor.capture(),
+            eq(senderId));
+
+    Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
+    assertThat(actualSmsTemplateValues)
+        .containsEntry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac())
+        .containsEntry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid());
   }
 
   @Test
@@ -243,7 +302,7 @@ class SmsFulfilmentEndpointUnitTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    ResponseManagementEvent validEvent =
+    EventDTO validEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -254,7 +313,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
 
     // When validated, then no exception is thrown
-    smsFulfilmentEndpoint.validateSmsFulfilmentEvent(validEvent);
+    smsFulfilmentEndpoint.validateEventAndFetchTemplate(validEvent);
   }
 
   @Test
@@ -262,7 +321,7 @@ class SmsFulfilmentEndpointUnitTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    ResponseManagementEvent invalidEvent =
+    EventDTO invalidEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.empty());
@@ -271,7 +330,7 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
+            () -> smsFulfilmentEndpoint.validateEventAndFetchTemplate(invalidEvent));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -282,7 +341,7 @@ class SmsFulfilmentEndpointUnitTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    ResponseManagementEvent invalidEvent =
+    EventDTO invalidEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -292,7 +351,7 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
+            () -> smsFulfilmentEndpoint.validateEventAndFetchTemplate(invalidEvent));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -303,7 +362,7 @@ class SmsFulfilmentEndpointUnitTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    ResponseManagementEvent invalidEvent =
+    EventDTO invalidEvent =
         buildSmsFulfilmentEvent(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -317,7 +376,7 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateSmsFulfilmentEvent(invalidEvent));
+            () -> smsFulfilmentEndpoint.validateEventAndFetchTemplate(invalidEvent));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -338,6 +397,7 @@ class SmsFulfilmentEndpointUnitTest {
         "0-7-1-2-3-4-5-6-7-8-9",
         "0 7 1 2 3 4 5 6 7 8 9",
         "07123\t456789",
+        "07123\n456789",
         "0  7123    456789",
       })
   void testValidatePhoneNumberValid(String phoneNumber) {
@@ -349,7 +409,17 @@ class SmsFulfilmentEndpointUnitTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"1", "foo", "007", "071234567890", "44+7123456789"})
+  @ValueSource(
+      strings = {
+        "1",
+        "foo",
+        "007",
+        "071234567890",
+        "44+7123456789",
+        "0712345678a",
+        "@7123456789",
+        "(+44) 07123456789"
+      })
   void testValidatePhoneNumberInvalid(String phoneNumber) {
     ResponseStatusException thrown =
         assertThrows(
@@ -358,17 +428,16 @@ class SmsFulfilmentEndpointUnitTest {
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
-  private ResponseManagementEvent buildSmsFulfilmentEvent(
-      UUID caseId, String packCode, String phoneNumber) {
-    ResponseManagementEvent smsFulfilmentEvent = new ResponseManagementEvent();
-    EventDTO event = new EventDTO();
+  private EventDTO buildSmsFulfilmentEvent(UUID caseId, String packCode, String phoneNumber) {
+    EventDTO smsFulfilmentEvent = new EventDTO();
+    EventHeaderDTO event = new EventHeaderDTO();
     PayloadDTO payloadDTO = new PayloadDTO();
     SmsFulfilment smsFulfilment = new SmsFulfilment();
     smsFulfilment.setCaseId(caseId);
     smsFulfilment.setPackCode(packCode);
     smsFulfilment.setPhoneNumber(phoneNumber);
 
-    smsFulfilmentEvent.setEvent(event);
+    smsFulfilmentEvent.setEventHeader(event);
     payloadDTO.setSmsFulfilment(smsFulfilment);
     smsFulfilmentEvent.setPayload(payloadDTO);
     return smsFulfilmentEvent;
