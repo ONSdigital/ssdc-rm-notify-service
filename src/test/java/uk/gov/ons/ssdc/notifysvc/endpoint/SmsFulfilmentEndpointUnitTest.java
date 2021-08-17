@@ -130,6 +130,7 @@ class SmsFulfilmentEndpointUnitTest {
         .isEqualTo(newUacQid.getUac());
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getQid())
         .isEqualTo(newUacQid.getQid());
+    assertThat(actualEnrichedSmsEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
 
     // Check the SMS request
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
@@ -184,6 +185,7 @@ class SmsFulfilmentEndpointUnitTest {
         .isEqualTo(newUacQid.getUac());
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getQid())
         .isEqualTo(newUacQid.getQid());
+    assertThat(actualEnrichedSmsEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
 
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
@@ -282,6 +284,7 @@ class SmsFulfilmentEndpointUnitTest {
         .isEqualTo(newUacQid.getUac());
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getQid())
         .isEqualTo(newUacQid.getQid());
+    assertThat(actualEnrichedSmsEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
 
     // Check the SMS request did still happen as expected
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
@@ -473,7 +476,7 @@ class SmsFulfilmentEndpointUnitTest {
     smsFulfilment.setPackCode(packCode);
     smsFulfilment.setPhoneNumber(phoneNumber);
 
-    smsFulfilmentEvent.setEventHeader(event);
+    smsFulfilmentEvent.setHeader(event);
     payloadDTO.setSmsFulfilment(smsFulfilment);
     smsFulfilmentEvent.setPayload(payloadDTO);
     return smsFulfilmentEvent;

@@ -84,6 +84,10 @@ public class SmsFulfilmentEndpoint {
 
     EventDTO enrichedSmsFulfilmentEvent = buildEnrichedSmsFulfilmentEvent(event, newUacQidPair);
 
+    // NOTE: Here we are sending the enriched event BEFORE we make the call to send the SMS.
+    // This is to be certain that the record of the UAC link is not lost. If we were to send the SMS
+    // first then the
+    // event publish failed it would leave the requester with a broken UAC we would be unable to fix
     sendEnrichedSmsFulfilmentEvent(enrichedSmsFulfilmentEvent);
 
     sendSms(event.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
@@ -101,8 +105,8 @@ public class SmsFulfilmentEndpoint {
     }
 
     EventDTO enrichedFulfilmentEvent = new EventDTO();
-    enrichedFulfilmentEvent.setEventHeader(sourceEvent.getEventHeader());
-    enrichedFulfilmentEvent.getEventHeader().setTopic(smsFulfilmentTopic);
+    enrichedFulfilmentEvent.setHeader(sourceEvent.getHeader());
+    enrichedFulfilmentEvent.getHeader().setTopic(smsFulfilmentTopic);
 
     enrichedFulfilmentEvent.setPayload(new PayloadDTO());
     enrichedFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);

@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventDTO {
-  private EventHeaderDTO eventHeader;
+  private EventHeaderDTO header;
   private PayloadDTO payload;
 }
