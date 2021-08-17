@@ -149,7 +149,7 @@ class SmsFulfilmentEndpointIT {
     payloadDTO.setSmsFulfilment(smsFulfilment);
     smsFulfilmentEvent.setPayload(payloadDTO);
 
-    // Stub the Notify API endpoint with a random response to keep the client happy
+    // Stub the Notify API endpoint with a success code and random response to keep the client happy
     NotifyApiResponse notifyApiResponse = easyRandom.nextObject(NotifyApiResponse.class);
     String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiResponse);
     wireMockServer.stubFor(
@@ -160,7 +160,7 @@ class SmsFulfilmentEndpointIT {
                     .withBody(notifyApiResponseJson)
                     .withHeader("Content-Type", "application/json")));
 
-    // Build the request
+    // Build the SMS fulfilment request
     RestTemplate restTemplate = new RestTemplate();
     String url = "http://localhost:" + port + SMS_FULFILMENT_ENDPOINT;
     HttpHeaders headers = new HttpHeaders();
@@ -172,7 +172,7 @@ class SmsFulfilmentEndpointIT {
     try (QueueSpy<EventDTO> smsFulfilmentQueueSpy =
         pubSubTestHelper.listen(SMS_FULFILMENT_TEST_SUBSCRIPTION, EventDTO.class)) {
 
-      // When 
+      // When
       // We post in the SMS fulfilment request
       ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
