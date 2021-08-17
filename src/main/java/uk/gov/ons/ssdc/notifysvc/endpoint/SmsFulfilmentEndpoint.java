@@ -86,8 +86,8 @@ public class SmsFulfilmentEndpoint {
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the SMS.
     // This is to be certain that the record of the UAC link is not lost. If we were to send the SMS
-    // first then the
-    // event publish failed it would leave the requester with a broken UAC we would be unable to fix
+    // first then the event publish failed it would leave the requester with a broken UAC we would
+    // be unable to fix
     sendEnrichedSmsFulfilmentEvent(enrichedSmsFulfilmentEvent);
 
     sendSms(event.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
