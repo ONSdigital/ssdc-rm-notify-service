@@ -6,7 +6,7 @@ spring:
     gcp:
       pubsub:
         emulator-host: localhost:18538
-        project-id: project
+        project-id: our-project
 
 
 notify:
