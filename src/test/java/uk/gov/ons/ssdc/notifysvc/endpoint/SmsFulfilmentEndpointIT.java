@@ -31,9 +31,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiResponse;
-import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.RequestDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.RequestHeaderDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.RequestPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
 import uk.gov.ons.ssdc.notifysvc.model.entity.CollectionExercise;
@@ -137,17 +138,22 @@ class SmsFulfilmentEndpointIT {
     fulfilmentSurveySmsTemplateRepository.save(fulfilmentSurveySmsTemplate);
 
     // Build the event JSON to post in
-    EventDTO smsFulfilmentEvent = new EventDTO();
-    EventHeaderDTO event = new EventHeaderDTO();
-    PayloadDTO payloadDTO = new PayloadDTO();
+    RequestDTO smsFulfilmentEvent = new RequestDTO();
+    RequestHeaderDTO header = new RequestHeaderDTO();
+    header.setSource("TEST_SOURCE");
+    header.setChannel("TEST_CHANNEL");
+    header.setCorrelationId(UUID.randomUUID());
+    header.setOriginatingUser("TEST_USER");
+
+    RequestPayloadDTO payload = new RequestPayloadDTO();
     SmsFulfilment smsFulfilment = new SmsFulfilment();
     smsFulfilment.setCaseId(testCase.getId());
     smsFulfilment.setPackCode(smsTemplate.getPackCode());
     smsFulfilment.setPhoneNumber(VALID_PHONE_NUMBER);
 
-    smsFulfilmentEvent.setHeader(event);
-    payloadDTO.setSmsFulfilment(smsFulfilment);
-    smsFulfilmentEvent.setPayload(payloadDTO);
+    smsFulfilmentEvent.setHeader(header);
+    payload.setSmsFulfilment(smsFulfilment);
+    smsFulfilmentEvent.setPayload(payload);
 
     // Stub the Notify API endpoint with a success code and random response to keep the client happy
     NotifyApiResponse notifyApiResponse = easyRandom.nextObject(NotifyApiResponse.class);
@@ -185,6 +191,7 @@ class SmsFulfilmentEndpointIT {
       assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
       assertThat(actualEnrichedEvent.getHeader().getCorrelationId())
           .isEqualTo(smsFulfilmentEvent.getHeader().getCorrelationId());
+
       assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getCaseId())
           .isEqualTo(testCase.getId());
       assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getPackCode())

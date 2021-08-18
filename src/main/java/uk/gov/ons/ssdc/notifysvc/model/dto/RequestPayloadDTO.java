@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 @JsonInclude(Include.NON_NULL)
-public class PayloadDTO {
-
-  private EnrichedSmsFulfilment enrichedSmsFulfilment;
+public class RequestPayloadDTO {
+  private SmsFulfilment smsFulfilment;
 }

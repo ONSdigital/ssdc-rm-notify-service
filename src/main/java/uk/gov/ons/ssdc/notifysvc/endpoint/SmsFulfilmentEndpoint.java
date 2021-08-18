@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -19,7 +21,10 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EnrichedSmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.RequestDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
@@ -28,8 +33,9 @@ import uk.gov.ons.ssdc.notifysvc.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
-import uk.gov.ons.ssdc.notifysvc.utility.ObjectMapperFactory;
-import uk.gov.ons.ssdc.notifysvc.utility.PubSubHelper;
+import uk.gov.ons.ssdc.notifysvc.utils.Constants;
+import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
+import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
@@ -74,15 +80,15 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public void smsFulfilment(@RequestBody EventDTO event) throws InterruptedException {
-    SmsTemplate smsTemplate = validateEventAndFetchTemplate(event);
+  public void smsFulfilment(@RequestBody RequestDTO request) throws InterruptedException {
+    SmsTemplate smsTemplate = validateRequestAndFetchSmsTemplate(request);
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
     Map<String, String> smsTemplateValues =
         buildTemplateValuesAndPopulateNewUacQidPair(smsTemplate, newUacQidPair);
 
-    EventDTO enrichedSmsFulfilmentEvent = buildEnrichedSmsFulfilmentEvent(event, newUacQidPair);
+    EventDTO enrichedSmsFulfilmentEvent = buildEnrichedSmsFulfilmentEvent(request, newUacQidPair);
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the SMS.
     // This is to be certain that the record of the UAC link is not lost. If we were to send the SMS
@@ -90,14 +96,15 @@ public class SmsFulfilmentEndpoint {
     // be unable to fix
     sendEnrichedSmsFulfilmentEvent(enrichedSmsFulfilmentEvent);
 
-    sendSms(event.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
+    sendSms(
+        request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
   }
 
   private EventDTO buildEnrichedSmsFulfilmentEvent(
-      EventDTO sourceEvent, UacQidCreatedPayloadDTO newUacQidPair) {
+      RequestDTO request, UacQidCreatedPayloadDTO newUacQidPair) {
     EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
-    enrichedSmsFulfilment.setCaseId(sourceEvent.getPayload().getSmsFulfilment().getCaseId());
-    enrichedSmsFulfilment.setPackCode(sourceEvent.getPayload().getSmsFulfilment().getPackCode());
+    enrichedSmsFulfilment.setCaseId(request.getPayload().getSmsFulfilment().getCaseId());
+    enrichedSmsFulfilment.setPackCode(request.getPayload().getSmsFulfilment().getPackCode());
 
     if (newUacQidPair != null) {
       enrichedSmsFulfilment.setUac(newUacQidPair.getUac());
@@ -105,21 +112,41 @@ public class SmsFulfilmentEndpoint {
     }
 
     EventDTO enrichedFulfilmentEvent = new EventDTO();
-    enrichedFulfilmentEvent.setHeader(sourceEvent.getHeader());
-    enrichedFulfilmentEvent.getHeader().setTopic(smsFulfilmentTopic);
+
+    EventHeaderDTO eventHeader = new EventHeaderDTO();
+    eventHeader.setTopic(smsFulfilmentTopic);
+    eventHeader.setSource(request.getHeader().getSource());
+    eventHeader.setChannel(request.getHeader().getChannel());
+    eventHeader.setCorrelationId(request.getHeader().getCorrelationId());
+    eventHeader.setOriginatingUser(request.getHeader().getOriginatingUser());
+    eventHeader.setDateTime(OffsetDateTime.now(Clock.systemUTC()));
+    eventHeader.setVersion(Constants.EVENT_SCHEMA_VERSION);
+    eventHeader.setMessageId(UUID.randomUUID());
+    enrichedFulfilmentEvent.setHeader(eventHeader);
 
     enrichedFulfilmentEvent.setPayload(new PayloadDTO());
     enrichedFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
     return enrichedFulfilmentEvent;
   }
 
-  public SmsTemplate validateEventAndFetchTemplate(EventDTO smsFulfilmentEvent) {
-    SmsFulfilment smsFulfilment = smsFulfilmentEvent.getPayload().getSmsFulfilment();
+  public SmsTemplate validateRequestAndFetchSmsTemplate(RequestDTO smsFulfilmentRequest) {
+    validateRequestHeader(smsFulfilmentRequest.getHeader());
+    SmsFulfilment smsFulfilment = smsFulfilmentRequest.getPayload().getSmsFulfilment();
     Case caze = findCaseById(smsFulfilment.getCaseId());
     SmsTemplate smsTemplate = findSmsTemplateByPackCode(smsFulfilment.getPackCode());
     validateTemplateOnSurvey(smsTemplate, caze.getCollectionExercise().getSurvey());
     validatePhoneNumber(smsFulfilment.getPhoneNumber());
     return smsTemplate;
+  }
+
+  private void validateRequestHeader(RequestHeaderDTO requestHeader) {
+    if (requestHeader.getCorrelationId() == null
+        || requestHeader.getChannel() == null
+        || requestHeader.getSource() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Invalid request header: correlationId, channel and source are mandatory");
+    }
   }
 
   public void validatePhoneNumber(String phoneNumber) {
@@ -198,7 +225,7 @@ public class SmsFulfilmentEndpoint {
   public void validateTemplateOnSurvey(SmsTemplate template, Survey survey) {
     if (!fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(template, survey)) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Template is not allowed on this survey");
+          HttpStatus.BAD_REQUEST, "The template for this pack code is not allowed on this survey");
     }
   }
 
@@ -206,13 +233,15 @@ public class SmsFulfilmentEndpoint {
     return smsTemplateRepository
         .findById(packCode)
         .orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Template does not exist"));
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "A template does not exist with this pack code"));
   }
 
   public Case findCaseById(UUID caseId) {
     return caseRepository
         .findById(caseId)
         .orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Case does not exist"));
+            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "The case does not exist"));
   }
 }

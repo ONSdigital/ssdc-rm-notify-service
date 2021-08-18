@@ -1,4 +1,4 @@
-package uk.gov.ons.ssdc.notifysvc.utility;
+package uk.gov.ons.ssdc.notifysvc.utils;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
