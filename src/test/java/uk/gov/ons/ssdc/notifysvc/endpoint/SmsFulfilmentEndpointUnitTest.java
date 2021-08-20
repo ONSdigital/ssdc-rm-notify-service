@@ -123,10 +123,9 @@ class SmsFulfilmentEndpointUnitTest {
     verify(uacQidServiceClient).generateUacQid(QID_TYPE);
 
     // Check the pubsub message
-    ArgumentCaptor<byte[]> pubSubMessageCaptor = ArgumentCaptor.forClass(byte[].class);
+    ArgumentCaptor<EventDTO> pubSubMessageCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(pubSubHelper).publishAndConfirm(eq(smsFulfilmentTopic), pubSubMessageCaptor.capture());
-    byte[] pubsubMessage = pubSubMessageCaptor.getValue();
-    EventDTO actualEnrichedSmsEvent = objectMapper.readValue(pubsubMessage, EventDTO.class);
+    EventDTO actualEnrichedSmsEvent = pubSubMessageCaptor.getValue();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment()).isNotNull();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getUac())
         .isEqualTo(newUacQid.getUac());
@@ -138,7 +137,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getNotifyId().toString()),
+            eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -178,10 +177,9 @@ class SmsFulfilmentEndpointUnitTest {
     // Then
     verify(uacQidServiceClient).generateUacQid(QID_TYPE);
 
-    ArgumentCaptor<byte[]> pubSubMessageCaptor = ArgumentCaptor.forClass(byte[].class);
+    ArgumentCaptor<EventDTO> pubSubMessageCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(pubSubHelper).publishAndConfirm(eq(smsFulfilmentTopic), pubSubMessageCaptor.capture());
-    byte[] pubsubMessage = pubSubMessageCaptor.getValue();
-    EventDTO actualEnrichedSmsEvent = objectMapper.readValue(pubsubMessage, EventDTO.class);
+    EventDTO actualEnrichedSmsEvent = pubSubMessageCaptor.getValue();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment()).isNotNull();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getUac())
         .isEqualTo(newUacQid.getUac());
@@ -200,7 +198,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getNotifyId().toString()),
+            eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -242,7 +240,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getNotifyId().toString()),
+            eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -284,11 +282,9 @@ class SmsFulfilmentEndpointUnitTest {
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
-    // The event should still have been sent to be safe
-    ArgumentCaptor<byte[]> pubSubMessageCaptor = ArgumentCaptor.forClass(byte[].class);
+    ArgumentCaptor<EventDTO> pubSubMessageCaptor = ArgumentCaptor.forClass(EventDTO.class);
     verify(pubSubHelper).publishAndConfirm(eq(smsFulfilmentTopic), pubSubMessageCaptor.capture());
-    byte[] pubsubMessage = pubSubMessageCaptor.getValue();
-    EventDTO actualEnrichedSmsEvent = objectMapper.readValue(pubsubMessage, EventDTO.class);
+    EventDTO actualEnrichedSmsEvent = pubSubMessageCaptor.getValue();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment()).isNotNull();
     assertThat(actualEnrichedSmsEvent.getPayload().getEnrichedSmsFulfilment().getUac())
         .isEqualTo(newUacQid.getUac());
@@ -300,7 +296,7 @@ class SmsFulfilmentEndpointUnitTest {
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
     verify(notificationClientApi)
         .sendSms(
-            eq(smsTemplate.getNotifyId().toString()),
+            eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
             eq(senderId));
@@ -566,7 +562,7 @@ class SmsFulfilmentEndpointUnitTest {
 
   private SmsTemplate getTestSmsTemplate(String[] template) {
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setNotifyId(UUID.randomUUID());
+    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate.setPackCode("TEST");
     smsTemplate.setTemplate(template);
     return smsTemplate;

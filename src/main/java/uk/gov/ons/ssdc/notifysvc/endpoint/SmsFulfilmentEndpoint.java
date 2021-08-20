@@ -1,18 +1,21 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -94,7 +97,7 @@ public class SmsFulfilmentEndpoint {
     // This is to be certain that the record of the UAC link is not lost. If we were to send the SMS
     // first then the event publish failed it would leave the requester with a broken UAC we would
     // be unable to fix
-    sendEnrichedSmsFulfilmentEvent(enrichedSmsFulfilmentEvent);
+    pubSubHelper.publishAndConfirm(smsFulfilmentTopic, enrichedSmsFulfilmentEvent);
 
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
@@ -141,8 +144,8 @@ public class SmsFulfilmentEndpoint {
 
   private void validateRequestHeader(RequestHeaderDTO requestHeader) {
     if (requestHeader.getCorrelationId() == null
-        || requestHeader.getChannel() == null
-        || requestHeader.getSource() == null) {
+        || StringUtils.isBlank(requestHeader.getChannel())
+        || StringUtils.isBlank(requestHeader.getSource())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Invalid request header: correlationId, channel and source are mandatory");
@@ -186,39 +189,22 @@ public class SmsFulfilmentEndpoint {
   }
 
   public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] smsTemplate) {
-    for (String templateItem : smsTemplate) {
-      switch (templateItem) {
-        case SMS_TEMPLATE_UAC_KEY:
-        case SMS_TEMPLATE_QID_KEY:
-          return uacQidServiceClient.generateUacQid(QID_TYPE);
-        default:
-          return null;
-      }
+    if (CollectionUtils.containsAny(
+        Arrays.asList(smsTemplate), List.of(SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY))) {
+      return uacQidServiceClient.generateUacQid(QID_TYPE);
     }
     return null;
-  }
-
-  public void sendEnrichedSmsFulfilmentEvent(EventDTO enrichedSmsFulfilmentEvent)
-      throws InterruptedException {
-    try {
-      // Publish and block until it is complete to ensure the event is not lost
-      pubSubHelper.publishAndConfirm(
-          smsFulfilmentTopic, objectMapper.writeValueAsBytes(enrichedSmsFulfilmentEvent));
-    } catch (JsonProcessingException e) {
-      logger.error("Error serializing enriched SMS fulfilment to JSON", e);
-      throw new RuntimeException("Error serializing enriched SMS fulfilment to JSON", e);
-    }
   }
 
   public void sendSms(
       String phoneNumber, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
     try {
       notificationClientApi.sendSms(
-          smsTemplate.getNotifyId().toString(), phoneNumber, smsTemplateValues, senderId);
+          smsTemplate.getNotifyTemplateId().toString(), phoneNumber, smsTemplateValues, senderId);
     } catch (NotificationClientException e) {
-      logger.error("Error attempting to send SMS with notify client", e);
+      logger.error("Error with Gov Notify when attempting to send SMS", e);
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Error attempting to send SMS with notify client", e);
+          HttpStatus.INTERNAL_SERVER_ERROR, "Error with Gov Notify when attempting to send SMS", e);
     }
   }
 

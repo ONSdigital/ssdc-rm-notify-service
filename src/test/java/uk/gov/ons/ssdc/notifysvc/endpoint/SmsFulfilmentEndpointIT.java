@@ -103,7 +103,7 @@ class SmsFulfilmentEndpointIT {
   }
 
   @Test
-  void smsFulfilment() throws JsonProcessingException, InterruptedException {
+  void testSmsFulfilment() throws JsonProcessingException, InterruptedException {
     // Given
     // Set up all the data required
     Survey survey = new Survey();
@@ -128,7 +128,7 @@ class SmsFulfilmentEndpointIT {
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST");
     smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
-    smsTemplate.setNotifyId(UUID.randomUUID());
+    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
 
     FulfilmentSurveySmsTemplate fulfilmentSurveySmsTemplate = new FulfilmentSurveySmsTemplate();

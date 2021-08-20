@@ -20,8 +20,8 @@
 		<dependencies>
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>Hoxton.SR12</version>
+				<artifactId>spring-cloud-gcp-dependencies</artifactId>
+				<version>1.2.8.RELEASE</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -63,11 +63,6 @@
 			<groupId>com.godaddy</groupId>
 			<artifactId>logging</artifactId>
 			<version>1.2.5</version>
-		</dependency>
-		<dependency>
-			<groupId>ma.glasnost.orika</groupId>
-			<artifactId>orika-core</artifactId>
-			<version>1.5.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.vladmihalcea</groupId>
