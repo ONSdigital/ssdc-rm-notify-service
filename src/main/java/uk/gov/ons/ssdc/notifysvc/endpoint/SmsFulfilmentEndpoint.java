@@ -155,11 +155,8 @@ public class SmsFulfilmentEndpoint {
   public void validatePhoneNumber(String phoneNumber) {
     // Throws a response status exception if the phone number does not pass validation
 
-    // Strip out valid whitespace, full stops, commas, dashes, braces, brackets, and parentheses
-    String sanitisedPhoneNumber = phoneNumber.replaceAll("[\\s.,\\-\\[\\]{}()]", "");
-
     // Remove valid leading country code or 0
-    sanitisedPhoneNumber = sanitisedPhoneNumber.replaceFirst("^(0{1,2}44|\\+44|0)", "");
+    String sanitisedPhoneNumber = phoneNumber.replaceFirst("^(0{1,2}44|\\+44|0)", "");
 
     // The sanitized number must then be 10 digits, starting with 7
     if (sanitisedPhoneNumber.length() != 10 || !sanitisedPhoneNumber.matches("^7[0-9]+$")) {

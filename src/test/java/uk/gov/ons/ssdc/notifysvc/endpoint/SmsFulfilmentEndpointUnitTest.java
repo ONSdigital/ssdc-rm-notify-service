@@ -491,20 +491,7 @@ class SmsFulfilmentEndpointUnitTest {
         VALID_PHONE_NUMBER,
         "+447123456789",
         "0447123456789",
-        "(+44)7123456789",
-        "{+44}7123456789",
-        "[+44]7123456789",
-        "+44 7123456789",
-        "07123 456789",
-        "(07123) 456789",
-        "07123,456789",
-        "07123--456789",
-        "0-7-1-2-3-4-5-6-7-8-9",
-        "0 7 1 2 3 4 5 6 7 8 9",
-        "07123\t456789",
-        "07123\n456789",
-        "0.7-123456789",
-        "0  7123    456789",
+        "7123456789",
       })
   void testValidatePhoneNumberValid(String phoneNumber) {
     try {
@@ -512,26 +499,6 @@ class SmsFulfilmentEndpointUnitTest {
     } catch (ResponseStatusException e) {
       fail("Validation failed on valid phone number: " + phoneNumber, e);
     }
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "1",
-        "foo",
-        "007",
-        "071234567890",
-        "44+7123456789",
-        "0712345678a",
-        "@7123456789",
-        "(+44) 07123456789"
-      })
-  void testValidatePhoneNumberInvalid(String phoneNumber) {
-    ResponseStatusException thrown =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validatePhoneNumber(phoneNumber));
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   private RequestDTO buildSmsFulfilmentRequest(UUID caseId, String packCode, String phoneNumber) {
@@ -558,6 +525,28 @@ class SmsFulfilmentEndpointUnitTest {
     uacQidCreatedPayloadDTO.setUac("test_uac");
     uacQidCreatedPayloadDTO.setQid("01_test_qid");
     return uacQidCreatedPayloadDTO;
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "1",
+        "foo",
+        "007",
+        "071234567890",
+        "+44 7123456789",
+        "44+7123456789",
+        "0712345678a",
+        "@7123456789",
+        "07123 456789",
+        "(+44) 07123456789"
+      })
+  void testValidatePhoneNumberInvalid(String phoneNumber) {
+    ResponseStatusException thrown =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> smsFulfilmentEndpoint.validatePhoneNumber(phoneNumber));
+    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   private SmsTemplate getTestSmsTemplate(String[] template) {
