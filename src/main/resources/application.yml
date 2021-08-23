@@ -1,0 +1,59 @@
+server:
+  port: 8162
+spring:
+  task:
+    scheduling:
+      pool:
+        size: 5
+
+  datasource:
+    url: jdbc:postgresql://localhost:6432/postgres
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+    hikari:
+      maximumPoolSize: 5
+
+  sql:
+    init:
+      mode: always
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: casev3
+        jdbc:
+          lob:
+            non_contextual_creation: true
+uacservice:
+  connection:
+    scheme: http
+    host: localhost
+    port: 8164
+
+  uacqid-cache-min: 500
+  uacqid-fetch-count: 1000
+  uacqid-get-timeout: 60   #seconds
+
+queueconfig:
+  sms-fulfilment-topic: rm-internal-sms-fulfilment
+
+
+notify:
+  apiKey: dummykey-ffffffff-ffff-ffff-ffff-ffffffffffff-ffffffff-ffff-ffff-ffff-ffffffffffff
+  baseUrl: https://dummy-notify:123
+  senderId: 6bf5f8c2-bc4e-4bbc-a855-aa708d5fdfe7
+
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+  metrics:
+    tags:
+      application: "Notify Service"
+      pod: ${HOSTNAME}
