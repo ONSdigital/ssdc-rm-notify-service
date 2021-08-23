@@ -47,7 +47,7 @@ Example body:
     "smsFulfilment": {
       "caseId": "2f2dc309-37cf-4749-85ea-ccb76ee69e4d",
       "packCode": "TEST_SMS",
-      "phoneNumber": "(+44) 7123456789"
+      "phoneNumber": "+447123456789"
     }
   }
 }
