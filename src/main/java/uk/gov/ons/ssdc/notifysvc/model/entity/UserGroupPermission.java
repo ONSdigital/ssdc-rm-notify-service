@@ -1,10 +1,9 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
+import java.util.UUID;
+import javax.persistence.*;
 import lombok.Data;
 import lombok.ToString;
-
-import javax.persistence.*;
-import java.util.UUID;
 
 @ToString(onlyExplicitlyIncluded = true) // Bidirectional relationship causes IDE stackoverflow
 @Entity
