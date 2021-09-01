@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -330,7 +331,7 @@ class SmsFulfilmentEndpointUnitTest {
                 .content(objectMapper.writeValueAsBytes(smsFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
-        .andExpect(status().reason(containsString("Invalid phone number")))
+        .andExpect(content().string(containsString("Invalid phone number")))
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then

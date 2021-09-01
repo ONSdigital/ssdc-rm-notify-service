@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,8 +84,15 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public void smsFulfilment(@RequestBody RequestDTO request) throws InterruptedException {
-    SmsTemplate smsTemplate = validateRequestAndFetchSmsTemplate(request);
+  public ResponseEntity<String> smsFulfilment(@RequestBody RequestDTO request)
+      throws InterruptedException {
+    SmsTemplate smsTemplate;
+    try {
+      smsTemplate = validateRequestAndFetchSmsTemplate(request);
+    } catch (ResponseStatusException responseStatusException) {
+      return new ResponseEntity<>(
+          responseStatusException.getMessage(), responseStatusException.getStatus());
+    }
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
@@ -101,6 +109,8 @@ public class SmsFulfilmentEndpoint {
 
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
+
+    return new ResponseEntity<>("", HttpStatus.OK);
   }
 
   private EventDTO buildEnrichedSmsFulfilmentEvent(
