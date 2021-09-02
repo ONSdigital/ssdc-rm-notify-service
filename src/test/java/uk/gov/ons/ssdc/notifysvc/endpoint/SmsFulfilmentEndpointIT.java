@@ -30,17 +30,20 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import uk.gov.ons.ssdc.common.model.entity.Case;
+import uk.gov.ons.ssdc.common.model.entity.CollectionExercise;
+import uk.gov.ons.ssdc.common.model.entity.FulfilmentSurveySmsTemplate;
+import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.common.validation.ColumnValidator;
+import uk.gov.ons.ssdc.common.validation.MandatoryRule;
+import uk.gov.ons.ssdc.common.validation.Rule;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
-import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
-import uk.gov.ons.ssdc.notifysvc.model.entity.CollectionExercise;
-import uk.gov.ons.ssdc.notifysvc.model.entity.FulfilmentSurveySmsTemplate;
-import uk.gov.ons.ssdc.notifysvc.model.entity.SmsTemplate;
-import uk.gov.ons.ssdc.notifysvc.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CollectionExerciseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
@@ -109,7 +112,10 @@ class SmsFulfilmentEndpointIT {
     Survey survey = new Survey();
     survey.setId(UUID.randomUUID());
     survey.setName("TEST SURVEY");
-    survey.setSampleValidationRules("[]");
+    survey.setSampleValidationRules(
+        new ColumnValidator[] {
+          new ColumnValidator("Junk", false, new Rule[] {new MandatoryRule()})
+        });
     survey.setSampleSeparator(',');
     survey = surveyRepository.saveAndFlush(survey);
 
