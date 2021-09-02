@@ -3,7 +3,11 @@ package uk.gov.ons.ssdc.notifysvc.model.entity;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import lombok.Data;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,15 +19,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class UacQidLink {
   @Id private UUID id;
 
-  @Column(
-      name = "qid", // "name" annotation is required for index on this column to work
-      nullable = false)
+  @Column(nullable = false, name = "qid") // "name" annotation required for index on column to work
   private String qid;
 
   @Column(nullable = false)
   private String uac;
 
-  @ManyToOne private Case caze;
+  @ManyToOne(optional = false)
+  private Case caze;
 
   @OneToMany(mappedBy = "uacQidLink")
   private List<Event> events;

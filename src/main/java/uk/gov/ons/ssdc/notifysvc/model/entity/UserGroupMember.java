@@ -5,15 +5,17 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import lombok.Data;
+import lombok.ToString;
 
-@Data
+@ToString(onlyExplicitlyIncluded = true) // Bidirectional relationship causes IDE stackoverflow
 @Entity
-public class FulfilmentSurveySmsTemplate {
+@Data
+public class UserGroupMember {
   @Id private UUID id;
 
   @ManyToOne(optional = false)
-  private Survey survey;
+  private User user;
 
   @ManyToOne(optional = false)
-  private SmsTemplate smsTemplate;
+  private UserGroup group;
 }

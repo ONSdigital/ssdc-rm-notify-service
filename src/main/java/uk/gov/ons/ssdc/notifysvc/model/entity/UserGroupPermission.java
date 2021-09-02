@@ -1,33 +1,27 @@
 package uk.gov.ons.ssdc.notifysvc.model.entity;
 
-import java.util.List;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import lombok.Data;
 import lombok.ToString;
 
 @ToString(onlyExplicitlyIncluded = true) // Bidirectional relationship causes IDE stackoverflow
-@Data
 @Entity
-public class CollectionExercise {
+@Data
+public class UserGroupPermission {
   @Id private UUID id;
 
-  @Column(nullable = false)
-  private String name;
-
   @ManyToOne(optional = false)
-  private Survey survey;
+  private UserGroup group;
 
-  @OneToMany(mappedBy = "collectionExercise")
-  private List<Case> cases;
+  @ManyToOne private Survey survey;
 
-  @OneToMany(mappedBy = "collectionExercise")
-  private List<ActionRule> actionRules;
-
-  @OneToMany(mappedBy = "collectionExercise")
-  private List<Job> jobs;
+  @Enumerated(EnumType.STRING)
+  @Column
+  private UserGroupAuthorisedActivityType authorisedActivity;
 }

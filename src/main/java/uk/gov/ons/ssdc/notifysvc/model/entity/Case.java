@@ -72,7 +72,8 @@ public class Case {
   @Column(columnDefinition = "jsonb")
   private Map<String, String> sampleSensitive;
 
-  @ManyToOne private CollectionExercise collectionExercise;
+  @ManyToOne(optional = false)
+  private CollectionExercise collectionExercise;
 
   @OneToMany(mappedBy = "caze")
   List<UacQidLink> uacQidLinks;

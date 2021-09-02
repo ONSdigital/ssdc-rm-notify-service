@@ -12,8 +12,9 @@ public class PrintTemplate {
   @Id private String packCode;
 
   @Type(type = "jsonb")
-  @Column(columnDefinition = "jsonb")
+  @Column(nullable = false, columnDefinition = "jsonb")
   private String[] template;
 
-  @Column private String printSupplier;
+  @Column(nullable = false)
+  private String printSupplier;
 }

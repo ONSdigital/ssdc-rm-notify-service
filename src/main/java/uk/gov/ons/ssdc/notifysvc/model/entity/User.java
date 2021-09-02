@@ -5,29 +5,27 @@ import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import lombok.Data;
 import lombok.ToString;
 
 @ToString(onlyExplicitlyIncluded = true) // Bidirectional relationship causes IDE stackoverflow
-@Data
 @Entity
-public class CollectionExercise {
+@Data
+@Table(
+    name = "users",
+    indexes = {@Index(name = "users_email_idx", columnList = "email", unique = true)})
+public class User {
   @Id private UUID id;
 
   @Column(nullable = false)
-  private String name;
+  private String email;
 
-  @ManyToOne(optional = false)
-  private Survey survey;
+  @OneToMany(mappedBy = "user")
+  private List<UserGroupMember> memberOf;
 
-  @OneToMany(mappedBy = "collectionExercise")
-  private List<Case> cases;
-
-  @OneToMany(mappedBy = "collectionExercise")
-  private List<ActionRule> actionRules;
-
-  @OneToMany(mappedBy = "collectionExercise")
-  private List<Job> jobs;
+  @OneToMany(mappedBy = "user")
+  private List<UserGroupAdmin> adminOf;
 }

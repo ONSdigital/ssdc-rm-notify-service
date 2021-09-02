@@ -7,11 +7,14 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import lombok.Data;
 
-@Entity
 @Data
-public class FulfilmentNextTrigger {
+@Entity
+public class ClusterLeader {
   @Id private UUID id;
 
+  @Column(nullable = false)
+  private String hostName;
+
   @Column(nullable = false, columnDefinition = "timestamp with time zone")
-  private OffsetDateTime triggerDateTime;
+  private OffsetDateTime hostLastSeenAliveAt;
 }
