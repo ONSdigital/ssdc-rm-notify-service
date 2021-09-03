@@ -30,6 +30,9 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponse;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponseError;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponseSuccess;
 import uk.gov.ons.ssdc.notifysvc.model.dto.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.entity.Case;
 import uk.gov.ons.ssdc.notifysvc.model.entity.SmsTemplate;
@@ -84,14 +87,15 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public ResponseEntity<String> smsFulfilment(@RequestBody RequestDTO request)
+  public ResponseEntity<SmsFulfilmentResponse> smsFulfilment(@RequestBody RequestDTO request)
       throws InterruptedException {
+
     SmsTemplate smsTemplate;
     try {
       smsTemplate = validateRequestAndFetchSmsTemplate(request);
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
-          responseStatusException.getMessage(), responseStatusException.getStatus());
+          new SmsFulfilmentResponseError(responseStatusException.getMessage()), responseStatusException.getStatus());
     }
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
@@ -110,7 +114,7 @@ public class SmsFulfilmentEndpoint {
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
 
-    return new ResponseEntity<>("", HttpStatus.OK);
+    return new ResponseEntity<>(new SmsFulfilmentResponseSuccess("whatevs", newUacQidPair.getQid()), HttpStatus.CREATED);
   }
 
   private EventDTO buildEnrichedSmsFulfilmentEvent(
