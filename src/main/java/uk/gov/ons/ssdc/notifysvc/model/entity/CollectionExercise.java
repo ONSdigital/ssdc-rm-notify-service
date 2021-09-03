@@ -2,7 +2,11 @@ package uk.gov.ons.ssdc.notifysvc.model.entity;
 
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import lombok.Data;
 import lombok.ToString;
 
@@ -12,9 +16,11 @@ import lombok.ToString;
 public class CollectionExercise {
   @Id private UUID id;
 
-  @Column private String name;
+  @Column(nullable = false)
+  private String name;
 
-  @ManyToOne private Survey survey;
+  @ManyToOne(optional = false)
+  private Survey survey;
 
   @OneToMany(mappedBy = "collectionExercise")
   private List<Case> cases;

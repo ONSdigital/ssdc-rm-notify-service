@@ -13,7 +13,9 @@ import lombok.ToString;
 public class UserGroupAdmin {
   @Id private UUID id;
 
-  @ManyToOne private User user;
+  @ManyToOne(optional = false)
+  private User user;
 
-  @ManyToOne private UserGroup group;
+  @ManyToOne(optional = false)
+  private UserGroup group;
 }

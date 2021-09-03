@@ -11,7 +11,9 @@ import lombok.Data;
 public class FulfilmentSurveyPrintTemplate {
   @Id private UUID id;
 
-  @ManyToOne private Survey survey;
+  @ManyToOne(optional = false)
+  private Survey survey;
 
-  @ManyToOne private PrintTemplate printTemplate;
+  @ManyToOne(optional = false)
+  private PrintTemplate printTemplate;
 }

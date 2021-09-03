@@ -11,7 +11,9 @@ import lombok.Data;
 public class FulfilmentSurveySmsTemplate {
   @Id private UUID id;
 
-  @ManyToOne private Survey survey;
+  @ManyToOne(optional = false)
+  private Survey survey;
 
-  @ManyToOne private SmsTemplate smsTemplate;
+  @ManyToOne(optional = false)
+  private SmsTemplate smsTemplate;
 }

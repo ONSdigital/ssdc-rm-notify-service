@@ -15,7 +15,8 @@ import lombok.ToString;
 public class UserGroup {
   @Id private UUID id;
 
-  @Column private String name;
+  @Column(nullable = false)
+  private String name;
 
   @OneToMany(mappedBy = "group")
   private List<UserGroupMember> members;
