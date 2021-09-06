@@ -41,6 +41,7 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
+import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
 import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
@@ -95,7 +96,8 @@ public class SmsFulfilmentEndpoint {
       smsTemplate = validateRequestAndFetchSmsTemplate(request);
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
-          new SmsFulfilmentResponseError(responseStatusException.getMessage()), responseStatusException.getStatus());
+          new SmsFulfilmentResponseError(responseStatusException.getMessage()),
+          responseStatusException.getStatus());
     }
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
@@ -114,7 +116,17 @@ public class SmsFulfilmentEndpoint {
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
 
-    return new ResponseEntity<>(new SmsFulfilmentResponseSuccess("whatevs", newUacQidPair.getQid()), HttpStatus.CREATED);
+    return new ResponseEntity<>(getSmsResponseSuccess(newUacQidPair), HttpStatus.CREATED);
+  }
+
+  private SmsFulfilmentResponse getSmsResponseSuccess(UacQidCreatedPayloadDTO newUacQidPair) {
+    if (newUacQidPair != null) {
+      String uacHash = HashHelper.hash(newUacQidPair.getUac());
+      return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
+    } else {
+      // Send empty, successful response for non-UAC SMS Fulfilments
+      return new SmsFulfilmentResponseSuccess(null, null);
+    }
   }
 
   private EventDTO buildEnrichedSmsFulfilmentEvent(
