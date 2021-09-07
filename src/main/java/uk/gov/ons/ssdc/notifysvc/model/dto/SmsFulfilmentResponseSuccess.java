@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @JsonInclude(Include.NON_NULL)
-public class SmsFulfilmentResponseSuccess implements SmsFulfilmentResponse{
+public class SmsFulfilmentResponseSuccess implements SmsFulfilmentResponse {
   private String uacHash;
   private String qid;
 }

@@ -30,6 +30,7 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentEmptyResponseSuccess;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponseError;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponseSuccess;
@@ -116,16 +117,16 @@ public class SmsFulfilmentEndpoint {
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
 
-    return new ResponseEntity<>(getSmsResponseSuccess(newUacQidPair), HttpStatus.CREATED);
+    return new ResponseEntity<>(sendSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
 
-  private SmsFulfilmentResponse getSmsResponseSuccess(UacQidCreatedPayloadDTO newUacQidPair) {
+  private SmsFulfilmentResponse sendSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
     if (newUacQidPair != null) {
       String uacHash = HashHelper.hash(newUacQidPair.getUac());
       return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
     } else {
       // Send empty, successful response for non-UAC SMS Fulfilments
-      return new SmsFulfilmentResponseSuccess(null, null);
+      return new SmsFulfilmentEmptyResponseSuccess();
     }
   }
 

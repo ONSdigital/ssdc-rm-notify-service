@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class SmsFulfilmentResponseError implements SmsFulfilmentResponse{
+public class SmsFulfilmentResponseError implements SmsFulfilmentResponse {
   String error;
 }
