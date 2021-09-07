@@ -2,6 +2,7 @@ package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +51,7 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
+import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
@@ -100,6 +103,7 @@ class SmsFulfilmentEndpointUnitTest {
     SmsTemplate smsTemplate =
         getTestSmsTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
+    String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
@@ -118,6 +122,9 @@ class SmsFulfilmentEndpointUnitTest {
                 .content(objectMapper.writeValueAsBytes(smsFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
+        .andExpect(jsonPath("uacHash", is(expectedHashedUac)))
+        .andExpect(jsonPath("uac").doesNotExist())
+        .andExpect(jsonPath("qid", is(newUacQid.getQid())))
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
@@ -155,6 +162,7 @@ class SmsFulfilmentEndpointUnitTest {
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {SMS_TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
+    String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
@@ -173,6 +181,9 @@ class SmsFulfilmentEndpointUnitTest {
                 .content(objectMapper.writeValueAsBytes(smsFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
+        .andExpect(jsonPath("uacHash", is(expectedHashedUac)))
+        .andExpect(jsonPath("uac").doesNotExist())
+        .andExpect(jsonPath("qid", is(newUacQid.getQid())))
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
@@ -215,7 +226,6 @@ class SmsFulfilmentEndpointUnitTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
@@ -233,6 +243,7 @@ class SmsFulfilmentEndpointUnitTest {
                 .content(objectMapper.writeValueAsBytes(smsFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
+        .andExpect(content().string("{}"))
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
