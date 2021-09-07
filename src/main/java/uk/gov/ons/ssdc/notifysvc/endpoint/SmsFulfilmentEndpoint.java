@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.time.Clock;
@@ -43,7 +42,6 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRep
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
-import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
@@ -66,7 +64,6 @@ public class SmsFulfilmentEndpoint {
   private final NotificationClientApi notificationClientApi;
 
   private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
-  private static final ObjectMapper objectMapper = ObjectMapperFactory.objectMapper();
 
   private static final int QID_TYPE = 1; // TODO replace hardcoded QID type
   private static final String SMS_TEMPLATE_UAC_KEY = "__uac__";
