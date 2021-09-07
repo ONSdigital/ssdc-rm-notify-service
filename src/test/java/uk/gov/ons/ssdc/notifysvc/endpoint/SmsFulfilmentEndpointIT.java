@@ -187,8 +187,8 @@ class SmsFulfilmentEndpointIT {
       assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
       JsonNode responseJson = objectMapper.readTree(response.getBody());
-      assertThat(responseJson.get("uacHash")).isNotEmpty();
-      assertThat(responseJson.get("qid")).isNotEmpty();
+      assertThat(responseJson.get("uacHash").textValue()).isNotEmpty();
+      assertThat(responseJson.get("qid").textValue()).isNotEmpty();
 
       // Check the outbound event is received and correct
       EventDTO actualEnrichedEvent = smsFulfilmentQueueSpy.checkExpectedMessageReceived();
