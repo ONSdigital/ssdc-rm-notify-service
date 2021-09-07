@@ -13,6 +13,8 @@ env:
 before_install:
   - mvn fmt:check
   - docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
+  - echo "$DOCKER_GCP_PASSWORD" > ~/google-service-account-key.json
+  - export GOOGLE_APPLICATION_CREDENTIALS=~/google-service-account-key.json
 
 install: echo "SKIPPING DEFAULT INSTALL" # Travis has a default maven install. Don't build twice!
 
