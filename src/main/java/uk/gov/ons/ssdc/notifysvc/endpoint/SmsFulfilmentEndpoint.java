@@ -114,7 +114,7 @@ public class SmsFulfilmentEndpoint {
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
 
-    return new ResponseEntity<>(sendSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
+    return new ResponseEntity<>(createSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
 
   private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
