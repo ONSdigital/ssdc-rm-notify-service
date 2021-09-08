@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.time.Clock;
@@ -33,12 +32,16 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentEmptyResponseSuccess;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponse;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponseError;
+import uk.gov.ons.ssdc.notifysvc.model.dto.SmsFulfilmentResponseSuccess;
 import uk.gov.ons.ssdc.notifysvc.model.dto.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
-import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
+import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
@@ -61,7 +64,6 @@ public class SmsFulfilmentEndpoint {
   private final NotificationClientApi notificationClientApi;
 
   private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
-  private static final ObjectMapper objectMapper = ObjectMapperFactory.objectMapper();
 
   private static final int QID_TYPE = 1; // TODO replace hardcoded QID type
   private static final String SMS_TEMPLATE_UAC_KEY = "__uac__";
@@ -84,14 +86,16 @@ public class SmsFulfilmentEndpoint {
   }
 
   @PostMapping
-  public ResponseEntity<String> smsFulfilment(@RequestBody RequestDTO request)
+  public ResponseEntity<SmsFulfilmentResponse> smsFulfilment(@RequestBody RequestDTO request)
       throws InterruptedException {
+
     SmsTemplate smsTemplate;
     try {
       smsTemplate = validateRequestAndFetchSmsTemplate(request);
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
-          responseStatusException.getMessage(), responseStatusException.getStatus());
+          new SmsFulfilmentResponseError(responseStatusException.getReason()),
+          responseStatusException.getStatus());
     }
 
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
@@ -110,7 +114,16 @@ public class SmsFulfilmentEndpoint {
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
 
-    return new ResponseEntity<>("", HttpStatus.OK);
+    return new ResponseEntity<>(createSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
+  }
+
+  private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
+    if (newUacQidPair != null) {
+      String uacHash = HashHelper.hash(newUacQidPair.getUac());
+      return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
+    } else {
+      return new SmsFulfilmentEmptyResponseSuccess();
+    }
   }
 
   private EventDTO buildEnrichedSmsFulfilmentEvent(
