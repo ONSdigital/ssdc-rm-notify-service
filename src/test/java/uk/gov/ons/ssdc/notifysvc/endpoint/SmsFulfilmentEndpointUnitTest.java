@@ -342,7 +342,7 @@ class SmsFulfilmentEndpointUnitTest {
                 .content(objectMapper.writeValueAsBytes(smsFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
-        .andExpect(content().string(containsString("Invalid phone number")))
+        .andExpect(jsonPath("error", is("Invalid phone number")))
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
