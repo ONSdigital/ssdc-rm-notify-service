@@ -117,7 +117,7 @@ public class SmsFulfilmentEndpoint {
     return new ResponseEntity<>(sendSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
 
-  private SmsFulfilmentResponse sendSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
+  private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
     if (newUacQidPair != null) {
       String uacHash = HashHelper.hash(newUacQidPair.getUac());
       return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
