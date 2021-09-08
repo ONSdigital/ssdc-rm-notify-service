@@ -94,7 +94,7 @@ public class SmsFulfilmentEndpoint {
       smsTemplate = validateRequestAndFetchSmsTemplate(request);
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
-          new SmsFulfilmentResponseError(responseStatusException.getMessage()),
+          new SmsFulfilmentResponseError(responseStatusException.getReason()),
           responseStatusException.getStatus());
     }
 
