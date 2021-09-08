@@ -122,7 +122,6 @@ public class SmsFulfilmentEndpoint {
       String uacHash = HashHelper.hash(newUacQidPair.getUac());
       return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
     } else {
-      // Send empty, successful response for non-UAC SMS Fulfilments
       return new SmsFulfilmentEmptyResponseSuccess();
     }
   }
