@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-@JsonSerialize
+@JsonInclude(Include.NON_NULL)
 public class SmsFulfilmentEmptyResponseSuccess implements SmsFulfilmentResponse {}
