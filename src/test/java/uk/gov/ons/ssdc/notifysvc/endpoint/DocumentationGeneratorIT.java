@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.FileOutputStream;
@@ -45,7 +44,8 @@ public class DocumentationGeneratorIT {
     int exitStatus = process.exitValue();
 
     if (!"true".equals(System.getenv().get("TRAVIS"))) {
-      // If this is failing, have you run `sudo npm install -g widdershins` like it says in README.md?
+      // If this is failing, have you run `sudo npm install -g widdershins` like it says in
+      // README.md?
       assertThat(exitStatus).isZero();
     }
   }
