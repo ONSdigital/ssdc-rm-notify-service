@@ -2,6 +2,8 @@
 A service for making requests to Gov Notify
 
 ## Building
+As part of documentation auto-generation, an NPM library is required to be installed, which can be done by running: `sudo npm install -g widdershins`
+
 To run all the tests and build the image
 ```  
    mvn clean install
