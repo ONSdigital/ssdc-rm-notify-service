@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
             title = "Notify Service",
             description = "Service for contacting respondents via Gov Notify SMS messages",
             version = "v1"),
-    servers = {@Server(url = "https://localhost:8162")})
+    servers = {@Server(url = "http://localhost:8162")})
 public class Application {
 
   public static void main(String[] args) {
