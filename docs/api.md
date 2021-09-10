@@ -27,7 +27,7 @@ Service for contacting respondents via Gov Notify SMS messages
 
 Base URLs:
 
-* <a href="http://localhost:64117/">http://localhost:64117/</a>
+* <a href="http://localhost:53210/">http://localhost:53210/</a>
 
 <h1 id="notify-service-sms-fulfilment-endpoint">sms-fulfilment-endpoint</h1>
 
@@ -39,15 +39,15 @@ Base URLs:
 
 ```shell
 # You can also use wget
-curl -X POST http://localhost:64117/sms-fulfilment \
+curl -X POST http://localhost:53210/sms-fulfilment \
   -H 'Content-Type: application/json' \
   -H 'Accept: */*'
 
 ```
 
 ```http
-POST http://localhost:64117/sms-fulfilment HTTP/1.1
-Host: localhost:64117
+POST http://localhost:53210/sms-fulfilment HTTP/1.1
+Host: localhost:53210
 Content-Type: application/json
 Accept: */*
 
@@ -74,7 +74,7 @@ const headers = {
   'Accept':'*/*'
 };
 
-fetch('http://localhost:64117/sms-fulfilment',
+fetch('http://localhost:53210/sms-fulfilment',
 {
   method: 'POST',
   body: inputBody,
@@ -97,7 +97,7 @@ headers = {
   'Accept' => '*/*'
 }
 
-result = RestClient.post 'http://localhost:64117/sms-fulfilment',
+result = RestClient.post 'http://localhost:53210/sms-fulfilment',
   params: {
   }, headers: headers
 
@@ -112,7 +112,7 @@ headers = {
   'Accept': '*/*'
 }
 
-r = requests.post('http://localhost:64117/sms-fulfilment', headers = headers)
+r = requests.post('http://localhost:53210/sms-fulfilment', headers = headers)
 
 print(r.json())
 
@@ -134,7 +134,7 @@ $client = new \GuzzleHttp\Client();
 $request_body = array();
 
 try {
-    $response = $client->request('POST','http://localhost:64117/sms-fulfilment', array(
+    $response = $client->request('POST','http://localhost:53210/sms-fulfilment', array(
         'headers' => $headers,
         'json' => $request_body,
        )
@@ -151,7 +151,7 @@ try {
 ```
 
 ```java
-URL obj = new URL("http://localhost:64117/sms-fulfilment");
+URL obj = new URL("http://localhost:53210/sms-fulfilment");
 HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 con.setRequestMethod("POST");
 int responseCode = con.getResponseCode();
@@ -183,7 +183,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest("POST", "http://localhost:64117/sms-fulfilment", data)
+    req, err := http.NewRequest("POST", "http://localhost:53210/sms-fulfilment", data)
     req.Header = headers
 
     client := &http.Client{}
