@@ -1,5 +1,8 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
+import static org.assertj.core.api.Assertions.as;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
@@ -27,14 +30,19 @@ public class DocumentationGeneratorIT {
   endpoints which could be a security risk.
    */
   @Test
-  public void generateDocs() throws IOException {
+  public void generateDocs() throws IOException, InterruptedException {
     RestTemplate restTemplate = new RestTemplate();
     String url = "http://localhost:" + port + "/v3/api-docs/";
     String apiSpec = restTemplate.getForObject(url, String.class);
+    assertThat(apiSpec).isNotBlank();
+
     try (FileOutputStream fos = new FileOutputStream("docs/api.json")) {
       fos.write(apiSpec.getBytes());
     }
 
-    Runtime.getRuntime().exec("npx widdershins docs/api.json -o docs/api.md");
+    Process process = Runtime.getRuntime().exec("npx widdershins docs/api.json -o docs/api.md");
+    process.waitFor();
+    int exitStatus = process.exitValue();
+    assertThat(exitStatus).isZero();
   }
 }
