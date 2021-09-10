@@ -43,6 +43,8 @@ public class DocumentationGeneratorIT {
     Process process = Runtime.getRuntime().exec("npx widdershins docs/api.json -o docs/api.md");
     process.waitFor();
     int exitStatus = process.exitValue();
+
+    // If this is failing, have you run `sudo npm install -g widdershins` like it says in README.md?
     assertThat(exitStatus).isZero();
   }
 }
