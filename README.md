@@ -2,6 +2,8 @@
 A service for making requests to Gov Notify
 
 ## Building
+As part of documentation auto-generation, an NPM library is required to be installed, which can be done by running: `sudo npm install -g widdershins`
+
 To run all the tests and build the image
 ```  
    mvn clean install
@@ -25,30 +27,6 @@ NOTIFY_BASEURL=http://localhost:8917
 ```
 
 ## Endpoints
-### SMS Fulfilment
-Endpoint: `/sms-fulfilment`
+The OpenAPI v3 spec can be found here: [api.json](docs/api.json)
 
-Method: `post`
-
-Description: Request an SMS fulfilment for a case. The case ID and pack code in the payload must exist in RM and the pack code must be allowed on the survey the case belongs to, otherwise the response will be `400`. 
-
-The phone number must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`). 
-
-Example body:
-```json
-{
-  "header": {
-    "source": "TEST",
-    "channel": "TEST",
-    "correlationId": "d6fc3b21-368e-43b5-baad-ef68d1a08629",
-    "originatingUser": "dummy@example.com"
-  },
-  "payload": {
-    "smsFulfilment": {
-      "caseId": "2f2dc309-37cf-4749-85ea-ccb76ee69e4d",
-      "packCode": "TEST_SMS",
-      "phoneNumber": "+447123456789"
-    }
-  }
-}
-```
+The API is documented in human-readable format, here: [api.md](docs/api.md)
