@@ -225,30 +225,22 @@ SMS Fulfilment Request
 
 > Example responses
 
-> Response for a case with UAC/QID
+> 200 Response
 
 ```json
 {
-  "uacHash": "4a1cd818b28d3278cdf5116ee8587b0178b9041b39134ca6409cd22247a419f2",
-  "qid": "123456789"
+  "uacHash": "string",
+  "qid": "string"
 }
-```
-
-> Response for a case without UAC/QID
-
-```json
-{}
 ```
 
 <h3 id="smsfulfilment-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Create an SMS fulfilment for a case|Inline|
-|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|SMS Fulfilment request failed validation|None|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Send an SMS fulfilment for a case. Returns uacHash & QID if template has UAC/QID, or empty response if not|[SmsFulfilmentResponseSuccess](#schemasmsfulfilmentresponsesuccess)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|SMS Fulfilment request failed validation|[SmsFulfilmentResponseError](#schemasmsfulfilmentresponseerror)|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error with Gov Notify when attempting to send SMS|None|
-
-<h3 id="smsfulfilment-responseschema">Response Schema</h3>
 
 <aside class="success">
 This operation does not require authentication
@@ -385,19 +377,23 @@ This operation does not require authentication
 |uacHash|string|false|none|none|
 |qid|string|false|none|none|
 
-<h2 id="tocS_SmsFulfilmentEmptyResponseSuccess">SmsFulfilmentEmptyResponseSuccess</h2>
+<h2 id="tocS_SmsFulfilmentResponseError">SmsFulfilmentResponseError</h2>
 <!-- backwards compatibility -->
-<a id="schemasmsfulfilmentemptyresponsesuccess"></a>
-<a id="schema_SmsFulfilmentEmptyResponseSuccess"></a>
-<a id="tocSsmsfulfilmentemptyresponsesuccess"></a>
-<a id="tocssmsfulfilmentemptyresponsesuccess"></a>
+<a id="schemasmsfulfilmentresponseerror"></a>
+<a id="schema_SmsFulfilmentResponseError"></a>
+<a id="tocSsmsfulfilmentresponseerror"></a>
+<a id="tocssmsfulfilmentresponseerror"></a>
 
 ```json
-{}
+{
+  "error": "string"
+}
 
 ```
 
 ### Properties
 
-*None*
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|error|string|false|none|none|
 

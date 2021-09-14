@@ -4,7 +4,6 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -96,34 +95,21 @@ public class SmsFulfilmentEndpoint {
       value = {
         @ApiResponse(
             responseCode = "200",
-            description = "Create an SMS fulfilment for a case",
+            description =
+                "Send an SMS fulfilment for a case. Returns uacHash & QID if template has UAC/QID, or empty response if not",
             content = {
               @Content(
                   mediaType = "application/json",
-                  schema =
-                      @Schema(
-                          oneOf = {
-                            SmsFulfilmentResponseSuccess.class,
-                            SmsFulfilmentEmptyResponseSuccess.class
-                          }),
-                  examples = {
-                    @ExampleObject(
-                        name = "Response for a case with UAC/QID",
-                        value =
-                            "{\"uacHash\": \"4a1cd818b28d3278cdf5116ee8587b0178b9041b39134ca6409cd22247a419f2\", \"qid\": \"123456789\"}",
-                        summary = "Response for a case with UAC/QID",
-                        externalValue = "Response for a case with UAC/QID"),
-                    @ExampleObject(
-                        name = "Response for a case without UAC/QID",
-                        value = "{}",
-                        summary = "Response for a case without UAC/QID",
-                        externalValue = "Response for a case without UAC/QID"),
-                  })
+                  schema = @Schema(implementation = SmsFulfilmentResponseSuccess.class))
             }),
         @ApiResponse(
             responseCode = "400",
             description = "SMS Fulfilment request failed validation",
-            content = @Content),
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = SmsFulfilmentResponseError.class))
+            }),
         @ApiResponse(
             responseCode = "500",
             description = "Error with Gov Notify when attempting to send SMS",
