@@ -2,6 +2,11 @@ package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -85,6 +90,31 @@ public class SmsFulfilmentEndpoint {
     this.notificationClientApi = notificationClientApi;
   }
 
+  @Operation(description = "SMS Fulfilment Request")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description =
+                "Send an SMS fulfilment for a case. Returns uacHash & QID if template has UAC/QID, or empty response if not",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = SmsFulfilmentResponseSuccess.class))
+            }),
+        @ApiResponse(
+            responseCode = "400",
+            description = "SMS Fulfilment request failed validation",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = SmsFulfilmentResponseError.class))
+            }),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error with Gov Notify when attempting to send SMS",
+            content = @Content)
+      })
   @PostMapping
   public ResponseEntity<SmsFulfilmentResponse> smsFulfilment(@RequestBody RequestDTO request)
       throws InterruptedException {
