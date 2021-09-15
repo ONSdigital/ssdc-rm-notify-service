@@ -2,7 +2,7 @@ version: '2.1'
 services:
   postgres:
     container_name: postgres-notify-service-it
-    image: rm-postgres-case-integration-testing:latest
+    image: eu.gcr.io/ssdc-rm-ci/rm/ssdc-rm-dev-common-postgres:latest
     command: ["-c", "shared_buffers=256MB", "-c", "max_connections=500"]
     ports:
       - "15432:5432"
