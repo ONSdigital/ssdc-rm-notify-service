@@ -31,8 +31,8 @@ curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/subscriptions/e
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/topics/event_invalid-case
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/subscriptions/event_invalid-case_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/shared-project/topics/event_invalid-case"}'
 
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/topics/event_survey-launch
-curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/subscriptions/event_survey-launch_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/shared-project/topics/event_survey-launch"}'
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/topics/event_eq-launch
+curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/subscriptions/event_eq-launch_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/shared-project/topics/event_eq-launch"}'
 
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/topics/event_uac-authentication
 curl -X PUT http://$PUBSUB_SETUP_HOST/v1/projects/shared-project/subscriptions/event_uac-authentication_rm-case-processor -H 'Content-Type: application/json' -d '{"topic": "projects/shared-project/topics/event_uac-authentication"}'
