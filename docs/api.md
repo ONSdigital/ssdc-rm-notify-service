@@ -41,7 +41,7 @@ Base URLs:
 # You can also use wget
 curl -X POST http://localhost:8162/sms-fulfilment \
   -H 'Content-Type: application/json' \
-  -H 'Accept: */*'
+  -H 'Accept: application/json'
 
 ```
 
@@ -49,7 +49,7 @@ curl -X POST http://localhost:8162/sms-fulfilment \
 POST http://localhost:8162/sms-fulfilment HTTP/1.1
 Host: localhost:8162
 Content-Type: application/json
-Accept: */*
+Accept: application/json
 
 ```
 
@@ -71,7 +71,7 @@ const inputBody = '{
 }';
 const headers = {
   'Content-Type':'application/json',
-  'Accept':'*/*'
+  'Accept':'application/json'
 };
 
 fetch('http://localhost:8162/sms-fulfilment',
@@ -94,7 +94,7 @@ require 'json'
 
 headers = {
   'Content-Type' => 'application/json',
-  'Accept' => '*/*'
+  'Accept' => 'application/json'
 }
 
 result = RestClient.post 'http://localhost:8162/sms-fulfilment',
@@ -109,7 +109,7 @@ p JSON.parse(result)
 import requests
 headers = {
   'Content-Type': 'application/json',
-  'Accept': '*/*'
+  'Accept': 'application/json'
 }
 
 r = requests.post('http://localhost:8162/sms-fulfilment', headers = headers)
@@ -125,7 +125,7 @@ require 'vendor/autoload.php';
 
 $headers = array(
     'Content-Type' => 'application/json',
-    'Accept' => '*/*',
+    'Accept' => 'application/json',
 );
 
 $client = new \GuzzleHttp\Client();
@@ -179,7 +179,7 @@ func main() {
 
     headers := map[string][]string{
         "Content-Type": []string{"application/json"},
-        "Accept": []string{"*/*"},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
@@ -194,6 +194,8 @@ func main() {
 ```
 
 `POST /sms-fulfilment`
+
+SMS Fulfilment Request
 
 > Body parameter
 
@@ -225,11 +227,20 @@ func main() {
 
 > 200 Response
 
+```json
+{
+  "uacHash": "string",
+  "qid": "string"
+}
+```
+
 <h3 id="smsfulfilment-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|[SmsFulfilmentResponse](#schemasmsfulfilmentresponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Send an SMS fulfilment for a case. Returns uacHash & QID if template has UAC/QID, or empty response if not|[SmsFulfilmentResponseSuccess](#schemasmsfulfilmentresponsesuccess)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|SMS Fulfilment request failed validation|[SmsFulfilmentResponseError](#schemasmsfulfilmentresponseerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error with Gov Notify when attempting to send SMS|None|
 
 <aside class="success">
 This operation does not require authentication
@@ -344,19 +355,45 @@ This operation does not require authentication
 |phoneNumber|string|false|none|The phone number, which must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`).|
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
 
-<h2 id="tocS_SmsFulfilmentResponse">SmsFulfilmentResponse</h2>
+<h2 id="tocS_SmsFulfilmentResponseSuccess">SmsFulfilmentResponseSuccess</h2>
 <!-- backwards compatibility -->
-<a id="schemasmsfulfilmentresponse"></a>
-<a id="schema_SmsFulfilmentResponse"></a>
-<a id="tocSsmsfulfilmentresponse"></a>
-<a id="tocssmsfulfilmentresponse"></a>
+<a id="schemasmsfulfilmentresponsesuccess"></a>
+<a id="schema_SmsFulfilmentResponseSuccess"></a>
+<a id="tocSsmsfulfilmentresponsesuccess"></a>
+<a id="tocssmsfulfilmentresponsesuccess"></a>
 
 ```json
-{}
+{
+  "uacHash": "string",
+  "qid": "string"
+}
 
 ```
 
 ### Properties
 
-*None*
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|uacHash|string|false|none|none|
+|qid|string|false|none|none|
+
+<h2 id="tocS_SmsFulfilmentResponseError">SmsFulfilmentResponseError</h2>
+<!-- backwards compatibility -->
+<a id="schemasmsfulfilmentresponseerror"></a>
+<a id="schema_SmsFulfilmentResponseError"></a>
+<a id="tocSsmsfulfilmentresponseerror"></a>
+<a id="tocssmsfulfilmentresponseerror"></a>
+
+```json
+{
+  "error": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|error|string|false|none|none|
 
