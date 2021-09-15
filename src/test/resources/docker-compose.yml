@@ -2,37 +2,15 @@ version: '2.1'
 services:
   postgres:
     container_name: postgres-notify-service-it
-    image: postgres:13
+    image: rm-postgres-case-integration-testing:latest
     command: ["-c", "shared_buffers=256MB", "-c", "max_connections=500"]
     ports:
       - "15432:5432"
-    environment:
-      - POSTGRES_PASSWORD=postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  case-processor:
-    container_name: case-processor-notify-service-it
-    image: eu.gcr.io/ssdc-rm-ci/rm/ssdc-rm-caseprocessor
-    external_links:
-      - postgres-notify-service-it
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notify-service-it:5432/postgres?sslmode=disable
-      - JAVA_OPTS=-Xmx128m -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5121 -Dspring.profiles.active=dev
-      - CASEREFGENERATORKEY=6+VLkvz5XYkF7vFLVX7FDnfxavQ7M+iY
-      - SPRING_CLOUD_GCP_PUBSUB_EMULATOR_HOST=pubsub-emulator:8538
-      - SPRING_CLOUD_GCP_PUBSUB_PROJECT_ID=project
-    healthcheck:
-      test: ["CMD", "cat", "/tmp/case-service-healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   uac-qid:
     container_name: uac-qid-notify-service-it
