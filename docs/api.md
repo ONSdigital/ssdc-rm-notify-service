@@ -56,16 +56,16 @@ Accept: application/json
 ```javascript
 const inputBody = '{
   "header": {
-    "source": "Survey Enquiry Line API",
     "channel": "RH",
     "correlationId": "48fb4cd3-2ef6-4479-bea1-7c92721b988c",
-    "originatingUser": "fred.bloggs@ons.gov.uk"
+    "originatingUser": "fred.bloggs@ons.gov.uk",
+    "source": "Survey Enquiry Line API"
   },
   "payload": {
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
-      "phoneNumber": "+447123456789",
-      "packCode": "string"
+      "packCode": "string",
+      "phoneNumber": "+447123456789"
     }
   }
 }';
@@ -202,16 +202,16 @@ SMS Fulfilment Request
 ```json
 {
   "header": {
-    "source": "Survey Enquiry Line API",
     "channel": "RH",
     "correlationId": "48fb4cd3-2ef6-4479-bea1-7c92721b988c",
-    "originatingUser": "fred.bloggs@ons.gov.uk"
+    "originatingUser": "fred.bloggs@ons.gov.uk",
+    "source": "Survey Enquiry Line API"
   },
   "payload": {
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
-      "phoneNumber": "+447123456789",
-      "packCode": "string"
+      "packCode": "string",
+      "phoneNumber": "+447123456789"
     }
   }
 }
@@ -229,8 +229,8 @@ SMS Fulfilment Request
 
 ```json
 {
-  "uacHash": "string",
-  "qid": "string"
+  "qid": "string",
+  "uacHash": "string"
 }
 ```
 
@@ -258,16 +258,16 @@ This operation does not require authentication
 ```json
 {
   "header": {
-    "source": "Survey Enquiry Line API",
     "channel": "RH",
     "correlationId": "48fb4cd3-2ef6-4479-bea1-7c92721b988c",
-    "originatingUser": "fred.bloggs@ons.gov.uk"
+    "originatingUser": "fred.bloggs@ons.gov.uk",
+    "source": "Survey Enquiry Line API"
   },
   "payload": {
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
-      "phoneNumber": "+447123456789",
-      "packCode": "string"
+      "packCode": "string",
+      "phoneNumber": "+447123456789"
     }
   }
 }
@@ -290,10 +290,10 @@ This operation does not require authentication
 
 ```json
 {
-  "source": "Survey Enquiry Line API",
   "channel": "RH",
   "correlationId": "48fb4cd3-2ef6-4479-bea1-7c92721b988c",
-  "originatingUser": "fred.bloggs@ons.gov.uk"
+  "originatingUser": "fred.bloggs@ons.gov.uk",
+  "source": "Survey Enquiry Line API"
 }
 
 ```
@@ -302,10 +302,10 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|source|string|false|none|The microservice that is calling the API|
 |channel|string|false|none|The product that is calling the API|
 |correlationId|string(uuid)|false|none|The ID that connects all the way from the public web load balancer to the backend, and back again|
 |originatingUser|string|false|none|The ONS user who is triggering this API request via an internal UI|
+|source|string|false|none|The microservice that is calling the API|
 
 <h2 id="tocS_RequestPayloadDTO">RequestPayloadDTO</h2>
 <!-- backwards compatibility -->
@@ -318,8 +318,8 @@ This operation does not require authentication
 {
   "smsFulfilment": {
     "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
-    "phoneNumber": "+447123456789",
-    "packCode": "string"
+    "packCode": "string",
+    "phoneNumber": "+447123456789"
   }
 }
 
@@ -341,8 +341,8 @@ This operation does not require authentication
 ```json
 {
   "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
-  "phoneNumber": "+447123456789",
-  "packCode": "string"
+  "packCode": "string",
+  "phoneNumber": "+447123456789"
 }
 
 ```
@@ -352,30 +352,8 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |caseId|string(uuid)|false|none|The case, which must exist in RM|
-|phoneNumber|string|false|none|The phone number, which must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`).|
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
-
-<h2 id="tocS_SmsFulfilmentResponseSuccess">SmsFulfilmentResponseSuccess</h2>
-<!-- backwards compatibility -->
-<a id="schemasmsfulfilmentresponsesuccess"></a>
-<a id="schema_SmsFulfilmentResponseSuccess"></a>
-<a id="tocSsmsfulfilmentresponsesuccess"></a>
-<a id="tocssmsfulfilmentresponsesuccess"></a>
-
-```json
-{
-  "uacHash": "string",
-  "qid": "string"
-}
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|uacHash|string|false|none|none|
-|qid|string|false|none|none|
+|phoneNumber|string|false|none|The phone number, which must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`).|
 
 <h2 id="tocS_SmsFulfilmentResponseError">SmsFulfilmentResponseError</h2>
 <!-- backwards compatibility -->
@@ -396,4 +374,26 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |error|string|false|none|none|
+
+<h2 id="tocS_SmsFulfilmentResponseSuccess">SmsFulfilmentResponseSuccess</h2>
+<!-- backwards compatibility -->
+<a id="schemasmsfulfilmentresponsesuccess"></a>
+<a id="schema_SmsFulfilmentResponseSuccess"></a>
+<a id="tocSsmsfulfilmentresponsesuccess"></a>
+<a id="tocssmsfulfilmentresponsesuccess"></a>
+
+```json
+{
+  "qid": "string",
+  "uacHash": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|qid|string|false|none|none|
+|uacHash|string|false|none|none|
 
