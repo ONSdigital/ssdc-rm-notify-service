@@ -18,3 +18,6 @@ uacservice:
 
 queueconfig:
   sms-fulfilment-topic: rm-internal-sms-fulfilment-dummy
+
+springdoc:
+  writer-with-order-by-keys: true
