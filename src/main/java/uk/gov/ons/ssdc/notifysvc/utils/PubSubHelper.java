@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.concurrent.ExecutionException;
-import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
+
+import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
 

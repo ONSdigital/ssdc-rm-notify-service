@@ -1,4 +1,4 @@
-package uk.gov.ons.ssdc.notifysvc.model.dto;
+package uk.gov.ons.ssdc.notifysvc.model.dto.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;

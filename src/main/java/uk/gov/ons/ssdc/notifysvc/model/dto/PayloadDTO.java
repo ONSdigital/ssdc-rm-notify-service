@@ -9,4 +9,6 @@ import lombok.Data;
 public class PayloadDTO {
 
   private EnrichedSmsFulfilment enrichedSmsFulfilment;
+  private SmsRequest smsRequest;
+  private SmsRequestEnriched smsRequestEnriched;
 }
