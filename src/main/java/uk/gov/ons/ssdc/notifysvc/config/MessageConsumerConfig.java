@@ -22,7 +22,7 @@ public class MessageConsumerConfig {
   @Value("${queueconfig.sms-request-subscription}")
   private String smsRequestSubscription;
 
-  @Value("${queueconfig.sms-fulfilment-subscription}")
+  @Value("${queueconfig.sms-request-enriched-subscription}")
   private String smsRequestEnrichedSubscription;
 
   public MessageConsumerConfig(
