@@ -1,8 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto.api;
 
-import lombok.Data;
-
 import java.util.Map;
+import lombok.Data;
 
 @Data
 public class SkippedMessage {

@@ -12,12 +12,10 @@ import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
 import org.springframework.messaging.MessageChannel;
 import uk.gov.ons.ssdc.notifysvc.messaging.ManagedMessageRecoverer;
 
-
 @Configuration
 public class MessageConsumerConfig {
   private final ManagedMessageRecoverer managedMessageRecoverer;
   private final PubSubTemplate pubSubTemplate;
-
 
   @Value("${queueconfig.sms-request-subscription}")
   private String smsRequestSubscription;

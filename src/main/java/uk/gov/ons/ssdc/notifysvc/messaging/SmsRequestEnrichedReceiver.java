@@ -1,4 +1,3 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
-public class SmsRequestEnrichedReceiver {
-}
+public class SmsRequestEnrichedReceiver {}

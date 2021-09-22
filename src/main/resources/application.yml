@@ -40,6 +40,7 @@ uacservice:
 
 queueconfig:
   sms-fulfilment-topic: rm-internal-sms-fulfilment
+  sms-request-enriched-topic: rm-internal-sms-request-enriched
   sms-request-subscription: rm-internal-sms-request_notify_service
   sms-request-enriched-subscription: rm-internal-sms-request-enriched_notify_service
 

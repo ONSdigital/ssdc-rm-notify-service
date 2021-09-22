@@ -2,6 +2,7 @@ package uk.gov.ons.ssdc.notifysvc.testUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.pubsub.v1.Subscriber;
+import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -9,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.HttpClientErrorException;
