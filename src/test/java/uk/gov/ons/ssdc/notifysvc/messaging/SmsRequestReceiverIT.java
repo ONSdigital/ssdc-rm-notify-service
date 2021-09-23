@@ -128,10 +128,13 @@ class SmsRequestReceiverIT {
             pubSubTestHelper.listen(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, EventDTO.class)) {
       pubSubHelper.publishAndConfirm(SMS_REQUEST_TOPIC, smsRequestEvent);
 
+      // Then
+      // Get the two expected pubsub messages
       EventDTO smsRequestEnrichedEvent = smsRequestEnrichedQueueSpy.checkExpectedMessageReceived();
       EventDTO enrichedSmsFulfilmentEvent =
           enrichedSmsFulfilmentQueueSpy.checkExpectedMessageReceived();
 
+      // Check the message headers
       EventHeaderDTO smsRequestEnrichedHeader = smsRequestEnrichedEvent.getHeader();
       assertThat(smsRequestEnrichedHeader.getCorrelationId())
           .isEqualTo(smsRequestEvent.getHeader().getCorrelationId());
@@ -154,6 +157,7 @@ class SmsRequestReceiverIT {
           .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
       assertThat(enrichedSmsFulfilmentHeader.getMessageId()).isNotNull();
 
+      // Check the message bodies
       SmsRequestEnriched smsRequestEnriched =
           smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
       EnrichedSmsFulfilment enrichedSmsFulfilment =
