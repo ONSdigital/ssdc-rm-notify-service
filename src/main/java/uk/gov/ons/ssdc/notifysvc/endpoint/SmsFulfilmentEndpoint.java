@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,8 +108,7 @@ public class SmsFulfilmentEndpoint {
         smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
     Map<String, String> smsTemplateValues =
-        smsRequestService.buildTemplateValues(
-            smsTemplate, caze, newUacQidPair.getUac(), newUacQidPair.getQid());
+        buildPersonalisationTemplateValues(smsTemplate, caze, newUacQidPair);
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the SMS.
     // This is to be certain that the record of the UAC link is not lost. If we were to send the SMS
@@ -129,6 +127,15 @@ public class SmsFulfilmentEndpoint {
         request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
 
     return new ResponseEntity<>(createSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
+  }
+
+  private Map<String, String> buildPersonalisationTemplateValues(
+      SmsTemplate smsTemplate, Case caze, UacQidCreatedPayloadDTO uacQidPair) {
+    if (uacQidPair != null) {
+      return smsRequestService.buildPersonalisationTemplateValues(
+          smsTemplate, caze, uacQidPair.getUac(), uacQidPair.getQid());
+    }
+    return smsRequestService.buildPersonalisationTemplateValues(smsTemplate, caze, null, null);
   }
 
   private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
@@ -164,7 +171,7 @@ public class SmsFulfilmentEndpoint {
     }
   }
 
-  public void sendSms(
+  private void sendSms(
       String phoneNumber, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
     try {
       notificationClientApi.sendSms(

@@ -1,5 +1,6 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -99,6 +100,12 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
+    when(smsRequestService.buildPersonalisationTemplateValues(
+            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
+        .thenReturn(
+            Map.ofEntries(
+                entry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac()),
+                entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -157,6 +164,9 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
+    when(smsRequestService.buildPersonalisationTemplateValues(
+            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
+        .thenReturn(Map.ofEntries(entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -212,6 +222,8 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(null);
+    when(smsRequestService.buildPersonalisationTemplateValues(smsTemplate, testCase, null, null))
+        .thenReturn(Map.of());
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -265,6 +277,12 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
+    when(smsRequestService.buildPersonalisationTemplateValues(
+            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
+        .thenReturn(
+            Map.ofEntries(
+                entry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac()),
+                entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     // Simulate an error when we attempt to send the SMS
     when(notificationClientApi.sendSms(any(), any(), any(), any()))
@@ -347,16 +365,13 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO validRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
-        .thenReturn(Optional.of(smsTemplate));
     when(smsRequestService.isSmsTemplateAllowedOnSurvey(
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     // When validated, then no exception is thrown
-    smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(validRequest);
+    smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(validRequest, testCase, smsTemplate);
   }
 
   @Test
@@ -367,13 +382,13 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO invalidRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.empty());
-
     // When
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
+                    invalidRequest, testCase, smsTemplate));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -387,14 +402,13 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO invalidRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(smsTemplateRepository.findById(smsTemplate.getPackCode())).thenReturn(Optional.empty());
-
     // When
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
+                    invalidRequest, testCase, smsTemplate));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -408,9 +422,6 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO invalidRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
-        .thenReturn(Optional.of(smsTemplate));
     when(smsRequestService.isSmsTemplateAllowedOnSurvey(
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(false);
@@ -419,7 +430,9 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
+                    invalidRequest, testCase, smsTemplate));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -439,7 +452,9 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
+                    invalidRequest, testCase, smsTemplate));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -459,7 +474,9 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
+                    invalidRequest, testCase, smsTemplate));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -479,7 +496,9 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
+                    invalidRequest, testCase, smsTemplate));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);

@@ -107,7 +107,7 @@ public class SmsRequestService {
     pubSubHelper.publishAndConfirm(smsFulfilmentTopic, enrichedSmsFulfilmentEvent);
   }
 
-  public Map<String, String> buildTemplateValues(
+  public Map<String, String> buildPersonalisationTemplateValues(
       SmsTemplate smsTemplate, Case caze, String uac, String qid) {
     String[] template = smsTemplate.getTemplate();
     Map<String, String> templateValues = new HashMap<>();
