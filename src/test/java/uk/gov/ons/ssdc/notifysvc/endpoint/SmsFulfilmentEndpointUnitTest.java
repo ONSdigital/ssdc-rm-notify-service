@@ -358,7 +358,6 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO validRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(
@@ -366,7 +365,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
 
     // When validated, then no exception is thrown
-    smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(validRequest);
+    smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(validRequest, testCase);
   }
 
   @Test
@@ -377,13 +376,12 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO invalidRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.empty());
-
     // When
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest, testCase));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -397,14 +395,14 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO invalidRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode())).thenReturn(Optional.empty());
 
     // When
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest, testCase));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -418,7 +416,6 @@ class SmsFulfilmentEndpointUnitTest {
     RequestDTO invalidRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
 
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(
@@ -429,7 +426,8 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest, testCase));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -449,7 +447,8 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest, testCase));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -469,7 +468,8 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest, testCase));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -489,7 +489,8 @@ class SmsFulfilmentEndpointUnitTest {
     ResponseStatusException thrown =
         assertThrows(
             ResponseStatusException.class,
-            () -> smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest));
+            () ->
+                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(invalidRequest, testCase));
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);

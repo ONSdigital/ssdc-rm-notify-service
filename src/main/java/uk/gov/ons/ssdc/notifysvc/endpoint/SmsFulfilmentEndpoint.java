@@ -120,8 +120,9 @@ public class SmsFulfilmentEndpoint {
       throws InterruptedException {
 
     SmsTemplate smsTemplate;
+    Case caze = findCaseById(request.getPayload().getSmsFulfilment().getCaseId());
     try {
-      smsTemplate = validateRequestAndFetchSmsTemplate(request);
+      smsTemplate = validateRequestAndFetchSmsTemplate(request, caze);
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
           new SmsFulfilmentResponseError(responseStatusException.getReason()),
@@ -131,7 +132,7 @@ public class SmsFulfilmentEndpoint {
     UacQidCreatedPayloadDTO newUacQidPair = fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
     Map<String, String> smsTemplateValues =
-        buildTemplateValuesAndPopulateNewUacQidPair(smsTemplate, newUacQidPair);
+        buildTemplateValuesAndPopulateNewUacQidPair(smsTemplate, newUacQidPair, caze);
 
     EventDTO enrichedSmsFulfilmentEvent = buildEnrichedSmsFulfilmentEvent(request, newUacQidPair);
 
@@ -185,10 +186,10 @@ public class SmsFulfilmentEndpoint {
     return enrichedFulfilmentEvent;
   }
 
-  public SmsTemplate validateRequestAndFetchSmsTemplate(RequestDTO smsFulfilmentRequest) {
+  public SmsTemplate validateRequestAndFetchSmsTemplate(
+      RequestDTO smsFulfilmentRequest, Case caze) {
     validateRequestHeader(smsFulfilmentRequest.getHeader());
     SmsFulfilment smsFulfilment = smsFulfilmentRequest.getPayload().getSmsFulfilment();
-    Case caze = findCaseById(smsFulfilment.getCaseId());
     SmsTemplate smsTemplate = findSmsTemplateByPackCode(smsFulfilment.getPackCode());
     validateTemplateOnSurvey(smsTemplate, caze.getCollectionExercise().getSurvey());
     validatePhoneNumber(smsFulfilment.getPhoneNumber());
@@ -218,7 +219,7 @@ public class SmsFulfilmentEndpoint {
   }
 
   public Map<String, String> buildTemplateValuesAndPopulateNewUacQidPair(
-      SmsTemplate smsTemplate, UacQidCreatedPayloadDTO newUacQidPair) {
+      SmsTemplate smsTemplate, UacQidCreatedPayloadDTO newUacQidPair, Case caze) {
     String[] template = smsTemplate.getTemplate();
     Map<String, String> templateValues = new HashMap<>();
 
@@ -231,8 +232,16 @@ public class SmsFulfilmentEndpoint {
           templateValues.put(SMS_TEMPLATE_QID_KEY, newUacQidPair.getQid());
           break;
         default:
-          throw new NotImplementedException(
-              "SMS template item has not been implemented: " + templateItem);
+          if (templateItem.startsWith("__sensitive__")) {
+            String[] sensitiveTemplateItemSplit = templateItem.split("\\.");
+            templateValues.put(
+                templateItem, caze.getSampleSensitive().get(sensitiveTemplateItemSplit[1]));
+          } else if (caze.getSample().containsKey(templateItem)) {
+            templateValues.put(templateItem, caze.getSample().get(templateItem));
+          } else {
+            throw new NotImplementedException(
+                "SMS template item has not been implemented: " + templateItem);
+          }
       }
     }
     return templateValues;
