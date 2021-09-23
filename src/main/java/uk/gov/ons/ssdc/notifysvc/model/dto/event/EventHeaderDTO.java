@@ -1,4 +1,4 @@
-package uk.gov.ons.ssdc.notifysvc.model.dto;
+package uk.gov.ons.ssdc.notifysvc.model.dto.event;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

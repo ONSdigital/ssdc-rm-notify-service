@@ -5,6 +5,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,12 +41,12 @@ import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
-import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.SmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CollectionExerciseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
@@ -61,10 +63,9 @@ class SmsFulfilmentEndpointIT {
   private static final String SMS_FULFILMENT_TEST_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
 
-  private static final String SMS_TEMPLATE_UAC_KEY = "__uac__";
-  private static final String SMS_TEMPLATE_QID_KEY = "__qid__";
-  private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   private static final String VALID_PHONE_NUMBER = "07123456789";
+  private static final String TEST_PACK_CODE = "TEST_PACK_CODE";
+  private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
 
   @Value("${queueconfig.sms-fulfilment-topic}")
@@ -133,7 +134,7 @@ class SmsFulfilmentEndpointIT {
     testCase = caseRepository.saveAndFlush(testCase);
 
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("TEST");
+    smsTemplate.setPackCode(TEST_PACK_CODE);
     smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
@@ -142,7 +143,7 @@ class SmsFulfilmentEndpointIT {
     fulfilmentSurveySmsTemplate.setSurvey(testCase.getCollectionExercise().getSurvey());
     fulfilmentSurveySmsTemplate.setSmsTemplate(smsTemplate);
     fulfilmentSurveySmsTemplate.setId(UUID.randomUUID());
-    fulfilmentSurveySmsTemplateRepository.save(fulfilmentSurveySmsTemplate);
+    fulfilmentSurveySmsTemplateRepository.saveAndFlush(fulfilmentSurveySmsTemplate);
 
     // Build the event JSON to post in
     RequestDTO smsFulfilmentEvent = new RequestDTO();

@@ -7,7 +7,7 @@ import com.godaddy.logging.LoggerFactory;
 import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import java.util.concurrent.ExecutionException;
 import org.springframework.stereotype.Component;
-import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 
 @Component
 public class PubSubHelper {
@@ -20,7 +20,7 @@ public class PubSubHelper {
     this.pubSubTemplate = pubSubTemplate;
   }
 
-  public void publishAndConfirm(String topic, EventDTO payload) throws InterruptedException {
+  public void publishAndConfirm(String topic, EventDTO payload) {
     try {
       pubSubTemplate.publish(topic, objectMapper.writeValueAsBytes(payload)).completable().get();
     } catch (ExecutionException e) {
@@ -29,6 +29,8 @@ public class PubSubHelper {
     } catch (JsonProcessingException e) {
       logger.error("Error mapping event to JSON", e);
       throw new RuntimeException("Error mapping event to JSON", e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
     }
   }
 }

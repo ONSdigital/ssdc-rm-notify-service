@@ -9,12 +9,13 @@ import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
-import uk.gov.ons.ssdc.notifysvc.model.dto.EventDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.EventHeaderDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.PayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.SmsRequest;
-import uk.gov.ons.ssdc.notifysvc.model.dto.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequest;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
+import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.SmsRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
@@ -26,21 +27,24 @@ public class SmsRequestReceiver {
   @Value("${queueconfig.sms-request-enriched-topic}")
   private String smsRequestEnrichedTopic;
 
+  private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
   private final SmsRequestService smsRequestService;
   private final PubSubHelper pubSubHelper;
 
   public SmsRequestReceiver(
+      CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
       SmsRequestService smsRequestService,
       PubSubHelper pubSubHelper) {
+    this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
     this.smsRequestService = smsRequestService;
     this.pubSubHelper = pubSubHelper;
   }
 
   @ServiceActivator(inputChannel = "smsRequestInputChannel", adviceChain = "retryAdvice")
-  public void receiveMessage(Message<byte[]> message) throws InterruptedException {
+  public void receiveMessage(Message<byte[]> message) {
     EventDTO event = convertJsonBytesToEvent(message.getPayload());
     EventHeaderDTO smsRequestHeader = event.getHeader();
     SmsRequest smsRequest = event.getPayload().getSmsRequest();
@@ -51,16 +55,21 @@ public class SmsRequestReceiver {
             .orElseThrow(
                 () -> new RuntimeException("SMS Template not found: " + smsRequest.getPackCode()));
 
+    caseRepository
+        .findById(smsRequest.getCaseId())
+        .orElseThrow(
+            () -> new RuntimeException("Case not found with ID: " + smsRequest.getCaseId()));
+
     SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
     smsRequestEnriched.setCaseId(smsRequest.getCaseId());
     smsRequestEnriched.setPhoneNumber(smsRequest.getPhoneNumber());
     smsRequestEnriched.setPackCode(smsRequest.getPackCode());
 
-    UacQidCreatedPayloadDTO uacQidCreated =
+    UacQidCreatedPayloadDTO newUacQidPair =
         smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
-    if (uacQidCreated != null) {
-      smsRequestEnriched.setUac(uacQidCreated.getUac());
-      smsRequestEnriched.setQid(uacQidCreated.getQid());
+    if (newUacQidPair != null) {
+      smsRequestEnriched.setUac(newUacQidPair.getUac());
+      smsRequestEnriched.setQid(newUacQidPair.getQid());
     }
 
     EventDTO smsRequestEnrichedEvent = new EventDTO();
@@ -70,7 +79,8 @@ public class SmsRequestReceiver {
     enrichedEventHeader.setCorrelationId(smsRequestHeader.getCorrelationId());
     enrichedEventHeader.setVersion(Constants.EVENT_SCHEMA_VERSION);
     enrichedEventHeader.setChannel(smsRequestHeader.getChannel());
-    enrichedEventHeader.setSource("Notify Service");
+    enrichedEventHeader.setSource(smsRequestHeader.getSource());
+    enrichedEventHeader.setOriginatingUser(smsRequestHeader.getOriginatingUser());
     enrichedEventHeader.setTopic(smsRequestEnrichedTopic);
     enrichedEventHeader.setDateTime(OffsetDateTime.now());
     smsRequestEnrichedEvent.setHeader(enrichedEventHeader);
@@ -78,6 +88,15 @@ public class SmsRequestReceiver {
     PayloadDTO enrichedPayload = new PayloadDTO();
     enrichedPayload.setSmsRequestEnriched(smsRequestEnriched);
     smsRequestEnrichedEvent.setPayload(enrichedPayload);
+
+    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+        smsRequest.getCaseId(),
+        smsRequest.getPackCode(),
+        newUacQidPair,
+        event.getHeader().getSource(),
+        event.getHeader().getChannel(),
+        event.getHeader().getCorrelationId(),
+        event.getHeader().getOriginatingUser());
 
     pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
   }

@@ -4,7 +4,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 5
+        size: 10
 
   datasource:
     url: jdbc:postgresql://localhost:6432/postgres
@@ -28,6 +28,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+
 uacservice:
   connection:
     scheme: http
@@ -41,8 +42,8 @@ uacservice:
 queueconfig:
   sms-fulfilment-topic: rm-internal-sms-fulfilment
   sms-request-enriched-topic: rm-internal-sms-request-enriched
-  sms-request-subscription: rm-internal-sms-request_notify_service
-  sms-request-enriched-subscription: rm-internal-sms-request-enriched_notify_service
+  sms-request-subscription: rm-internal-sms-request_notify-service
+  sms-request-enriched-subscription: rm-internal-sms-request-enriched_notify-service
 
 
 notify:
@@ -60,3 +61,6 @@ management:
     tags:
       application: "Notify Service"
       pod: ${HOSTNAME}
+
+messagelogging:
+  logstacktraces: false

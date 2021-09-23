@@ -1,4 +1,4 @@
-package uk.gov.ons.ssdc.notifysvc.model.dto;
+package uk.gov.ons.ssdc.notifysvc.model.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
