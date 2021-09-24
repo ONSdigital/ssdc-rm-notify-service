@@ -63,7 +63,7 @@ class SmsRequestReceiverTest {
 
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQidCreated);
 
@@ -116,7 +116,7 @@ class SmsRequestReceiverTest {
 
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
-    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(null);
 

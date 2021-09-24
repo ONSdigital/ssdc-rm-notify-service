@@ -45,9 +45,9 @@ public class SmsRequestReceiver {
 
   @ServiceActivator(inputChannel = "smsRequestInputChannel", adviceChain = "retryAdvice")
   public void receiveMessage(Message<byte[]> message) {
-    EventDTO event = convertJsonBytesToEvent(message.getPayload());
-    EventHeaderDTO smsRequestHeader = event.getHeader();
-    SmsRequest smsRequest = event.getPayload().getSmsRequest();
+    EventDTO smsRequestEvent = convertJsonBytesToEvent(message.getPayload());
+    EventHeaderDTO smsRequestHeader = smsRequestEvent.getHeader();
+    SmsRequest smsRequest = smsRequestEvent.getPayload().getSmsRequest();
 
     SmsTemplate smsTemplate =
         smsTemplateRepository
@@ -55,24 +55,42 @@ public class SmsRequestReceiver {
             .orElseThrow(
                 () -> new RuntimeException("SMS Template not found: " + smsRequest.getPackCode()));
 
-    caseRepository
-        .findById(smsRequest.getCaseId())
-        .orElseThrow(
-            () -> new RuntimeException("Case not found with ID: " + smsRequest.getCaseId()));
+    if (!caseRepository.existsById(smsRequest.getCaseId())) {
+      throw new RuntimeException("Case not found with ID: " + smsRequest.getCaseId());
+    }
 
+    UacQidCreatedPayloadDTO newUacQidPair =
+        smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
+    EventDTO smsRequestEnrichedEvent =
+        buildSmsRequestEnrichedEvent(smsRequest, smsRequestHeader, newUacQidPair);
+
+    // Send the event, including the UAC/QID pair if required, to be linked and logged
+    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+        smsRequest.getCaseId(),
+        smsRequest.getPackCode(),
+        newUacQidPair,
+        smsRequestHeader.getSource(),
+        smsRequestHeader.getChannel(),
+        smsRequestHeader.getCorrelationId(),
+        smsRequestHeader.getOriginatingUser());
+
+    // Send the enriched SMS Request, now including the UAC/QID pair if required.
+    // This enriched message can then safely be retried multiple times without potentially
+    // generating and linking more, unnecessary UAC/QID pairs
+    pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
+  }
+
+  private EventDTO buildSmsRequestEnrichedEvent(
+      SmsRequest smsRequest, EventHeaderDTO smsRequestHeader, UacQidCreatedPayloadDTO uacQidPair) {
     SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
     smsRequestEnriched.setCaseId(smsRequest.getCaseId());
     smsRequestEnriched.setPhoneNumber(smsRequest.getPhoneNumber());
     smsRequestEnriched.setPackCode(smsRequest.getPackCode());
 
-    UacQidCreatedPayloadDTO newUacQidPair =
-        smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
-    if (newUacQidPair != null) {
-      smsRequestEnriched.setUac(newUacQidPair.getUac());
-      smsRequestEnriched.setQid(newUacQidPair.getQid());
+    if (uacQidPair != null) {
+      smsRequestEnriched.setUac(uacQidPair.getUac());
+      smsRequestEnriched.setQid(uacQidPair.getQid());
     }
-
-    EventDTO smsRequestEnrichedEvent = new EventDTO();
 
     EventHeaderDTO enrichedEventHeader = new EventHeaderDTO();
     enrichedEventHeader.setMessageId(UUID.randomUUID());
@@ -83,21 +101,13 @@ public class SmsRequestReceiver {
     enrichedEventHeader.setOriginatingUser(smsRequestHeader.getOriginatingUser());
     enrichedEventHeader.setTopic(smsRequestEnrichedTopic);
     enrichedEventHeader.setDateTime(OffsetDateTime.now());
-    smsRequestEnrichedEvent.setHeader(enrichedEventHeader);
 
     PayloadDTO enrichedPayload = new PayloadDTO();
     enrichedPayload.setSmsRequestEnriched(smsRequestEnriched);
+
+    EventDTO smsRequestEnrichedEvent = new EventDTO();
+    smsRequestEnrichedEvent.setHeader(enrichedEventHeader);
     smsRequestEnrichedEvent.setPayload(enrichedPayload);
-
-    smsRequestService.buildAndSendEnrichedSmsFulfilment(
-        smsRequest.getCaseId(),
-        smsRequest.getPackCode(),
-        newUacQidPair,
-        event.getHeader().getSource(),
-        event.getHeader().getChannel(),
-        event.getHeader().getCorrelationId(),
-        event.getHeader().getOriginatingUser());
-
-    pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
+    return smsRequestEnrichedEvent;
   }
 }
