@@ -100,7 +100,7 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
-    when(smsRequestService.buildPersonalisationTemplateValues(
+    when(smsRequestService.buildPersonalisationFromTemplate(
             smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
         .thenReturn(
             Map.ofEntries(
@@ -164,7 +164,7 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
-    when(smsRequestService.buildPersonalisationTemplateValues(
+    when(smsRequestService.buildPersonalisationFromTemplate(
             smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
         .thenReturn(Map.ofEntries(entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
 
@@ -222,7 +222,7 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(null);
-    when(smsRequestService.buildPersonalisationTemplateValues(smsTemplate, testCase, null, null))
+    when(smsRequestService.buildPersonalisationFromTemplate(smsTemplate, testCase, null, null))
         .thenReturn(Map.of());
 
     RequestDTO smsFulfilmentRequest =
@@ -277,7 +277,7 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
-    when(smsRequestService.buildPersonalisationTemplateValues(
+    when(smsRequestService.buildPersonalisationFromTemplate(
             smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
         .thenReturn(
             Map.ofEntries(

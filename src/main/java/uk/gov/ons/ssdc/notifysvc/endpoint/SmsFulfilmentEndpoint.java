@@ -132,10 +132,10 @@ public class SmsFulfilmentEndpoint {
   private Map<String, String> buildPersonalisationTemplateValues(
       SmsTemplate smsTemplate, Case caze, UacQidCreatedPayloadDTO uacQidPair) {
     if (uacQidPair != null) {
-      return smsRequestService.buildPersonalisationTemplateValues(
+      return smsRequestService.buildPersonalisationFromTemplate(
           smsTemplate, caze, uacQidPair.getUac(), uacQidPair.getQid());
     }
-    return smsRequestService.buildPersonalisationTemplateValues(smsTemplate, caze, null, null);
+    return smsRequestService.buildPersonalisationFromTemplate(smsTemplate, caze, null, null);
   }
 
   private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {

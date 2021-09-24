@@ -1,39 +1,60 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
+import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
+import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 
 @ExtendWith(MockitoExtension.class)
 class SmsRequestServiceTest {
 
   @Mock private FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
   @Mock private UacQidServiceClient uacQidServiceClient;
+  @Mock private PubSubHelper pubSubHelper;
 
   @InjectMocks private SmsRequestService smsRequestService;
 
+  @Value("${queueconfig.sms-fulfilment-topic}")
+  private String smsFulfilmentTopic;
+
   private static final int QID_TYPE = 1;
-  private static final String SMS_TEMPLATE_UAC_KEY = "__uac__";
-  private static final String SMS_TEMPLATE_QID_KEY = "__qid__";
+  private static final String SENSITIVE_TEMPLATE_PREFIX = "__sensitive__.";
 
   private final String TEST_PACK_CODE = "TEST_PACK_CODE";
+  private final String TEST_UAC = "TEST_UAC";
+  private final String TEST_QID = "TEST_QID";
+  private final String TEST_SOURCE = "TEST_SOURCE";
+  private final String TEST_CHANNEL = "TEST_CHANNEL";
+  private final String TEST_USER = "test@example.test";
 
   @ParameterizedTest
   @ValueSource(
@@ -118,5 +139,148 @@ class SmsRequestServiceTest {
 
     // When, then
     assertFalse(smsRequestService.isSmsTemplateAllowedOnSurvey(smsTemplate, survey));
+  }
+
+  @Test
+  void testBuildEnrichedSmsFulfilment() {
+    // Given
+    UUID caseId = UUID.randomUUID();
+    UacQidCreatedPayloadDTO uacQidPair = new UacQidCreatedPayloadDTO();
+    uacQidPair.setUac(TEST_UAC);
+    uacQidPair.setQid(TEST_QID);
+    UUID correlationId = UUID.randomUUID();
+
+    ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+
+    // When
+    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+        caseId, TEST_PACK_CODE, uacQidPair, TEST_SOURCE, TEST_CHANNEL, correlationId, TEST_USER);
+
+    // Then
+    // Check we're publishing the expected event
+    verify(pubSubHelper)
+        .publishAndConfirm(eq(smsFulfilmentTopic), eventDTOArgumentCaptor.capture());
+    EventDTO enrichedSmsFulfilmentEvent = eventDTOArgumentCaptor.getValue();
+
+    // Check the event header
+    EventHeaderDTO enrichedSmsFulfilmentHeader = enrichedSmsFulfilmentEvent.getHeader();
+    assertThat(enrichedSmsFulfilmentHeader.getOriginatingUser()).isEqualTo(TEST_USER);
+    assertThat(enrichedSmsFulfilmentHeader.getSource()).isEqualTo(TEST_SOURCE);
+    assertThat(enrichedSmsFulfilmentHeader.getChannel()).isEqualTo(TEST_CHANNEL);
+    assertThat(enrichedSmsFulfilmentHeader.getCorrelationId()).isEqualTo(correlationId);
+    assertThat(enrichedSmsFulfilmentHeader.getMessageId()).isNotNull();
+    assertThat(enrichedSmsFulfilmentHeader.getTopic()).isEqualTo(smsFulfilmentTopic);
+    assertThat(enrichedSmsFulfilmentHeader.getDateTime()).isNotNull();
+
+    // Check the event payload
+    EnrichedSmsFulfilment enrichedSmsFulfilment =
+        enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
+    assertThat(enrichedSmsFulfilment.getCaseId()).isEqualTo(caseId);
+    assertThat(enrichedSmsFulfilment.getPackCode()).isEqualTo(TEST_PACK_CODE);
+    assertThat(enrichedSmsFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
+    assertThat(enrichedSmsFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
+  }
+
+  @Test
+  void testBuildPersonalisationFromTemplate() {
+    // Given
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setTemplate(
+        new String[] {
+          SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY, "foo", SENSITIVE_TEMPLATE_PREFIX + "foo"
+        });
+
+    Case testCase = new Case();
+    testCase.setSample(Map.ofEntries(entry("foo", "bar")));
+    testCase.setSampleSensitive(Map.ofEntries(entry("foo", "secretBar")));
+
+    // When
+    Map<String, String> personalisationValues =
+        smsRequestService.buildPersonalisationFromTemplate(
+            smsTemplate, testCase, TEST_UAC, TEST_QID);
+
+    // Then
+    assertThat(personalisationValues)
+        .containsEntry(SMS_TEMPLATE_UAC_KEY, TEST_UAC)
+        .containsEntry(SMS_TEMPLATE_QID_KEY, TEST_QID)
+        .containsEntry("foo", "bar")
+        .containsEntry(SENSITIVE_TEMPLATE_PREFIX + "foo", "secretBar");
+  }
+
+  @Test
+  void testBuildPersonalisationFromTemplateJustUac() {
+    // Given
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_UAC_KEY});
+
+    Case testCase = new Case();
+
+    // When
+    Map<String, String> personalisationValues =
+        smsRequestService.buildPersonalisationFromTemplate(
+            smsTemplate, testCase, TEST_UAC, TEST_QID);
+
+    // Then
+    assertThat(personalisationValues)
+        .containsEntry(SMS_TEMPLATE_UAC_KEY, TEST_UAC)
+        .containsOnlyKeys(SMS_TEMPLATE_UAC_KEY);
+  }
+
+  @Test
+  void testBuildPersonalisationFromTemplateJustQid() {
+    // Given
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY});
+
+    Case testCase = new Case();
+
+    // When
+    Map<String, String> personalisationValues =
+        smsRequestService.buildPersonalisationFromTemplate(
+            smsTemplate, testCase, TEST_UAC, TEST_QID);
+
+    // Then
+    assertThat(personalisationValues)
+        .containsEntry(SMS_TEMPLATE_QID_KEY, TEST_QID)
+        .containsOnlyKeys(SMS_TEMPLATE_QID_KEY);
+  }
+
+  @Test
+  void testBuildPersonalisationFromTemplateJustSampleFields() {
+    // Given
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setTemplate(new String[] {"foo", "spam"});
+
+    Case testCase = new Case();
+    testCase.setSample(Map.ofEntries(entry("foo", "bar"), entry("spam", "eggs")));
+
+    // When
+    Map<String, String> personalisationValues =
+        smsRequestService.buildPersonalisationFromTemplate(
+            smsTemplate, testCase, TEST_UAC, TEST_QID);
+
+    // Then
+    assertThat(personalisationValues).containsEntry("foo", "bar").containsEntry("spam", "eggs");
+  }
+
+  @Test
+  void testBuildPersonalisationFromTemplateJustSampleSensitiveFields() {
+    // Given
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setTemplate(
+        new String[] {SENSITIVE_TEMPLATE_PREFIX + "foo", SENSITIVE_TEMPLATE_PREFIX + "spam"});
+
+    Case testCase = new Case();
+    testCase.setSampleSensitive(Map.ofEntries(entry("foo", "secretBar"), entry("spam", "secretEggs")));
+
+    // When
+    Map<String, String> personalisationValues =
+        smsRequestService.buildPersonalisationFromTemplate(
+            smsTemplate, testCase, TEST_UAC, TEST_QID);
+
+    // Then
+    assertThat(personalisationValues)
+        .containsEntry(SENSITIVE_TEMPLATE_PREFIX + "foo", "secretBar")
+        .containsEntry(SENSITIVE_TEMPLATE_PREFIX + "spam", "secretEggs");
   }
 }

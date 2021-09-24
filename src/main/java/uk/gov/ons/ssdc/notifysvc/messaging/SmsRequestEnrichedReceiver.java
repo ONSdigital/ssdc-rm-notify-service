@@ -64,7 +64,7 @@ public class SmsRequestEnrichedReceiver {
                         "Case not found with ID: " + smsRequestEnriched.getCaseId()));
 
     Map<String, String> personalisationTemplateValues =
-        smsRequestService.buildPersonalisationTemplateValues(
+        smsRequestService.buildPersonalisationFromTemplate(
             smsTemplate, caze, smsRequestEnriched.getUac(), smsRequestEnriched.getQid());
 
     try {
