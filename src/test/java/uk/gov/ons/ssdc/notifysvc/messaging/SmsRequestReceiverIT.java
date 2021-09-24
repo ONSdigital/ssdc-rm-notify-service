@@ -1,18 +1,25 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import java.util.Map;
 import java.util.UUID;
 import org.jeasy.random.EasyRandom;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -25,6 +32,7 @@ import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
+import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
@@ -62,10 +70,29 @@ class SmsRequestReceiverIT {
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
 
+  @Value("${queueconfig.sms-request-enriched-topic}")
+  private String smsRequestEnrichedTopic;
+
+  @Value("${queueconfig.sms-fulfilment-topic}")
+  private String smsFulfilmentTopic;
+
+  @Value("${queueconfig.sms-request-subscription}")
+  private String smsRequestSubscription;
+
+  public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
+
+  private WireMockServer wireMockServer;
+
   @BeforeEach
   @Transactional
   public void setUp() {
     clearDownData();
+    pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
+    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(smsRequestSubscription, SMS_REQUEST_TOPIC);
+    this.wireMockServer = new WireMockServer(8089);
+    wireMockServer.start();
+    configureFor(wireMockServer.port());
   }
 
   public void clearDownData() {
@@ -76,8 +103,13 @@ class SmsRequestReceiverIT {
     surveyRepository.deleteAllInBatch();
   }
 
+  @AfterEach
+  public void tearDown() {
+    wireMockServer.stop();
+  }
+
   @Test
-  void testReceiveSmsRequest() throws InterruptedException {
+  void testReceiveSmsRequest() throws InterruptedException, JsonProcessingException {
     // Given
     // Set up all the data required
     Survey survey = new Survey();
@@ -103,7 +135,7 @@ class SmsRequestReceiverIT {
     testCase = caseRepository.saveAndFlush(testCase);
 
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("TEST");
+    smsTemplate.setPackCode("TEST_PACK_CODE");
     smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
@@ -121,60 +153,71 @@ class SmsRequestReceiverIT {
     smsRequest.setPhoneNumber("07123456789");
     smsRequestEvent.getPayload().setSmsRequest(smsRequest);
 
+    // Stub the Notify API endpoint with a success code and random response to keep the client
+    // happy, this is to stop the enriched receiver from failing and nacking the resulting enriched
+    // message
+    NotifyApiResponse notifyApiResponse = easyRandom.nextObject(NotifyApiResponse.class);
+    String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiResponse);
+    wireMockServer.stubFor(
+        WireMock.post(urlEqualTo(SMS_NOTIFY_API_ENDPOINT))
+            .willReturn(
+                WireMock.aResponse()
+                    .withStatus(201)
+                    .withBody(notifyApiResponseJson)
+                    .withHeader("Content-Type", "application/json")));
+
     // When
+    pubSubHelper.publishAndConfirm(SMS_REQUEST_TOPIC, smsRequestEvent);
+
+    // Then
+    // Get the two expected pubsub messages
+    EventDTO smsRequestEnrichedEvent;
+    EventDTO enrichedSmsFulfilmentEvent;
     try (QueueSpy<EventDTO> smsRequestEnrichedQueueSpy =
-            pubSubTestHelper.listen(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, EventDTO.class);
-        QueueSpy<EventDTO> enrichedSmsFulfilmentQueueSpy =
-            pubSubTestHelper.listen(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, EventDTO.class)) {
-      pubSubHelper.publishAndConfirm(SMS_REQUEST_TOPIC, smsRequestEvent);
-
-      // Then
-      // Get the two expected pubsub messages
-      EventDTO smsRequestEnrichedEvent = smsRequestEnrichedQueueSpy.checkExpectedMessageReceived();
-      EventDTO enrichedSmsFulfilmentEvent =
-          enrichedSmsFulfilmentQueueSpy.checkExpectedMessageReceived();
-
-      // Check the message headers
-      EventHeaderDTO smsRequestEnrichedHeader = smsRequestEnrichedEvent.getHeader();
-      assertThat(smsRequestEnrichedHeader.getCorrelationId())
-          .isEqualTo(smsRequestEvent.getHeader().getCorrelationId());
-      assertThat(smsRequestEnrichedHeader.getSource())
-          .isEqualTo(smsRequestEvent.getHeader().getSource());
-      assertThat(smsRequestEnrichedHeader.getChannel())
-          .isEqualTo(smsRequestEvent.getHeader().getChannel());
-      assertThat(smsRequestEnrichedHeader.getOriginatingUser())
-          .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
-      assertThat(smsRequestEnrichedHeader.getMessageId()).isNotNull();
-
-      EventHeaderDTO enrichedSmsFulfilmentHeader = enrichedSmsFulfilmentEvent.getHeader();
-      assertThat(enrichedSmsFulfilmentHeader.getCorrelationId())
-          .isEqualTo(smsRequestEvent.getHeader().getCorrelationId());
-      assertThat(enrichedSmsFulfilmentHeader.getSource())
-          .isEqualTo(smsRequestEvent.getHeader().getSource());
-      assertThat(enrichedSmsFulfilmentHeader.getChannel())
-          .isEqualTo(smsRequestEvent.getHeader().getChannel());
-      assertThat(enrichedSmsFulfilmentHeader.getOriginatingUser())
-          .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
-      assertThat(enrichedSmsFulfilmentHeader.getMessageId()).isNotNull();
-
-      // Check the message bodies
-      SmsRequestEnriched smsRequestEnriched =
-          smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
-      EnrichedSmsFulfilment enrichedSmsFulfilment =
-          enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
-      assertThat(smsRequestEnriched.getQid())
-          .isEqualTo(enrichedSmsFulfilment.getQid())
-          .isNotEmpty();
-      assertThat(smsRequestEnriched.getUac())
-          .isEqualTo(enrichedSmsFulfilment.getUac())
-          .isNotEmpty();
-      assertThat(smsRequestEnriched.getCaseId())
-          .isEqualTo(enrichedSmsFulfilment.getCaseId())
-          .isEqualTo(smsRequest.getCaseId());
-      assertThat(smsRequestEnriched.getPackCode())
-          .isEqualTo(enrichedSmsFulfilment.getPackCode())
-          .isEqualTo(smsRequest.getPackCode());
-      assertThat(smsRequestEnriched.getPhoneNumber()).isEqualTo(smsRequest.getPhoneNumber());
+        pubSubTestHelper.listen(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, EventDTO.class)) {
+      smsRequestEnrichedEvent = smsRequestEnrichedQueueSpy.checkExpectedMessageReceived();
     }
+    try (QueueSpy<EventDTO> enrichedSmsFulfilmentQueueSpy =
+        pubSubTestHelper.listen(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, EventDTO.class)) {
+      enrichedSmsFulfilmentEvent = enrichedSmsFulfilmentQueueSpy.checkExpectedMessageReceived();
+    }
+
+    // Check the message headers
+    EventHeaderDTO smsRequestEnrichedHeader = smsRequestEnrichedEvent.getHeader();
+    assertThat(smsRequestEnrichedHeader.getCorrelationId())
+        .isEqualTo(smsRequestEvent.getHeader().getCorrelationId());
+    assertThat(smsRequestEnrichedHeader.getSource())
+        .isEqualTo(smsRequestEvent.getHeader().getSource());
+    assertThat(smsRequestEnrichedHeader.getChannel())
+        .isEqualTo(smsRequestEvent.getHeader().getChannel());
+    assertThat(smsRequestEnrichedHeader.getOriginatingUser())
+        .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
+    assertThat(smsRequestEnrichedHeader.getMessageId()).isNotNull();
+
+    EventHeaderDTO enrichedSmsFulfilmentHeader = enrichedSmsFulfilmentEvent.getHeader();
+    assertThat(enrichedSmsFulfilmentHeader.getCorrelationId())
+        .isEqualTo(smsRequestEvent.getHeader().getCorrelationId());
+    assertThat(enrichedSmsFulfilmentHeader.getSource())
+        .isEqualTo(smsRequestEvent.getHeader().getSource());
+    assertThat(enrichedSmsFulfilmentHeader.getChannel())
+        .isEqualTo(smsRequestEvent.getHeader().getChannel());
+    assertThat(enrichedSmsFulfilmentHeader.getOriginatingUser())
+        .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
+    assertThat(enrichedSmsFulfilmentHeader.getMessageId()).isNotNull();
+
+    // Check the message bodies
+    SmsRequestEnriched smsRequestEnriched =
+        smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
+    EnrichedSmsFulfilment enrichedSmsFulfilment =
+        enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
+    assertThat(smsRequestEnriched.getQid()).isEqualTo(enrichedSmsFulfilment.getQid()).isNotEmpty();
+    assertThat(smsRequestEnriched.getUac()).isEqualTo(enrichedSmsFulfilment.getUac()).isNotEmpty();
+    assertThat(smsRequestEnriched.getCaseId())
+        .isEqualTo(enrichedSmsFulfilment.getCaseId())
+        .isEqualTo(smsRequest.getCaseId());
+    assertThat(smsRequestEnriched.getPackCode())
+        .isEqualTo(enrichedSmsFulfilment.getPackCode())
+        .isEqualTo(smsRequest.getPackCode());
+    assertThat(smsRequestEnriched.getPhoneNumber()).isEqualTo(smsRequest.getPhoneNumber());
   }
 }

@@ -41,8 +41,8 @@ import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 @ActiveProfiles("test")
 public class SmsRequestEnrichedReceiverIT {
 
-  private static final String SMS_FULFILMENT_TEST_SUBSCRIPTION =
-      "rm-internal-sms-fulfilment_notify-service-it";
+  private static final String TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION =
+      "TEST-sms-request-enriched_notify-service";
 
   private static final String TEST_PACK_CODE = "TEST_PACK_CODE";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
@@ -70,7 +70,7 @@ public class SmsRequestEnrichedReceiverIT {
   @Transactional
   public void setUp() {
     clearDownData();
-    pubSubTestHelper.purgeMessages(SMS_FULFILMENT_TEST_SUBSCRIPTION, smsRequestEnrichedTopic);
+    pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -90,7 +90,7 @@ public class SmsRequestEnrichedReceiverIT {
   }
 
   @Test
-  void happyPathSmsRequestEnrichedReceiver() throws JsonProcessingException {
+  void happyPathSmsRequestEnrichedReceiver() throws JsonProcessingException, InterruptedException {
     // Given
     // Set up all the data required
     Survey survey = new Survey();
@@ -149,6 +149,7 @@ public class SmsRequestEnrichedReceiverIT {
 
     pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
 
-    verify(1, postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
+    Thread.sleep(2000); // TODO retry instead?
+    verify(postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
   }
 }

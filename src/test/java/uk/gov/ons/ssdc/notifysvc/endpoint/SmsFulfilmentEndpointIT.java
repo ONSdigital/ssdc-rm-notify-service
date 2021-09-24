@@ -60,16 +60,26 @@ import uk.gov.ons.ssdc.notifysvc.testUtils.QueueSpy;
 @ActiveProfiles("test")
 class SmsFulfilmentEndpointIT {
 
-  private static final String SMS_FULFILMENT_TEST_SUBSCRIPTION =
-      "rm-internal-sms-fulfilment_notify-service-it";
-
   private static final String VALID_PHONE_NUMBER = "07123456789";
   private static final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
 
+  private static final String SMS_REQUEST_TOPIC = "rm-internal-sms-request";
+  private static final String TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION =
+      "TEST-sms-request-enriched_notify-service";
+
+  private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
+      "rm-internal-sms-fulfilment_notify-service-it";
+
+  @Value("${queueconfig.sms-request-enriched-topic}")
+  private String smsRequestEnrichedTopic;
+
   @Value("${queueconfig.sms-fulfilment-topic}")
   private String smsFulfilmentTopic;
+
+  @Value("${queueconfig.sms-request-subscription}")
+  private String smsRequestSubscription;
 
   @Autowired private CaseRepository caseRepository;
   @Autowired private SurveyRepository surveyRepository;
@@ -88,7 +98,9 @@ class SmsFulfilmentEndpointIT {
   @Transactional
   public void setUp() {
     clearDownData();
-    pubSubTestHelper.purgeMessages(SMS_FULFILMENT_TEST_SUBSCRIPTION, smsFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
+    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(smsRequestSubscription, SMS_REQUEST_TOPIC);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -182,37 +194,37 @@ class SmsFulfilmentEndpointIT {
     HttpEntity<String> request =
         new HttpEntity<>(objectMapper.writeValueAsString(smsFulfilmentEvent), headers);
 
+    // When
+    // We post in the SMS fulfilment request
+    ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    JsonNode responseJson = objectMapper.readTree(response.getBody());
+    assertThat(responseJson.get("uacHash").textValue()).isNotEmpty();
+    assertThat(responseJson.get("qid").textValue()).isNotEmpty();
+
     // Listen to the test subscription to receive and inspect the resulting enriched event message
+    EventDTO actualEnrichedEvent;
     try (QueueSpy<EventDTO> smsFulfilmentQueueSpy =
-        pubSubTestHelper.listen(SMS_FULFILMENT_TEST_SUBSCRIPTION, EventDTO.class)) {
-
-      // When
-      // We post in the SMS fulfilment request
-      ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-
-      // Then
-      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-      JsonNode responseJson = objectMapper.readTree(response.getBody());
-      assertThat(responseJson.get("uacHash").textValue()).isNotEmpty();
-      assertThat(responseJson.get("qid").textValue()).isNotEmpty();
-
+        pubSubTestHelper.listen(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, EventDTO.class)) {
       // Check the outbound event is received and correct
-      EventDTO actualEnrichedEvent = smsFulfilmentQueueSpy.checkExpectedMessageReceived();
-
-      assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
-      assertThat(actualEnrichedEvent.getHeader().getCorrelationId())
-          .isEqualTo(smsFulfilmentEvent.getHeader().getCorrelationId());
-
-      assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getCaseId())
-          .isEqualTo(testCase.getId());
-      assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getPackCode())
-          .isEqualTo(smsFulfilment.getPackCode());
-      assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getUac()).isNotEmpty();
-      assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getQid()).isNotEmpty();
+      actualEnrichedEvent = smsFulfilmentQueueSpy.checkExpectedMessageReceived();
     }
 
+    assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
+    assertThat(actualEnrichedEvent.getHeader().getCorrelationId())
+        .isEqualTo(smsFulfilmentEvent.getHeader().getCorrelationId());
+
+    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getCaseId())
+        .isEqualTo(testCase.getId());
+    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getPackCode())
+        .isEqualTo(smsFulfilment.getPackCode());
+    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getUac()).isNotEmpty();
+    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getQid()).isNotEmpty();
+
     // Check the Notify API stub was indeed called
-    verify(1, postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
+    verify(postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
   }
 }
