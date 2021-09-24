@@ -89,7 +89,6 @@ class SmsRequestReceiverIT {
     clearDownData();
     pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
     pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
-    pubSubTestHelper.purgeMessages(smsRequestSubscription, SMS_REQUEST_TOPIC);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());

@@ -149,7 +149,7 @@ public class SmsRequestEnrichedReceiverIT {
 
     pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
 
-    Thread.sleep(2000); // TODO retry instead?
+    Thread.sleep(1000);
     verify(postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
   }
 }
