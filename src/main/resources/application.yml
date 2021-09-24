@@ -29,6 +29,10 @@ spring:
           lob:
             non_contextual_creation: true
 
+exceptionmanager:
+  connection:
+    scheme: http
+
 uacservice:
   connection:
     scheme: http

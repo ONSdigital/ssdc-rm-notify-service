@@ -271,7 +271,8 @@ class SmsRequestServiceTest {
         new String[] {SENSITIVE_TEMPLATE_PREFIX + "foo", SENSITIVE_TEMPLATE_PREFIX + "spam"});
 
     Case testCase = new Case();
-    testCase.setSampleSensitive(Map.ofEntries(entry("foo", "secretBar"), entry("spam", "secretEggs")));
+    testCase.setSampleSensitive(
+        Map.ofEntries(entry("foo", "secretBar"), entry("spam", "secretEggs")));
 
     // When
     Map<String, String> personalisationValues =
