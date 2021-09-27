@@ -2,21 +2,12 @@ package uk.gov.ons.ssdc.notifysvc.utils;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.EVENT_SCHEMA_VERSION;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 
 public class JsonHelper {
   private static final ObjectMapper objectMapper = ObjectMapperFactory.objectMapper();
-
-  public static String convertObjectToJson(Object obj) {
-    try {
-      return objectMapper.writeValueAsString(obj);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed converting Object To Json", e);
-    }
-  }
 
   public static EventDTO convertJsonBytesToEvent(byte[] bytes) {
     EventDTO event;

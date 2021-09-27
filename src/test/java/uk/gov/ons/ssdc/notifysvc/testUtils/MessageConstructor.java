@@ -10,11 +10,10 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
-import uk.gov.ons.ssdc.notifysvc.utils.JsonHelper;
 
 public class MessageConstructor {
   public static Message<byte[]> constructMessageWithValidTimeStamp(Object payload) {
-    byte[] payloadBytes = JsonHelper.convertObjectToJson(payload).getBytes();
+    byte[] payloadBytes = JsonTestHelper.convertObjectToJson(payload).getBytes();
     return constructMessageInternal(payloadBytes);
   }
 
