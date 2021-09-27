@@ -82,7 +82,7 @@ public class PubSubTestHelper {
       }
     }
 
-    Thread.sleep(1000);  // Make sure the subscription is available before continuing
+    Thread.sleep(1000); // Make sure the subscription is available before continuing
   }
 
   @Data
