@@ -65,21 +65,11 @@ class SmsFulfilmentEndpointIT {
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
 
-  private static final String SMS_REQUEST_TOPIC = "rm-internal-sms-request";
-  private static final String TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION =
-      "TEST-sms-request-enriched_notify-service";
-
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
 
-  @Value("${queueconfig.sms-request-enriched-topic}")
-  private String smsRequestEnrichedTopic;
-
   @Value("${queueconfig.sms-fulfilment-topic}")
   private String smsFulfilmentTopic;
-
-  @Value("${queueconfig.sms-request-subscription}")
-  private String smsRequestSubscription;
 
   @Autowired private CaseRepository caseRepository;
   @Autowired private SurveyRepository surveyRepository;
@@ -96,11 +86,8 @@ class SmsFulfilmentEndpointIT {
 
   @BeforeEach
   @Transactional
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     clearDownData();
-    pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
-    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
-    pubSubTestHelper.purgeMessages(smsRequestSubscription, SMS_REQUEST_TOPIC);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());

@@ -52,7 +52,7 @@ public class PubSubTestHelper {
     return new QueueSpy(queue, subscriber);
   }
 
-  public void purgeMessages(String subscription, String topic) throws InterruptedException {
+  public void purgeMessages(String subscription, String topic) {
     RestTemplate restTemplate = new RestTemplate();
 
     String subscriptionUrl =
@@ -81,8 +81,6 @@ public class PubSubTestHelper {
         throw exception;
       }
     }
-
-    Thread.sleep(1000); // Make sure the subscription is available before continuing
   }
 
   @Data

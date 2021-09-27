@@ -68,7 +68,7 @@ public class SmsRequestEnrichedReceiverIT {
 
   @BeforeEach
   @Transactional
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     clearDownData();
     pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
     this.wireMockServer = new WireMockServer(8089);
