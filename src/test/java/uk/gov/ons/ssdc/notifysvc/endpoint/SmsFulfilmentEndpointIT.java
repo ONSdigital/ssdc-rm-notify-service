@@ -88,6 +88,7 @@ class SmsFulfilmentEndpointIT {
   @Transactional
   public void setUp() {
     clearDownData();
+    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
