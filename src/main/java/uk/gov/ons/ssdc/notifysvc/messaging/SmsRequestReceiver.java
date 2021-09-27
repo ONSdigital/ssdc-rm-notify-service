@@ -49,6 +49,10 @@ public class SmsRequestReceiver {
     EventHeaderDTO smsRequestHeader = smsRequestEvent.getHeader();
     SmsRequest smsRequest = smsRequestEvent.getPayload().getSmsRequest();
 
+    if (!smsRequestService.validatePhoneNumber(smsRequest.getPhoneNumber())) {
+      throw new RuntimeException("Invalid phone number on SMS request message");
+    }
+
     SmsTemplate smsTemplate =
         smsTemplateRepository
             .findById(smsRequest.getPackCode())

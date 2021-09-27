@@ -1,8 +1,10 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMessageWithValidTimeStamp;
@@ -46,6 +48,7 @@ class SmsRequestReceiverTest {
   private final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
+  private final String VALID_PHONE_NUMBER = "07123456789";
 
   @Test
   void testReceiveMessageHappyPathWithUacQid() {
@@ -66,12 +69,13 @@ class SmsRequestReceiverTest {
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQidCreated);
+    when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
     SmsRequest smsRequest = new SmsRequest();
     smsRequest.setCaseId(testCase.getId());
     smsRequest.setPackCode(TEST_PACK_CODE);
-    smsRequest.setPhoneNumber("07123456789");
+    smsRequest.setPhoneNumber(VALID_PHONE_NUMBER);
     smsRequestEvent.getPayload().setSmsRequest(smsRequest);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
@@ -119,12 +123,13 @@ class SmsRequestReceiverTest {
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(null);
+    when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
     SmsRequest smsRequest = new SmsRequest();
     smsRequest.setCaseId(testCase.getId());
     smsRequest.setPackCode(TEST_PACK_CODE);
-    smsRequest.setPhoneNumber("07123456789");
+    smsRequest.setPhoneNumber(VALID_PHONE_NUMBER);
     smsRequestEvent.getPayload().setSmsRequest(smsRequest);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
@@ -155,5 +160,109 @@ class SmsRequestReceiverTest {
             smsRequestEvent.getHeader().getChannel(),
             smsRequestEvent.getHeader().getCorrelationId(),
             smsRequestEvent.getHeader().getOriginatingUser());
+  }
+
+  @Test
+  void testReceiveMessageExceptionOnInvalidPhoneNumber() {
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("TEST_PACK_CODE");
+    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+
+    String invalidPhoneNumber = "blah";
+
+    when(smsRequestService.validatePhoneNumber(invalidPhoneNumber)).thenReturn(false);
+
+    EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
+    SmsRequest smsRequest = new SmsRequest();
+    smsRequest.setCaseId(testCase.getId());
+    smsRequest.setPackCode(TEST_PACK_CODE);
+    smsRequest.setPhoneNumber(invalidPhoneNumber);
+    smsRequestEvent.getPayload().setSmsRequest(smsRequest);
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
+
+    // When, then throws
+    Exception thrown =
+        assertThrows(RuntimeException.class, () -> smsRequestReceiver.receiveMessage(eventMessage));
+
+    assertThat(thrown.getMessage()).containsIgnoringCase("invalid phone number");
+    verifyNoInteractions(caseRepository);
+    verifyNoInteractions(smsTemplateRepository);
+    verifyNoInteractions(pubSubHelper);
+  }
+
+  @Test
+  void testReceiveMessageExceptionOnCaseNotFound() {
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("TEST_PACK_CODE");
+    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
+    when(caseRepository.existsById(testCase.getId())).thenReturn(false);
+
+    EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
+    SmsRequest smsRequest = new SmsRequest();
+    smsRequest.setCaseId(testCase.getId());
+    smsRequest.setPackCode(TEST_PACK_CODE);
+    smsRequest.setPhoneNumber(VALID_PHONE_NUMBER);
+    smsRequestEvent.getPayload().setSmsRequest(smsRequest);
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
+
+    // When, then throws
+    Exception thrown =
+        assertThrows(RuntimeException.class, () -> smsRequestReceiver.receiveMessage(eventMessage));
+
+    assertThat(thrown.getMessage()).containsIgnoringCase("case not found");
+    verifyNoInteractions(pubSubHelper);
+  }
+
+  @Test
+  void testReceiveMessageExceptionOnMissingSMSTemplate() {
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("TEST_PACK_CODE");
+    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode())).thenReturn(Optional.empty());
+
+    EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
+    SmsRequest smsRequest = new SmsRequest();
+    smsRequest.setCaseId(testCase.getId());
+    smsRequest.setPackCode(TEST_PACK_CODE);
+    smsRequest.setPhoneNumber(VALID_PHONE_NUMBER);
+    smsRequestEvent.getPayload().setSmsRequest(smsRequest);
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
+
+    // When, then throws
+    Exception thrown =
+        assertThrows(RuntimeException.class, () -> smsRequestReceiver.receiveMessage(eventMessage));
+
+    assertThat(thrown.getMessage()).containsIgnoringCase("SMS template not found");
+    verifyNoInteractions(caseRepository);
+    verifyNoInteractions(pubSubHelper);
   }
 }

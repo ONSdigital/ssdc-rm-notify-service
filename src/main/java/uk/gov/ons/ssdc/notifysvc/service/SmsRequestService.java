@@ -62,8 +62,6 @@ public class SmsRequestService {
   }
 
   public boolean validatePhoneNumber(String phoneNumber) {
-    // Throws a response status exception if the phone number does not pass validation
-
     // Remove valid leading country code or 0
     String sanitisedPhoneNumber = phoneNumber.replaceFirst("^(0{1,2}44|\\+44|0)", "");
 
