@@ -85,7 +85,7 @@ class SmsRequestReceiverIT {
 
   @BeforeEach
   @Transactional
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     clearDownData();
     pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
     pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
