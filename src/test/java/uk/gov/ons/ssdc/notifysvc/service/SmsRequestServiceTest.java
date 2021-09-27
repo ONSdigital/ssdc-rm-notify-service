@@ -10,8 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
 import java.util.Map;
@@ -267,7 +267,9 @@ class SmsRequestServiceTest {
     // Given
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
-        new String[] {SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", SMS_TEMPLATE_SENSITIVE_PREFIX + "spam"});
+        new String[] {
+          SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", SMS_TEMPLATE_SENSITIVE_PREFIX + "spam"
+        });
 
     Case testCase = new Case();
     testCase.setSampleSensitive(

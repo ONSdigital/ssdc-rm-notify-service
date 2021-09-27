@@ -1,8 +1,8 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
 import java.time.Clock;
