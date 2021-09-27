@@ -1,5 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
@@ -31,9 +33,6 @@ public class SmsRequestService {
 
   @Value("${queueconfig.sms-fulfilment-topic}")
   private String smsFulfilmentTopic;
-
-  private static final int QID_TYPE = 1; // TODO replace hardcoded QID type
-  private static final String SENSITIVE_TEMPLATE_PREFIX = "__sensitive__.";
 
   private final UacQidServiceClient uacQidServiceClient;
   private final FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
@@ -118,11 +117,11 @@ public class SmsRequestService {
       } else if (templateItem.equals(SMS_TEMPLATE_QID_KEY)) {
         templateValues.put(SMS_TEMPLATE_QID_KEY, qid);
 
-      } else if (templateItem.startsWith(SENSITIVE_TEMPLATE_PREFIX)) {
+      } else if (templateItem.startsWith(SMS_TEMPLATE_SENSITIVE_PREFIX)) {
         templateValues.put(
             templateItem,
             caze.getSampleSensitive()
-                .get(templateItem.substring(SENSITIVE_TEMPLATE_PREFIX.length())));
+                .get(templateItem.substring(SMS_TEMPLATE_SENSITIVE_PREFIX.length())));
 
       } else {
         templateValues.put(templateItem, caze.getSample().get(templateItem));

@@ -9,6 +9,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
@@ -45,9 +47,6 @@ class SmsRequestServiceTest {
 
   @Value("${queueconfig.sms-fulfilment-topic}")
   private String smsFulfilmentTopic;
-
-  private static final int QID_TYPE = 1;
-  private static final String SENSITIVE_TEMPLATE_PREFIX = "__sensitive__.";
 
   private final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private final String TEST_UAC = "TEST_UAC";
@@ -187,7 +186,7 @@ class SmsRequestServiceTest {
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
         new String[] {
-          SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY, "foo", SENSITIVE_TEMPLATE_PREFIX + "foo"
+          SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY, "foo", SMS_TEMPLATE_SENSITIVE_PREFIX + "foo"
         });
 
     Case testCase = new Case();
@@ -204,7 +203,7 @@ class SmsRequestServiceTest {
         .containsEntry(SMS_TEMPLATE_UAC_KEY, TEST_UAC)
         .containsEntry(SMS_TEMPLATE_QID_KEY, TEST_QID)
         .containsEntry("foo", "bar")
-        .containsEntry(SENSITIVE_TEMPLATE_PREFIX + "foo", "secretBar");
+        .containsEntry(SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar");
   }
 
   @Test
@@ -268,7 +267,7 @@ class SmsRequestServiceTest {
     // Given
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
-        new String[] {SENSITIVE_TEMPLATE_PREFIX + "foo", SENSITIVE_TEMPLATE_PREFIX + "spam"});
+        new String[] {SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", SMS_TEMPLATE_SENSITIVE_PREFIX + "spam"});
 
     Case testCase = new Case();
     testCase.setSampleSensitive(
@@ -281,7 +280,7 @@ class SmsRequestServiceTest {
 
     // Then
     assertThat(personalisationValues)
-        .containsEntry(SENSITIVE_TEMPLATE_PREFIX + "foo", "secretBar")
-        .containsEntry(SENSITIVE_TEMPLATE_PREFIX + "spam", "secretEggs");
+        .containsEntry(SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar")
+        .containsEntry(SMS_TEMPLATE_SENSITIVE_PREFIX + "spam", "secretEggs");
   }
 }
