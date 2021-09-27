@@ -15,6 +15,7 @@ services:
   uac-qid:
     container_name: uac-qid-notify-service-it
     image: eu.gcr.io/ssdc-rm-ci/rm/ssdc-rm-uac-qid-service:latest
+    restart: always
     ports:
       - "18164:8164"
     external_links:
