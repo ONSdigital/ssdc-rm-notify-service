@@ -71,6 +71,7 @@ public class SmsRequestService {
   public void buildAndSendEnrichedSmsFulfilment(
       UUID caseId,
       String packCode,
+      Map metadata,
       UacQidCreatedPayloadDTO newUacQidPair,
       String source,
       String channel,
@@ -98,6 +99,10 @@ public class SmsRequestService {
     eventHeader.setMessageId(UUID.randomUUID());
     enrichedSmsFulfilmentEvent.setHeader(eventHeader);
 
+    Map<String, String> testUacMetadata = new HashMap<>();
+    testUacMetadata.put("Wave of Contact", "1");
+
+    enrichedSmsFulfilment.setUacMetadata(testUacMetadata);
     enrichedSmsFulfilmentEvent.setPayload(new PayloadDTO());
     enrichedSmsFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
 

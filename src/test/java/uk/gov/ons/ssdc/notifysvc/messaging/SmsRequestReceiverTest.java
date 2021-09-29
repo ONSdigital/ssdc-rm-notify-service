@@ -101,6 +101,7 @@ class SmsRequestReceiverTest {
         .buildAndSendEnrichedSmsFulfilment(
             testCase.getId(),
             smsTemplate.getPackCode(),
+            smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
             newUacQidCreated,
             smsRequestEvent.getHeader().getSource(),
             smsRequestEvent.getHeader().getChannel(),
@@ -155,6 +156,7 @@ class SmsRequestReceiverTest {
         .buildAndSendEnrichedSmsFulfilment(
             testCase.getId(),
             smsTemplate.getPackCode(),
+            smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
             null,
             smsRequestEvent.getHeader().getSource(),
             smsRequestEvent.getHeader().getChannel(),

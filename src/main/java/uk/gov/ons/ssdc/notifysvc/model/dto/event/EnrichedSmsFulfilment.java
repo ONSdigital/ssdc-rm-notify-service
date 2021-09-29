@@ -1,5 +1,6 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto.event;
 
+import java.util.Map;
 import java.util.UUID;
 import lombok.Data;
 
@@ -9,5 +10,5 @@ public class EnrichedSmsFulfilment {
   private String packCode;
   private String uac;
   private String qid;
-  private String metadata;
+  private Map<String, String> uacMetadata;
 }

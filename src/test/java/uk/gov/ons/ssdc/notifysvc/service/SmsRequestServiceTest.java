@@ -14,6 +14,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -151,9 +152,19 @@ class SmsRequestServiceTest {
 
     ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
 
+    Map<String, String> testUacMetadata = new HashMap<>();
+    testUacMetadata.put("Wave of Contact", "1");
+
     // When
     smsRequestService.buildAndSendEnrichedSmsFulfilment(
-        caseId, TEST_PACK_CODE, uacQidPair, TEST_SOURCE, TEST_CHANNEL, correlationId, TEST_USER);
+        caseId,
+        TEST_PACK_CODE,
+        testUacMetadata,
+        uacQidPair,
+        TEST_SOURCE,
+        TEST_CHANNEL,
+        correlationId,
+        TEST_USER);
 
     // Then
     // Check we're publishing the expected event

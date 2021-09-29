@@ -72,6 +72,7 @@ public class SmsRequestReceiver {
     smsRequestService.buildAndSendEnrichedSmsFulfilment(
         smsRequest.getCaseId(),
         smsRequest.getPackCode(),
+        smsRequest.getUacMetadata(),
         newUacQidPair,
         smsRequestHeader.getSource(),
         smsRequestHeader.getChannel(),
