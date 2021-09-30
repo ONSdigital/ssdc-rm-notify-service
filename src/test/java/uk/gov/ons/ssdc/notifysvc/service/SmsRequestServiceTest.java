@@ -55,6 +55,8 @@ class SmsRequestServiceTest {
   private final String TEST_SOURCE = "TEST_SOURCE";
   private final String TEST_CHANNEL = "TEST_CHANNEL";
   private final String TEST_USER = "test@example.test";
+  private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
+
 
   @ParameterizedTest
   @ValueSource(
@@ -152,14 +154,11 @@ class SmsRequestServiceTest {
 
     ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
 
-    Map<String, String> testUacMetadata = new HashMap<>();
-    testUacMetadata.put("Wave of Contact", "1");
-
     // When
     smsRequestService.buildAndSendEnrichedSmsFulfilment(
         caseId,
         TEST_PACK_CODE,
-        testUacMetadata,
+        TEST_UAC_METADATA,
         uacQidPair,
         TEST_SOURCE,
         TEST_CHANNEL,
@@ -189,6 +188,7 @@ class SmsRequestServiceTest {
     assertThat(enrichedSmsFulfilment.getPackCode()).isEqualTo(TEST_PACK_CODE);
     assertThat(enrichedSmsFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
     assertThat(enrichedSmsFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
+    assertThat(enrichedSmsFulfilment.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
   }
 
   @Test
