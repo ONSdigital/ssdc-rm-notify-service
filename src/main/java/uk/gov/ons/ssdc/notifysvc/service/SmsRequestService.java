@@ -80,6 +80,7 @@ public class SmsRequestService {
     EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
     enrichedSmsFulfilment.setCaseId(caseId);
     enrichedSmsFulfilment.setPackCode(packCode);
+    enrichedSmsFulfilment.setUacMetadata(uacMetadata);
 
     if (newUacQidPair != null) {
       enrichedSmsFulfilment.setUac(newUacQidPair.getUac());
@@ -98,7 +99,6 @@ public class SmsRequestService {
     eventHeader.setVersion(Constants.EVENT_SCHEMA_VERSION);
     eventHeader.setMessageId(UUID.randomUUID());
     enrichedSmsFulfilmentEvent.setHeader(eventHeader);
-    enrichedSmsFulfilment.setUacMetadata(uacMetadata);
     enrichedSmsFulfilmentEvent.setPayload(new PayloadDTO());
     enrichedSmsFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
 

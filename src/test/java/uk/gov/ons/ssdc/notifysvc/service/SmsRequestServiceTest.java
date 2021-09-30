@@ -14,7 +14,6 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -56,7 +55,6 @@ class SmsRequestServiceTest {
   private final String TEST_CHANNEL = "TEST_CHANNEL";
   private final String TEST_USER = "test@example.test";
   private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
-
 
   @ParameterizedTest
   @ValueSource(

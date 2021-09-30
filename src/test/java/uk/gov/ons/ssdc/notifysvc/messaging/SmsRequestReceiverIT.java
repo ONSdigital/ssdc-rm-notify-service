@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.jeasy.random.EasyRandom;
@@ -150,6 +151,11 @@ class SmsRequestReceiverIT {
     smsRequest.setCaseId(testCase.getId());
     smsRequest.setPackCode(smsTemplate.getPackCode());
     smsRequest.setPhoneNumber("07123456789");
+
+    Map<String, String> uacMetadata = new HashMap<>();
+    uacMetadata.put("waveOfContact", "1");
+    smsRequest.setUacMetadata(uacMetadata);
+
     smsRequestEvent.getPayload().setSmsRequest(smsRequest);
 
     // Stub the Notify API endpoint with a success code and random response to keep the client
@@ -211,6 +217,7 @@ class SmsRequestReceiverIT {
         enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
     assertThat(smsRequestEnriched.getQid()).isEqualTo(enrichedSmsFulfilment.getQid()).isNotEmpty();
     assertThat(smsRequestEnriched.getUac()).isEqualTo(enrichedSmsFulfilment.getUac()).isNotEmpty();
+    assertThat(enrichedSmsFulfilment.getUacMetadata()).isNotEmpty();
     assertThat(smsRequestEnriched.getCaseId())
         .isEqualTo(enrichedSmsFulfilment.getCaseId())
         .isEqualTo(smsRequest.getCaseId());

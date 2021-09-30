@@ -11,6 +11,7 @@ import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMe
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,7 @@ class SmsRequestReceiverTest {
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
   private final String VALID_PHONE_NUMBER = "07123456789";
+  private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
 
   @Test
   void testReceiveMessageHappyPathWithUacQid() {
@@ -76,6 +78,7 @@ class SmsRequestReceiverTest {
     smsRequest.setCaseId(testCase.getId());
     smsRequest.setPackCode(TEST_PACK_CODE);
     smsRequest.setPhoneNumber(VALID_PHONE_NUMBER);
+    smsRequest.setUacMetadata(TEST_UAC_METADATA);
     smsRequestEvent.getPayload().setSmsRequest(smsRequest);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
@@ -131,6 +134,7 @@ class SmsRequestReceiverTest {
     smsRequest.setCaseId(testCase.getId());
     smsRequest.setPackCode(TEST_PACK_CODE);
     smsRequest.setPhoneNumber(VALID_PHONE_NUMBER);
+    smsRequest.setUacMetadata(TEST_UAC_METADATA);
     smsRequestEvent.getPayload().setSmsRequest(smsRequest);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEvent);
