@@ -217,7 +217,7 @@ class SmsRequestReceiverIT {
         enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
     assertThat(smsRequestEnriched.getQid()).isEqualTo(enrichedSmsFulfilment.getQid()).isNotEmpty();
     assertThat(smsRequestEnriched.getUac()).isEqualTo(enrichedSmsFulfilment.getUac()).isNotEmpty();
-    assertThat(enrichedSmsFulfilment.getUacMetadata()).isNotEmpty();
+    assertThat(enrichedSmsFulfilment.getUacMetadata()).isNotNull();
     assertThat(smsRequestEnriched.getCaseId())
         .isEqualTo(enrichedSmsFulfilment.getCaseId())
         .isEqualTo(smsRequest.getCaseId());

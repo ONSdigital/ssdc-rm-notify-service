@@ -71,7 +71,7 @@ public class SmsRequestService {
   public void buildAndSendEnrichedSmsFulfilment(
       UUID caseId,
       String packCode,
-      Map<String, String> uacMetadata,
+      Object uacMetadata,
       UacQidCreatedPayloadDTO newUacQidPair,
       String source,
       String channel,

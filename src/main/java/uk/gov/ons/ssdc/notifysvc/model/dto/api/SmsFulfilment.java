@@ -1,7 +1,6 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Map;
 import java.util.UUID;
 import lombok.Data;
 
@@ -22,5 +21,5 @@ public class SmsFulfilment {
   private String packCode;
 
   @Schema(description = "Metadata for UACQIDLinks")
-  private Map<String, String> uacMetadata;
+  private Object uacMetadata;
 }
