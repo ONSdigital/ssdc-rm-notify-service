@@ -66,10 +66,7 @@ const inputBody = '{
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
       "packCode": "string",
       "phoneNumber": "+447123456789",
-      "uacMetadata": {
-        "property1": "string",
-        "property2": "string"
-      }
+      "uacMetadata": {}
     }
   }
 }';
@@ -216,10 +213,7 @@ SMS Fulfilment Request
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
       "packCode": "string",
       "phoneNumber": "+447123456789",
-      "uacMetadata": {
-        "property1": "string",
-        "property2": "string"
-      }
+      "uacMetadata": {}
     }
   }
 }
@@ -276,10 +270,7 @@ This operation does not require authentication
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
       "packCode": "string",
       "phoneNumber": "+447123456789",
-      "uacMetadata": {
-        "property1": "string",
-        "property2": "string"
-      }
+      "uacMetadata": {}
     }
   }
 }
@@ -332,10 +323,7 @@ This operation does not require authentication
     "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
     "packCode": "string",
     "phoneNumber": "+447123456789",
-    "uacMetadata": {
-      "property1": "string",
-      "property2": "string"
-    }
+    "uacMetadata": {}
   }
 }
 
@@ -359,10 +347,7 @@ This operation does not require authentication
   "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
   "packCode": "string",
   "phoneNumber": "+447123456789",
-  "uacMetadata": {
-    "property1": "string",
-    "property2": "string"
-  }
+  "uacMetadata": {}
 }
 
 ```
@@ -375,7 +360,6 @@ This operation does not require authentication
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
 |phoneNumber|string|false|none|The phone number, which must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`).|
 |uacMetadata|object|false|none|Metadata for UACQIDLinks|
-|» **additionalProperties**|string|false|none|Metadata for UACQIDLinks|
 
 <h2 id="tocS_SmsFulfilmentResponseError">SmsFulfilmentResponseError</h2>
 <!-- backwards compatibility -->
