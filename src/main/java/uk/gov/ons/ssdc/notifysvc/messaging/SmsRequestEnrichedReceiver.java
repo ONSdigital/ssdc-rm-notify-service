@@ -74,8 +74,6 @@ public class SmsRequestEnrichedReceiver {
           personalisationTemplateValues,
           senderId);
     } catch (NotificationClientException e) {
-      logger.error(
-          "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
     }
