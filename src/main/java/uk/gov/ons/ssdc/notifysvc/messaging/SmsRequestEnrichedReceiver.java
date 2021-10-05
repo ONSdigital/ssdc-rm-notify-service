@@ -2,8 +2,6 @@ package uk.gov.ons.ssdc.notifysvc.messaging;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -29,8 +27,6 @@ public class SmsRequestEnrichedReceiver {
   private final CaseRepository caseRepository;
   private final SmsRequestService smsRequestService;
   private final NotificationClientApi notificationClientApi;
-
-  private static final Logger logger = LoggerFactory.getLogger(SmsRequestEnrichedReceiver.class);
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
@@ -74,8 +70,6 @@ public class SmsRequestEnrichedReceiver {
           personalisationTemplateValues,
           senderId);
     } catch (NotificationClientException e) {
-      logger.error(
-          "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
     }
