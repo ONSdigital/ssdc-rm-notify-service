@@ -9,4 +9,5 @@ public class EnrichedSmsFulfilment {
   private String packCode;
   private String uac;
   private String qid;
+  private Object uacMetadata;
 }

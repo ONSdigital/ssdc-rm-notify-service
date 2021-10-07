@@ -117,6 +117,7 @@ public class SmsFulfilmentEndpoint {
     smsRequestService.buildAndSendEnrichedSmsFulfilment(
         request.getPayload().getSmsFulfilment().getCaseId(),
         request.getPayload().getSmsFulfilment().getPackCode(),
+        request.getPayload().getSmsFulfilment().getUacMetadata(),
         newUacQidPair,
         request.getHeader().getSource(),
         request.getHeader().getChannel(),
