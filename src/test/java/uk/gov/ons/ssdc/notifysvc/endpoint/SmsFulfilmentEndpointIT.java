@@ -64,6 +64,7 @@ class SmsFulfilmentEndpointIT {
   private static final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
+  private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
 
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
@@ -158,6 +159,7 @@ class SmsFulfilmentEndpointIT {
     smsFulfilment.setCaseId(testCase.getId());
     smsFulfilment.setPackCode(smsTemplate.getPackCode());
     smsFulfilment.setPhoneNumber(VALID_PHONE_NUMBER);
+    smsFulfilment.setUacMetadata(TEST_UAC_METADATA);
 
     smsFulfilmentEvent.setHeader(header);
     payload.setSmsFulfilment(smsFulfilment);
@@ -209,6 +211,8 @@ class SmsFulfilmentEndpointIT {
         .isEqualTo(testCase.getId());
     assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getPackCode())
         .isEqualTo(smsFulfilment.getPackCode());
+    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getUacMetadata())
+        .isEqualTo(smsFulfilment.getUacMetadata());
     assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getUac()).isNotEmpty();
     assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getQid()).isNotEmpty();
 
