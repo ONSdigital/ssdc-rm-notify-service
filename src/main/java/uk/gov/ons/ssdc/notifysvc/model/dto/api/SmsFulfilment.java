@@ -19,4 +19,7 @@ public class SmsFulfilment {
       description =
           "The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to")
   private String packCode;
+
+  @Schema(description = "Metadata for UACQIDLinks")
+  private Object uacMetadata;
 }

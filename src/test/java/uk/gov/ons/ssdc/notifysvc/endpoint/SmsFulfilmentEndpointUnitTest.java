@@ -127,6 +127,7 @@ class SmsFulfilmentEndpointUnitTest {
         .buildAndSendEnrichedSmsFulfilment(
             testCase.getId(),
             smsTemplate.getPackCode(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
             newUacQid,
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
@@ -188,6 +189,7 @@ class SmsFulfilmentEndpointUnitTest {
         .buildAndSendEnrichedSmsFulfilment(
             testCase.getId(),
             smsTemplate.getPackCode(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
             newUacQid,
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
@@ -243,6 +245,7 @@ class SmsFulfilmentEndpointUnitTest {
         .buildAndSendEnrichedSmsFulfilment(
             testCase.getId(),
             smsTemplate.getPackCode(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
             null,
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
@@ -306,6 +309,7 @@ class SmsFulfilmentEndpointUnitTest {
         .buildAndSendEnrichedSmsFulfilment(
             testCase.getId(),
             smsTemplate.getPackCode(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
             newUacQid,
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
