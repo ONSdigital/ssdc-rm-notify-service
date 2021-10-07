@@ -23,6 +23,9 @@ public class SmsRequestEnrichedReceiver {
   @Value("${notify.senderId}")
   private String senderId;
 
+  @Value("${sms-request-enriched-delay")
+  private int smsRequestEnrichedDelay;
+
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
   private final SmsRequestService smsRequestService;
@@ -41,6 +44,12 @@ public class SmsRequestEnrichedReceiver {
 
   @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
   public void receiveMessage(Message<byte[]> message) {
+    try {
+      Thread.sleep(smsRequestEnrichedDelay);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted during throttling delay", e);
+    }
+
     EventDTO event = convertJsonBytesToEvent(message.getPayload());
     SmsRequestEnriched smsRequestEnriched = event.getPayload().getSmsRequestEnriched();
     SmsTemplate smsTemplate =
