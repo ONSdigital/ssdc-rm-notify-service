@@ -34,7 +34,7 @@ spring:
       pubsub:
         subscriber:
           flow-control:
-            max-outstanding-element-count: 500
+            max-outstanding-element-count: 100
 
 exceptionmanager:
   connection:
