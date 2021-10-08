@@ -39,10 +39,6 @@ uacservice:
     host: localhost
     port: 8164
 
-  uacqid-cache-min: 500
-  uacqid-fetch-count: 1000
-  uacqid-get-timeout: 60   #seconds
-
 queueconfig:
   sms-fulfilment-topic: rm-internal-sms-fulfilment
   sms-request-enriched-topic: rm-internal-sms-request-enriched
@@ -71,3 +67,5 @@ management:
 
 messagelogging:
   logstacktraces: false
+
+sms-request-enriched-delay: 0  # milliseconds
