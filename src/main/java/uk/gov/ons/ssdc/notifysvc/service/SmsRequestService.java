@@ -96,7 +96,7 @@ public class SmsRequestService {
     eventHeader.setCorrelationId(correlationId);
     eventHeader.setOriginatingUser(originatingUser);
     eventHeader.setDateTime(OffsetDateTime.now(Clock.systemUTC()));
-    eventHeader.setVersion(Constants.EVENT_SCHEMA_VERSION);
+    eventHeader.setVersion(Constants.OUTBOUND_EVENT_SCHEMA_VERSION);
     eventHeader.setMessageId(UUID.randomUUID());
     enrichedSmsFulfilmentEvent.setHeader(eventHeader);
     enrichedSmsFulfilmentEvent.setPayload(new PayloadDTO());

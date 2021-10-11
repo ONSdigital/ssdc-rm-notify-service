@@ -100,7 +100,7 @@ public class SmsRequestReceiver {
     EventHeaderDTO enrichedEventHeader = new EventHeaderDTO();
     enrichedEventHeader.setMessageId(UUID.randomUUID());
     enrichedEventHeader.setCorrelationId(smsRequestHeader.getCorrelationId());
-    enrichedEventHeader.setVersion(Constants.EVENT_SCHEMA_VERSION);
+    enrichedEventHeader.setVersion(Constants.OUTBOUND_EVENT_SCHEMA_VERSION);
     enrichedEventHeader.setChannel(smsRequestHeader.getChannel());
     enrichedEventHeader.setSource(smsRequestHeader.getSource());
     enrichedEventHeader.setOriginatingUser(smsRequestHeader.getOriginatingUser());
