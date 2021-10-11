@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 import org.jeasy.random.EasyRandom;
@@ -46,6 +47,9 @@ public class SmsRequestEnrichedReceiverIT {
 
   private static final String TEST_PACK_CODE = "TEST_PACK_CODE";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
+
+  private static final Map<String, String> TEST_COLLECTION_EXERCISE_METADATA =
+      Map.of("TEST_COLLECTION_EXERCISE_METADATA", "TEST");
 
   @Value("${queueconfig.sms-request-enriched-topic}")
   private String smsRequestEnrichedTopic;
@@ -107,6 +111,10 @@ public class SmsRequestEnrichedReceiverIT {
     collectionExercise.setId(UUID.randomUUID());
     collectionExercise.setSurvey(survey);
     collectionExercise.setName("TEST COLLEX");
+    collectionExercise.setReference("MVP012021");
+    collectionExercise.setStartDate(OffsetDateTime.now());
+    collectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
+    collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_METADATA);
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
     Case testCase = new Case();
