@@ -1,6 +1,6 @@
 package uk.gov.ons.ssdc.notifysvc.utils;
 
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.EVENT_SCHEMA_VERSION;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.ALLOWED_INBOUND_EVENT_SCHEMA_VERSIONS;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -17,11 +17,12 @@ public class JsonHelper {
       throw new RuntimeException(e);
     }
 
-    if (!EVENT_SCHEMA_VERSION.equals(event.getHeader().getVersion())) {
+    if (!ALLOWED_INBOUND_EVENT_SCHEMA_VERSIONS.contains((event.getHeader().getVersion()))) {
       throw new RuntimeException(
           String.format(
-              "Incorrect message version. Expected %s but got: %s",
-              EVENT_SCHEMA_VERSION, event.getHeader()));
+              "Unsupported message version. Got %s but RM only supports %s",
+              event.getHeader().getVersion(),
+              String.join(", ", ALLOWED_INBOUND_EVENT_SCHEMA_VERSIONS)));
     }
 
     return event;
