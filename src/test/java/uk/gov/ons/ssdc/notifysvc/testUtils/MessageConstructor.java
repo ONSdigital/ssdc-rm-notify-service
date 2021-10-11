@@ -34,7 +34,7 @@ public class MessageConstructor {
     eventHeaderDTO.setOriginatingUser("test@example.test");
     eventHeaderDTO.setSource("TEST_SOURCE");
     eventHeaderDTO.setChannel("TEST_CHANNEL");
-    eventHeaderDTO.setVersion(Constants.EVENT_SCHEMA_VERSION);
+    eventHeaderDTO.setVersion(Constants.OUTBOUND_EVENT_SCHEMA_VERSION);
 
     eventDTO.setPayload(payloadDTO);
     eventDTO.setHeader(eventHeaderDTO);
