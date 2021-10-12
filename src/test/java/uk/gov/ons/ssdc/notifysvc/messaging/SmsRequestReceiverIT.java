@@ -72,8 +72,8 @@ class SmsRequestReceiverIT {
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
 
-  private static final Map<String, String> TEST_COLLECTION_EXERCISE_METADATA =
-      Map.of("TEST_COLLECTION_EXERCISE_METADATA", "TEST");
+  private static final Map<String, String> TEST_COLLECTION_EXERCISE_UPDATE_METADATA =
+      Map.of("TEST_COLLECTION_EXERCISE_UPDATE_METADATA", "TEST");
 
   @Value("${queueconfig.sms-request-enriched-topic}")
   private String smsRequestEnrichedTopic;
@@ -134,7 +134,7 @@ class SmsRequestReceiverIT {
     collectionExercise.setReference("MVP012021");
     collectionExercise.setStartDate(OffsetDateTime.now());
     collectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
-    collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_METADATA);
+    collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_UPDATE_METADATA);
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
     Case testCase = new Case();

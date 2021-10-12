@@ -66,8 +66,8 @@ class SmsFulfilmentEndpointIT {
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
   private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
-  private static final Map<String, String> TEST_COLLECTION_EXERCISE_METADATA =
-      Map.of("TEST_COLLECTION_EXERCISE_METADATA", "TEST");
+  private static final Map<String, String> TEST_COLLECTION_EXERCISE_UPDATE_METADATA =
+      Map.of("TEST_COLLECTION_EXERCISE_UPDATE_METADATA", "TEST");
 
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
@@ -133,7 +133,7 @@ class SmsFulfilmentEndpointIT {
     collectionExercise.setReference("MVP012021");
     collectionExercise.setStartDate(OffsetDateTime.now());
     collectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
-    collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_METADATA);
+    collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_UPDATE_METADATA);
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
     Case testCase = new Case();
