@@ -123,6 +123,7 @@ class SmsFulfilmentEndpointIT {
           new ColumnValidator("Junk", false, new Rule[] {new MandatoryRule()})
         });
     survey.setSampleSeparator(',');
+    survey.setSampleDefinitionUrl("http://junk");
     survey = surveyRepository.saveAndFlush(survey);
 
     CollectionExercise collectionExercise = new CollectionExercise();
