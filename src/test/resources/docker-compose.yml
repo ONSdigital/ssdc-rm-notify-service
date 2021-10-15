@@ -1,23 +1,23 @@
 version: '2.1'
 services:
-  postgres:
+  postgres-notify-service-it:
     container_name: postgres-notify-service-it
     image: eu.gcr.io/ssdc-rm-ci/rm/ssdc-rm-dev-common-postgres:latest
     command: ["-c", "shared_buffers=256MB", "-c", "max_connections=500"]
     ports:
-      - "15432:5432"
+      - "15435:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  uac-qid:
+  uac-qid-notify-service-it:
     container_name: uac-qid-notify-service-it
     image: eu.gcr.io/ssdc-rm-ci/rm/ssdc-rm-uac-qid-service:latest
     restart: always
     ports:
-      - "18164:8164"
+      - "18166:8164"
     external_links:
       - postgres-notify-service-it
     environment:
@@ -29,24 +29,30 @@ services:
       timeout: 10s
       retries: 10
 
-  pubsub-emulator:
+  pubsub-emulator-notify-service-it:
     container_name: pubsub-emulator-notify-service-it
     image: eu.gcr.io/ssdc-rm-ci/rm/gcloud-pubsub-emulator:latest
     ports:
-      - "18538:8538"
+      - "18540:8538"
 
-  setup-pubsub-emulator:
+  setup-pubsub-emulator-notify-service-it:
+    container_name: setup-pubsub-emulator-notify-service-it
     image: eu.gcr.io/ssdc-rm-ci/rm/gcloud-pubsub-emulator:latest
     environment:
-      - PUBSUB_SETUP_HOST=pubsub-emulator:8538
+      - PUBSUB_SETUP_HOST=pubsub-emulator-notify-service-it:8538
     volumes:
       - ./setup_pubsub.sh:/setup_pubsub.sh
     depends_on:
-      - pubsub-emulator
+      - pubsub-emulator-notify-service-it
     entrypoint: sh -c "/setup_pubsub.sh"
 
   start_dependencies:
     image: dadarek/wait-for-dependencies
     depends_on:
-      uac-qid:
+      uac-qid-notify-service-it:
         condition: service_healthy
+
+networks:
+  default:
+    external:
+      name: ssdcrmdockerdev_default
