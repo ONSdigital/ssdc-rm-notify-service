@@ -1,11 +1,11 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:15432/postgres
+    url: jdbc:postgresql://localhost:15435/postgres
 
   cloud:
     gcp:
       pubsub:
-        emulator-host: localhost:18538
+        emulator-host: localhost:18540
         project-id: our-project
 
 
@@ -14,7 +14,7 @@ notify:
 
 uacservice:
   connection:
-      port: 18164
+      port: 18166
 
 exceptionmanager:
   connection:
