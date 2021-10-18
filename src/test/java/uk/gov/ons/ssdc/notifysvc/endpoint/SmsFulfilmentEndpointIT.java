@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 import org.jeasy.random.EasyRandom;
@@ -65,6 +66,8 @@ class SmsFulfilmentEndpointIT {
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
   private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
+  private static final Map<String, String> TEST_COLLECTION_EXERCISE_UPDATE_METADATA =
+      Map.of("TEST_COLLECTION_EXERCISE_UPDATE_METADATA", "TEST");
 
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
@@ -127,6 +130,10 @@ class SmsFulfilmentEndpointIT {
     collectionExercise.setId(UUID.randomUUID());
     collectionExercise.setSurvey(survey);
     collectionExercise.setName("TEST COLLEX");
+    collectionExercise.setReference("MVP012021");
+    collectionExercise.setStartDate(OffsetDateTime.now());
+    collectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
+    collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_UPDATE_METADATA);
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
     Case testCase = new Case();
