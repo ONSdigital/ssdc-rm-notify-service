@@ -63,6 +63,8 @@ class SmsRequestServiceTest {
         "07876543456",
         "+447123456789",
         "0447123456789",
+        "00447123456789",
+        "447123456789",
         "7123456789",
       })
   void testValidatePhoneNumberValid(String phoneNumber) {
@@ -76,6 +78,7 @@ class SmsRequestServiceTest {
         "foo",
         "007",
         "071234567890",
+        "000447123456789",
         "+44 7123456789",
         "44+7123456789",
         "0712345678a",

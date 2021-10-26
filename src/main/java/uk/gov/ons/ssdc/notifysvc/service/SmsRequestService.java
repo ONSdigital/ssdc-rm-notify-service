@@ -62,7 +62,7 @@ public class SmsRequestService {
 
   public boolean validatePhoneNumber(String phoneNumber) {
     // Remove valid leading country code or 0
-    String sanitisedPhoneNumber = phoneNumber.replaceFirst("^(0{1,2}44|\\+44|0)", "");
+    String sanitisedPhoneNumber = phoneNumber.replaceFirst("^(44|0{1,2}44|\\+44|0)", "");
 
     // The sanitized number must then be 10 digits, starting with 7
     return sanitisedPhoneNumber.length() == 10 && sanitisedPhoneNumber.matches("^7[0-9]+$");
