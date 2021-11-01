@@ -146,6 +146,7 @@ class SmsFulfilmentEndpointIT {
     smsTemplate.setPackCode(TEST_PACK_CODE);
     smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+    smsTemplate.setDescription("Test description");
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
 
     FulfilmentSurveySmsTemplate fulfilmentSurveySmsTemplate = new FulfilmentSurveySmsTemplate();
