@@ -87,8 +87,7 @@ class SmsFulfilmentEndpointUnitTest {
   void testSmsFulfilmentHappyPathWithUacQid() throws Exception {
     // Given
     Case testCase = getTestCase();
-    SmsTemplate smsTemplate =
-        getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -268,8 +267,7 @@ class SmsFulfilmentEndpointUnitTest {
   void testSmsFulfilmentServerErrorFromNotify() throws Exception {
     // Given
     Case testCase = getTestCase();
-    SmsTemplate smsTemplate =
-        getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
@@ -334,18 +332,20 @@ class SmsFulfilmentEndpointUnitTest {
   @Test
   void testSmsFulfilmentInvalidPhoneNumber() throws Exception {
     // Given
+    String invalidPhoneNumber = "07123 INVALID";
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(smsRequestService.isSmsTemplateAllowedOnSurvey(
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
+    when(smsRequestService.validatePhoneNumber(invalidPhoneNumber))
+        .thenReturn(false); // TODO how did this pass without this mock?
 
     RequestDTO smsFulfilmentRequest =
-        buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), "07123 INVALID");
+        buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), invalidPhoneNumber);
 
     // When we call with a bad phone number, we get a bad request response and descriptive reason
     mockMvc

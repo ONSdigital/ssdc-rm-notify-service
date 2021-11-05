@@ -1,5 +1,8 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
+
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -14,15 +17,8 @@ import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
-import java.util.Map;
-
-import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
-
 @MessageEndpoint
 public class EmailRequestEnrichedReceiver {
-
-  @Value("${notify.senderId}")
-  private String senderId;
 
   @Value("${email-request-enriched-delay}")
   private int emailRequestEnrichedDelay;
@@ -78,7 +74,7 @@ public class EmailRequestEnrichedReceiver {
           emailTemplate.getNotifyTemplateId().toString(),
           emailRequestEnriched.getEmail(),
           personalisationTemplateValues,
-          senderId);
+          event.getHeader().getCorrelationId().toString()); // Use the correlation ID as reference
     } catch (NotificationClientException e) {
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send email (from enriched email request event)",

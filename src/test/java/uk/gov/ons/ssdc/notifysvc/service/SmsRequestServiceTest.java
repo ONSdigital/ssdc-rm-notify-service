@@ -198,7 +198,7 @@ class SmsRequestServiceTest {
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
         new String[] {
-            TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, "foo", TEMPLATE_SENSITIVE_PREFIX + "foo"
+          TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, "foo", TEMPLATE_SENSITIVE_PREFIX + "foo"
         });
 
     Case testCase = new Case();
@@ -279,9 +279,7 @@ class SmsRequestServiceTest {
     // Given
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
-        new String[] {
-          TEMPLATE_SENSITIVE_PREFIX + "foo", TEMPLATE_SENSITIVE_PREFIX + "spam"
-        });
+        new String[] {TEMPLATE_SENSITIVE_PREFIX + "foo", TEMPLATE_SENSITIVE_PREFIX + "spam"});
 
     Case testCase = new Case();
     testCase.setSampleSensitive(

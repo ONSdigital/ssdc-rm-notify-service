@@ -1,11 +1,22 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
+
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
-import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
@@ -16,19 +27,6 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveyEmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
-
-import java.time.Clock;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 @Service
 public class EmailRequestService {
@@ -59,7 +57,8 @@ public class EmailRequestService {
   }
 
   public boolean isEmailTemplateAllowedOnSurvey(EmailTemplate emailTemplate, Survey survey) {
-    return fulfilmentSurveyEmailTemplateRepository.existsByEmailTemplateAndSurvey(emailTemplate, survey);
+    return fulfilmentSurveyEmailTemplateRepository.existsByEmailTemplateAndSurvey(
+        emailTemplate, survey);
   }
 
   public boolean validateEmailAddress(String emailAddress) {

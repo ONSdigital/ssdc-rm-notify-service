@@ -1,9 +1,8 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
 import java.util.UUID;
+import lombok.Data;
 
 @Data
 public class EmailFulfilment {
@@ -11,8 +10,7 @@ public class EmailFulfilment {
   private UUID caseId;
 
   @Schema(
-      description =
-          "The target email address, to which we will send a fulfilment",
+      description = "The target email address, to which we will send a fulfilment",
       example = "example@example.com")
   private String email;
 

@@ -26,39 +26,50 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.ons.ssdc.common.model.entity.*;
+import uk.gov.ons.ssdc.common.model.entity.Case;
+import uk.gov.ons.ssdc.common.model.entity.CollectionExercise;
+import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.common.model.entity.FulfilmentSurveyEmailTemplate;
+import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendSmsResponse;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
-import uk.gov.ons.ssdc.notifysvc.model.repository.*;
+import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.CollectionExerciseRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveyEmailTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.SurveyRepository;
 import uk.gov.ons.ssdc.notifysvc.testUtils.PubSubTestHelper;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class SmsRequestEnrichedReceiverIT {
+class EmailRequestEnrichedReceiverIT {
 
-  private static final String TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION =
-      "TEST-sms-request-enriched_notify-service";
+  private static final String TEST_EMAIl_REQUEST_ENRICHED_SUBSCRIPTION =
+      "TEST-email-request-enriched_notify-service";
 
   private static final String TEST_PACK_CODE = "TEST_PACK_CODE";
-  public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
+  public static final String EMAIL_NOTIFY_API_ENDPOINT = "/v2/notifications/email";
 
   private static final Map<String, String> TEST_COLLECTION_EXERCISE_UPDATE_METADATA =
       Map.of("TEST_COLLECTION_EXERCISE_UPDATE_METADATA", "TEST");
 
-  @Value("${queueconfig.sms-request-enriched-topic}")
-  private String smsRequestEnrichedTopic;
+  @Value("${queueconfig.email-request-enriched-topic}")
+  private String emailRequestEnrichedTopic;
 
   @Autowired private CaseRepository caseRepository;
   @Autowired private SurveyRepository surveyRepository;
   @Autowired private CollectionExerciseRepository collectionExerciseRepository;
-  @Autowired private SmsTemplateRepository smsTemplateRepository;
-  @Autowired private FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
+  @Autowired private EmailTemplateRepository emailTemplateRepository;
+
+  @Autowired
+  private FulfilmentSurveyEmailTemplateRepository fulfilmentSurveyEmailTemplateRepository;
+
   @Autowired private PubSubTestHelper pubSubTestHelper;
   @Autowired private PubSubHelper pubSubHelper;
 
@@ -74,15 +85,16 @@ class SmsRequestEnrichedReceiverIT {
   @Transactional
   public void setUp() {
     clearDownData();
-    pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
+    pubSubTestHelper.purgeMessages(
+        TEST_EMAIl_REQUEST_ENRICHED_SUBSCRIPTION, emailRequestEnrichedTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
   }
 
   public void clearDownData() {
-    fulfilmentSurveySmsTemplateRepository.deleteAllInBatch();
-    smsTemplateRepository.deleteAllInBatch();
+    fulfilmentSurveyEmailTemplateRepository.deleteAllInBatch();
+    emailTemplateRepository.deleteAllInBatch();
     caseRepository.deleteAllInBatch();
     collectionExerciseRepository.deleteAllInBatch();
     surveyRepository.deleteAllInBatch();
@@ -95,7 +107,8 @@ class SmsRequestEnrichedReceiverIT {
   }
 
   @Test
-  void happyPathSmsRequestEnrichedReceiver() throws JsonProcessingException, InterruptedException {
+  void happyPathEmailRequestEnrichedReceiver()
+      throws JsonProcessingException, InterruptedException {
     // Given
     // Set up all the data required
     Survey survey = new Survey();
@@ -125,42 +138,43 @@ class SmsRequestEnrichedReceiverIT {
     testCase.setSample(Map.of());
     testCase = caseRepository.saveAndFlush(testCase);
 
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode(TEST_PACK_CODE);
-    smsTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
-    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
-    smsTemplate.setDescription("Test description");
-    smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode(TEST_PACK_CODE);
+    emailTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    emailTemplate.setNotifyTemplateId(UUID.randomUUID());
+    emailTemplate.setDescription("Test description");
+    emailTemplate = emailTemplateRepository.saveAndFlush(emailTemplate);
 
-    FulfilmentSurveySmsTemplate fulfilmentSurveySmsTemplate = new FulfilmentSurveySmsTemplate();
-    fulfilmentSurveySmsTemplate.setSurvey(testCase.getCollectionExercise().getSurvey());
-    fulfilmentSurveySmsTemplate.setSmsTemplate(smsTemplate);
-    fulfilmentSurveySmsTemplate.setId(UUID.randomUUID());
-    fulfilmentSurveySmsTemplateRepository.saveAndFlush(fulfilmentSurveySmsTemplate);
+    FulfilmentSurveyEmailTemplate fulfilmentSurveyEmailTemplate =
+        new FulfilmentSurveyEmailTemplate();
+    fulfilmentSurveyEmailTemplate.setSurvey(testCase.getCollectionExercise().getSurvey());
+    fulfilmentSurveyEmailTemplate.setEmailTemplate(emailTemplate);
+    fulfilmentSurveyEmailTemplate.setId(UUID.randomUUID());
+    fulfilmentSurveyEmailTemplateRepository.saveAndFlush(fulfilmentSurveyEmailTemplate);
 
-    EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);
-    SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
-    smsRequestEnriched.setCaseId(testCase.getId());
-    smsRequestEnriched.setPackCode("TEST_PACK_CODE");
-    smsRequestEnriched.setUac(TEST_UAC);
-    smsRequestEnriched.setQid(TEST_QID);
-    smsRequestEnriched.setPhoneNumber("07564283939");
-    smsRequestEnrichedEvent.getPayload().setSmsRequestEnriched(smsRequestEnriched);
+    EventDTO emailRequestEnrichedEvent = buildEventDTO(emailRequestEnrichedTopic);
+    EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
+    emailRequestEnriched.setCaseId(testCase.getId());
+    emailRequestEnriched.setPackCode("TEST_PACK_CODE");
+    emailRequestEnriched.setUac(TEST_UAC);
+    emailRequestEnriched.setQid(TEST_QID);
+    emailRequestEnriched.setEmail("example@example.com");
+    emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
     // Stub the Notify API endpoint with a success code and random response to keep the client happy
     NotifyApiSendSmsResponse notifyApiSendSmsResponse = easyRandom.nextObject(NotifyApiSendSmsResponse.class);
     String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendSmsResponse);
     wireMockServer.stubFor(
-        WireMock.post(urlEqualTo(SMS_NOTIFY_API_ENDPOINT))
+        WireMock.post(urlEqualTo(EMAIL_NOTIFY_API_ENDPOINT))
             .willReturn(
                 WireMock.aResponse()
                     .withStatus(201)
                     .withBody(notifyApiResponseJson)
                     .withHeader("Content-Type", "application/json")));
 
-    pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
+    pubSubHelper.publishAndConfirm(emailRequestEnrichedTopic, emailRequestEnrichedEvent);
 
     Thread.sleep(1000);
-    verify(postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
+    verify(postRequestedFor(urlEqualTo(EMAIL_NOTIFY_API_ENDPOINT)));
   }
 }

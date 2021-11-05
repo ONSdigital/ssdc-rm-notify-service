@@ -34,7 +34,7 @@ import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
-import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiResponse;
+import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendSmsResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
@@ -81,9 +81,6 @@ class SmsRequestReceiverIT {
   @Value("${queueconfig.sms-fulfilment-topic}")
   private String smsFulfilmentTopic;
 
-  @Value("${queueconfig.sms-request-subscription}")
-  private String smsRequestSubscription;
-
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
 
   private WireMockServer wireMockServer;
@@ -110,6 +107,7 @@ class SmsRequestReceiverIT {
   @AfterEach
   public void tearDown() {
     wireMockServer.stop();
+    clearDownData();
   }
 
   @Test
@@ -171,8 +169,8 @@ class SmsRequestReceiverIT {
     // Stub the Notify API endpoint with a success code and random response to keep the client
     // happy, this is to stop the enriched receiver from failing and nacking the resulting enriched
     // message
-    NotifyApiResponse notifyApiResponse = easyRandom.nextObject(NotifyApiResponse.class);
-    String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiResponse);
+    NotifyApiSendSmsResponse notifyApiSendSmsResponse = easyRandom.nextObject(NotifyApiSendSmsResponse.class);
+    String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendSmsResponse);
     wireMockServer.stubFor(
         WireMock.post(urlEqualTo(SMS_NOTIFY_API_ENDPOINT))
             .willReturn(

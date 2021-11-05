@@ -29,6 +29,237 @@ Base URLs:
 
 * <a href="http://localhost:8162">http://localhost:8162</a>
 
+<h1 id="notify-service-email-fulfilment-endpoint">email-fulfilment-endpoint</h1>
+
+## emailFulfilment
+
+<a id="opIdemailFulfilment"></a>
+
+> Code samples
+
+```shell
+# You can also use wget
+curl -X POST http://localhost:8162/email-fulfilment \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json'
+
+```
+
+```http
+POST http://localhost:8162/email-fulfilment HTTP/1.1
+Host: localhost:8162
+Content-Type: application/json
+Accept: application/json
+
+```
+
+```javascript
+const inputBody = '{
+  "header": {
+    "channel": "RH",
+    "correlationId": "48fb4cd3-2ef6-4479-bea1-7c92721b988c",
+    "originatingUser": "fred.bloggs@ons.gov.uk",
+    "source": "Survey Enquiry Line API"
+  },
+  "payload": {
+    "emailFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "email": "example@example.com",
+      "packCode": "string",
+      "uacMetadata": {}
+    },
+    "smsFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "packCode": "string",
+      "phoneNumber": "+447123456789",
+      "uacMetadata": {}
+    }
+  }
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('http://localhost:8162/email-fulfilment',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Content-Type' => 'application/json',
+  'Accept' => 'application/json'
+}
+
+result = RestClient.post 'http://localhost:8162/email-fulfilment',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post('http://localhost:8162/email-fulfilment', headers = headers)
+
+print(r.json())
+
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Content-Type' => 'application/json',
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('POST','http://localhost:8162/email-fulfilment', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("http://localhost:8162/email-fulfilment");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("POST");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("POST", "http://localhost:8162/email-fulfilment", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+```
+
+`POST /email-fulfilment`
+
+Email Fulfilment Request
+
+> Body parameter
+
+```json
+{
+  "header": {
+    "channel": "RH",
+    "correlationId": "48fb4cd3-2ef6-4479-bea1-7c92721b988c",
+    "originatingUser": "fred.bloggs@ons.gov.uk",
+    "source": "Survey Enquiry Line API"
+  },
+  "payload": {
+    "emailFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "email": "example@example.com",
+      "packCode": "string",
+      "uacMetadata": {}
+    },
+    "smsFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "packCode": "string",
+      "phoneNumber": "+447123456789",
+      "uacMetadata": {}
+    }
+  }
+}
+```
+
+<h3 id="emailfulfilment-parameters">Parameters</h3>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|[RequestDTO](#schemarequestdto)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "qid": "string",
+  "uacHash": "string"
+}
+```
+
+<h3 id="emailfulfilment-responses">Responses</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Send an email fulfilment for a case. Returns uacHash & QID if template has UAC/QID, or empty response if not|[EmailFulfilmentResponseSuccess](#schemaemailfulfilmentresponsesuccess)|
+|400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Email Fulfilment request failed validation|[EmailFulfilmentResponseError](#schemaemailfulfilmentresponseerror)|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error with Gov Notify when attempting to send email|None|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 <h1 id="notify-service-sms-fulfilment-endpoint">sms-fulfilment-endpoint</h1>
 
 ## smsFulfilment
@@ -62,6 +293,12 @@ const inputBody = '{
     "source": "Survey Enquiry Line API"
   },
   "payload": {
+    "emailFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "email": "example@example.com",
+      "packCode": "string",
+      "uacMetadata": {}
+    },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
       "packCode": "string",
@@ -209,6 +446,12 @@ SMS Fulfilment Request
     "source": "Survey Enquiry Line API"
   },
   "payload": {
+    "emailFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "email": "example@example.com",
+      "packCode": "string",
+      "uacMetadata": {}
+    },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
       "packCode": "string",
@@ -250,6 +493,74 @@ This operation does not require authentication
 
 # Schemas
 
+<h2 id="tocS_EmailFulfilment">EmailFulfilment</h2>
+<!-- backwards compatibility -->
+<a id="schemaemailfulfilment"></a>
+<a id="schema_EmailFulfilment"></a>
+<a id="tocSemailfulfilment"></a>
+<a id="tocsemailfulfilment"></a>
+
+```json
+{
+  "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+  "email": "example@example.com",
+  "packCode": "string",
+  "uacMetadata": {}
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|caseId|string(uuid)|false|none|The case, which must exist in RM|
+|email|string|false|none|The target email address, to which we will send a fulfilment|
+|packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
+|uacMetadata|object|false|none|Metadata for UACQIDLinks|
+
+<h2 id="tocS_EmailFulfilmentResponseError">EmailFulfilmentResponseError</h2>
+<!-- backwards compatibility -->
+<a id="schemaemailfulfilmentresponseerror"></a>
+<a id="schema_EmailFulfilmentResponseError"></a>
+<a id="tocSemailfulfilmentresponseerror"></a>
+<a id="tocsemailfulfilmentresponseerror"></a>
+
+```json
+{
+  "error": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|error|string|false|none|none|
+
+<h2 id="tocS_EmailFulfilmentResponseSuccess">EmailFulfilmentResponseSuccess</h2>
+<!-- backwards compatibility -->
+<a id="schemaemailfulfilmentresponsesuccess"></a>
+<a id="schema_EmailFulfilmentResponseSuccess"></a>
+<a id="tocSemailfulfilmentresponsesuccess"></a>
+<a id="tocsemailfulfilmentresponsesuccess"></a>
+
+```json
+{
+  "qid": "string",
+  "uacHash": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|qid|string|false|none|none|
+|uacHash|string|false|none|none|
+
 <h2 id="tocS_RequestDTO">RequestDTO</h2>
 <!-- backwards compatibility -->
 <a id="schemarequestdto"></a>
@@ -266,6 +577,12 @@ This operation does not require authentication
     "source": "Survey Enquiry Line API"
   },
   "payload": {
+    "emailFulfilment": {
+      "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+      "email": "example@example.com",
+      "packCode": "string",
+      "uacMetadata": {}
+    },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
       "packCode": "string",
@@ -319,6 +636,12 @@ This operation does not require authentication
 
 ```json
 {
+  "emailFulfilment": {
+    "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
+    "email": "example@example.com",
+    "packCode": "string",
+    "uacMetadata": {}
+  },
   "smsFulfilment": {
     "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
     "packCode": "string",
@@ -333,6 +656,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|emailFulfilment|[EmailFulfilment](#schemaemailfulfilment)|false|none|none|
 |smsFulfilment|[SmsFulfilment](#schemasmsfulfilment)|false|none|none|
 
 <h2 id="tocS_SmsFulfilment">SmsFulfilment</h2>

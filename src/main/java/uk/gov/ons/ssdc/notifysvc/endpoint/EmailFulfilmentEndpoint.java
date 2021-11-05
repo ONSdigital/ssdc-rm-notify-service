@@ -7,9 +7,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import java.util.Map;
+import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,15 +36,9 @@ import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
-import java.util.Map;
-import java.util.UUID;
-
 @RestController
 @RequestMapping(value = "/email-fulfilment")
 public class EmailFulfilmentEndpoint {
-
-  @Value("${notify.senderId}")
-  private String senderId;
 
   private final EmailRequestService emailRequestService;
   private final CaseRepository caseRepository;
@@ -127,7 +122,10 @@ public class EmailFulfilmentEndpoint {
         request.getHeader().getOriginatingUser());
 
     sendEmail(
-        request.getPayload().getEmailFulfilment().getEmail(), emailTemplate, emailTemplateValues);
+        request.getPayload().getEmailFulfilment().getEmail(),
+        emailTemplate,
+        emailTemplateValues,
+        request.getHeader().getCorrelationId().toString());
 
     return new ResponseEntity<>(createEmailSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
@@ -141,7 +139,8 @@ public class EmailFulfilmentEndpoint {
     return emailRequestService.buildPersonalisationFromTemplate(emailTemplate, caze, null, null);
   }
 
-  private EmailFulfilmentResponse createEmailSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
+  private EmailFulfilmentResponse createEmailSuccessResponse(
+      UacQidCreatedPayloadDTO newUacQidPair) {
     if (newUacQidPair != null) {
       String uacHash = HashHelper.hash(newUacQidPair.getUac());
       return new EmailFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
@@ -155,7 +154,7 @@ public class EmailFulfilmentEndpoint {
     validateRequestHeader(emailFulfilmentRequest.getHeader());
     EmailFulfilment emailFulfilment = emailFulfilmentRequest.getPayload().getEmailFulfilment();
     validateTemplateOnSurvey(emailTemplate, caze.getCollectionExercise().getSurvey());
-    validateEmailAdress(emailFulfilment.getEmail());
+    validateEmailAddress(emailFulfilment.getEmail());
   }
 
   private void validateRequestHeader(RequestHeaderDTO requestHeader) {
@@ -168,21 +167,29 @@ public class EmailFulfilmentEndpoint {
     }
   }
 
-  private void validateEmailAdress(String emailAddress) {
+  private void validateEmailAddress(String emailAddress) {
     if (!emailRequestService.validateEmailAddress(emailAddress)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email address");
     }
   }
 
   private void sendEmail(
-      String emailAddress, EmailTemplate emailTemplate, Map<String, String> emailTemplateValues) {
+      String emailAddress,
+      EmailTemplate emailTemplate,
+      Map<String, String> emailTemplatePersonalization,
+      String reference) {
     try {
       notificationClientApi.sendEmail(
-          emailTemplate.getNotifyTemplateId().toString(), emailAddress, emailTemplateValues, senderId);
+          emailTemplate.getNotifyTemplateId().toString(),
+          emailAddress,
+          emailTemplatePersonalization,
+          reference);
     } catch (NotificationClientException e) {
       logger.error("Error with Gov Notify when attempting to send email", e);
       throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Error with Gov Notify when attempting to send email", e);
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Error with Gov Notify when attempting to send email",
+          e);
     }
   }
 

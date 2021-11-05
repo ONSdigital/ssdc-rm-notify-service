@@ -1,5 +1,9 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
+
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -16,11 +20,6 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
-import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 
 @MessageEndpoint
 public class EmailRequestReceiver {
@@ -58,7 +57,9 @@ public class EmailRequestReceiver {
         emailTemplateRepository
             .findById(emailRequest.getPackCode())
             .orElseThrow(
-                () -> new RuntimeException("Email template not found: " + emailRequest.getPackCode()));
+                () ->
+                    new RuntimeException(
+                        "Email template not found: " + emailRequest.getPackCode()));
 
     if (!caseRepository.existsById(emailRequest.getCaseId())) {
       throw new RuntimeException("Case not found with ID: " + emailRequest.getCaseId());
@@ -87,7 +88,9 @@ public class EmailRequestReceiver {
   }
 
   private EventDTO buildEmailRequestEnrichedEvent(
-      EmailRequest emailRequest, EventHeaderDTO emailRequestHeader, UacQidCreatedPayloadDTO uacQidPair) {
+      EmailRequest emailRequest,
+      EventHeaderDTO emailRequestHeader,
+      UacQidCreatedPayloadDTO uacQidPair) {
     EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
     emailRequestEnriched.setCaseId(emailRequest.getCaseId());
     emailRequestEnriched.setEmail(emailRequest.getEmail());
