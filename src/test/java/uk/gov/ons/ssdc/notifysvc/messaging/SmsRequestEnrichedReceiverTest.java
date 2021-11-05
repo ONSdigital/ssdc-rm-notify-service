@@ -5,8 +5,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMessageWithValidTimeStamp;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
 import java.util.Optional;
@@ -56,7 +56,7 @@ class SmsRequestEnrichedReceiverTest {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
@@ -73,7 +73,7 @@ class SmsRequestEnrichedReceiverTest {
     smsRequestEnrichedEvent.getPayload().setSmsRequestEnriched(smsRequestEnriched);
 
     Map<String, String> personalisationValues =
-        Map.ofEntries(entry(SMS_TEMPLATE_UAC_KEY, TEST_UAC), entry(SMS_TEMPLATE_QID_KEY, TEST_QID));
+        Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
 
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));

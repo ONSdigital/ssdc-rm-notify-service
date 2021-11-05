@@ -11,4 +11,7 @@ public class PayloadDTO {
   private EnrichedSmsFulfilment enrichedSmsFulfilment;
   private SmsRequest smsRequest;
   private SmsRequestEnriched smsRequestEnriched;
+  private EnrichedEmailFulfilment enrichedEmailFulfilment;
+  private EmailRequest emailRequest;
+  private EmailRequestEnriched emailRequestEnriched;
 }

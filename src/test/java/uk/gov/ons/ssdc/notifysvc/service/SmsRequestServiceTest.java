@@ -10,9 +10,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
 import java.util.UUID;
@@ -112,7 +112,7 @@ class SmsRequestServiceTest {
     // When
     UacQidCreatedPayloadDTO actualUacQidCreated =
         smsRequestService.fetchNewUacQidPairIfRequired(
-            new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
+            new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
 
     // Then
     assertThat(actualUacQidCreated).isEqualTo(newUacQidCreated);
@@ -198,7 +198,7 @@ class SmsRequestServiceTest {
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
         new String[] {
-          SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY, "foo", SMS_TEMPLATE_SENSITIVE_PREFIX + "foo"
+            TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, "foo", TEMPLATE_SENSITIVE_PREFIX + "foo"
         });
 
     Case testCase = new Case();
@@ -212,17 +212,17 @@ class SmsRequestServiceTest {
 
     // Then
     assertThat(personalisationValues)
-        .containsEntry(SMS_TEMPLATE_UAC_KEY, TEST_UAC)
-        .containsEntry(SMS_TEMPLATE_QID_KEY, TEST_QID)
+        .containsEntry(TEMPLATE_UAC_KEY, TEST_UAC)
+        .containsEntry(TEMPLATE_QID_KEY, TEST_QID)
         .containsEntry("foo", "bar")
-        .containsEntry(SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar");
+        .containsEntry(TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar");
   }
 
   @Test
   void testBuildPersonalisationFromTemplateJustUac() {
     // Given
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_UAC_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY});
 
     Case testCase = new Case();
 
@@ -233,15 +233,15 @@ class SmsRequestServiceTest {
 
     // Then
     assertThat(personalisationValues)
-        .containsEntry(SMS_TEMPLATE_UAC_KEY, TEST_UAC)
-        .containsOnlyKeys(SMS_TEMPLATE_UAC_KEY);
+        .containsEntry(TEMPLATE_UAC_KEY, TEST_UAC)
+        .containsOnlyKeys(TEMPLATE_UAC_KEY);
   }
 
   @Test
   void testBuildPersonalisationFromTemplateJustQid() {
     // Given
     SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY});
 
     Case testCase = new Case();
 
@@ -252,8 +252,8 @@ class SmsRequestServiceTest {
 
     // Then
     assertThat(personalisationValues)
-        .containsEntry(SMS_TEMPLATE_QID_KEY, TEST_QID)
-        .containsOnlyKeys(SMS_TEMPLATE_QID_KEY);
+        .containsEntry(TEMPLATE_QID_KEY, TEST_QID)
+        .containsOnlyKeys(TEMPLATE_QID_KEY);
   }
 
   @Test
@@ -280,7 +280,7 @@ class SmsRequestServiceTest {
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setTemplate(
         new String[] {
-          SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", SMS_TEMPLATE_SENSITIVE_PREFIX + "spam"
+          TEMPLATE_SENSITIVE_PREFIX + "foo", TEMPLATE_SENSITIVE_PREFIX + "spam"
         });
 
     Case testCase = new Case();
@@ -294,7 +294,7 @@ class SmsRequestServiceTest {
 
     // Then
     assertThat(personalisationValues)
-        .containsEntry(SMS_TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar")
-        .containsEntry(SMS_TEMPLATE_SENSITIVE_PREFIX + "spam", "secretEggs");
+        .containsEntry(TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar")
+        .containsEntry(TEMPLATE_SENSITIVE_PREFIX + "spam", "secretEggs");
   }
 }

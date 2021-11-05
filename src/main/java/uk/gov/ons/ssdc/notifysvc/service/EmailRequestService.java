@@ -1,9 +1,21 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import uk.gov.ons.ssdc.common.model.entity.Case;
+import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
+import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedEmailFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveyEmailTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.utils.Constants;
+import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -12,38 +24,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import uk.gov.ons.ssdc.common.model.entity.Case;
-import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
-import uk.gov.ons.ssdc.common.model.entity.Survey;
-import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
-import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
-import uk.gov.ons.ssdc.notifysvc.utils.Constants;
-import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
+
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 @Service
-public class SmsRequestService {
+public class EmailRequestService {
 
-  @Value("${queueconfig.sms-fulfilment-topic}")
-  private String smsFulfilmentTopic;
+  @Value("${queueconfig.email-fulfilment-topic}")
+  private String emailFulfilmentTopic;
 
   private final UacQidServiceClient uacQidServiceClient;
-  private final FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
+  private final FulfilmentSurveyEmailTemplateRepository fulfilmentSurveyEmailTemplateRepository;
   private final PubSubHelper pubSubHelper;
 
-  public SmsRequestService(
+  public EmailRequestService(
       UacQidServiceClient uacQidServiceClient,
-      FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository,
+      FulfilmentSurveyEmailTemplateRepository fulfilmentSurveyEmailTemplateRepository,
       PubSubHelper pubSubHelper) {
     this.uacQidServiceClient = uacQidServiceClient;
-    this.fulfilmentSurveySmsTemplateRepository = fulfilmentSurveySmsTemplateRepository;
+    this.fulfilmentSurveyEmailTemplateRepository = fulfilmentSurveyEmailTemplateRepository;
     this.pubSubHelper = pubSubHelper;
   }
 
@@ -56,19 +58,16 @@ public class SmsRequestService {
     return null;
   }
 
-  public boolean isSmsTemplateAllowedOnSurvey(SmsTemplate smsTemplate, Survey survey) {
-    return fulfilmentSurveySmsTemplateRepository.existsBySmsTemplateAndSurvey(smsTemplate, survey);
+  public boolean isEmailTemplateAllowedOnSurvey(EmailTemplate emailTemplate, Survey survey) {
+    return fulfilmentSurveyEmailTemplateRepository.existsByEmailTemplateAndSurvey(emailTemplate, survey);
   }
 
-  public boolean validatePhoneNumber(String phoneNumber) {
-    // Remove valid leading country code or 0
-    String sanitisedPhoneNumber = phoneNumber.replaceFirst("^(44|0044|\\+44|0)", "");
-
-    // The sanitized number must then be 10 digits, starting with 7
-    return sanitisedPhoneNumber.length() == 10 && sanitisedPhoneNumber.matches("^7[0-9]+$");
+  public boolean validateEmailAddress(String emailAddress) {
+    // TODO
+    return true;
   }
 
-  public void buildAndSendEnrichedSmsFulfilment(
+  public void buildAndSendEnrichedEmailFulfilment(
       UUID caseId,
       String packCode,
       Object uacMetadata,
@@ -77,20 +76,20 @@ public class SmsRequestService {
       String channel,
       UUID correlationId,
       String originatingUser) {
-    EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
-    enrichedSmsFulfilment.setCaseId(caseId);
-    enrichedSmsFulfilment.setPackCode(packCode);
-    enrichedSmsFulfilment.setUacMetadata(uacMetadata);
+    EnrichedEmailFulfilment enrichedEmailFulfilment = new EnrichedEmailFulfilment();
+    enrichedEmailFulfilment.setCaseId(caseId);
+    enrichedEmailFulfilment.setPackCode(packCode);
+    enrichedEmailFulfilment.setUacMetadata(uacMetadata);
 
     if (newUacQidPair != null) {
-      enrichedSmsFulfilment.setUac(newUacQidPair.getUac());
-      enrichedSmsFulfilment.setQid(newUacQidPair.getQid());
+      enrichedEmailFulfilment.setUac(newUacQidPair.getUac());
+      enrichedEmailFulfilment.setQid(newUacQidPair.getQid());
     }
 
-    EventDTO enrichedSmsFulfilmentEvent = new EventDTO();
+    EventDTO enrichedEmailFulfilmentEvent = new EventDTO();
 
     EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setTopic(smsFulfilmentTopic);
+    eventHeader.setTopic(emailFulfilmentTopic);
     eventHeader.setSource(source);
     eventHeader.setChannel(channel);
     eventHeader.setCorrelationId(correlationId);
@@ -98,16 +97,16 @@ public class SmsRequestService {
     eventHeader.setDateTime(OffsetDateTime.now(Clock.systemUTC()));
     eventHeader.setVersion(Constants.OUTBOUND_EVENT_SCHEMA_VERSION);
     eventHeader.setMessageId(UUID.randomUUID());
-    enrichedSmsFulfilmentEvent.setHeader(eventHeader);
-    enrichedSmsFulfilmentEvent.setPayload(new PayloadDTO());
-    enrichedSmsFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
+    enrichedEmailFulfilmentEvent.setHeader(eventHeader);
+    enrichedEmailFulfilmentEvent.setPayload(new PayloadDTO());
+    enrichedEmailFulfilmentEvent.getPayload().setEnrichedEmailFulfilment(enrichedEmailFulfilment);
 
-    pubSubHelper.publishAndConfirm(smsFulfilmentTopic, enrichedSmsFulfilmentEvent);
+    pubSubHelper.publishAndConfirm(emailFulfilmentTopic, enrichedEmailFulfilmentEvent);
   }
 
   public Map<String, String> buildPersonalisationFromTemplate(
-      SmsTemplate smsTemplate, Case caze, String uac, String qid) {
-    String[] template = smsTemplate.getTemplate();
+      EmailTemplate emailTemplate, Case caze, String uac, String qid) {
+    String[] template = emailTemplate.getTemplate();
     Map<String, String> templateValues = new HashMap<>();
 
     for (String templateItem : template) {
