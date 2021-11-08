@@ -75,9 +75,6 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(emailRequestService.buildPersonalisationFromTemplate(
-            emailTemplate, testCase, emailRequestEnriched.getUac(), emailRequestEnriched.getQid()))
-        .thenReturn(personalisationValues);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 

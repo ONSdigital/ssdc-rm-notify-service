@@ -25,7 +25,6 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
-import uk.gov.ons.ssdc.notifysvc.service.SmsRequestService;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
@@ -33,7 +32,6 @@ import uk.gov.service.notify.NotificationClientException;
 class SmsRequestEnrichedReceiverTest {
   @Mock SmsTemplateRepository smsTemplateRepository;
   @Mock CaseRepository caseRepository;
-  @Mock SmsRequestService smsRequestService;
   @Mock NotificationClientApi notificationClientApi;
 
   @InjectMocks SmsRequestEnrichedReceiver smsRequestEnrichedReceiver;
@@ -78,9 +76,6 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, smsRequestEnriched.getUac(), smsRequestEnriched.getQid()))
-        .thenReturn(personalisationValues);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 

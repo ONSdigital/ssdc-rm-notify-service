@@ -1,22 +1,14 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.doesTemplateRequireNewUacQid;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
@@ -48,10 +40,8 @@ public class EmailRequestService {
     this.pubSubHelper = pubSubHelper;
   }
 
-  // TODO make this return an optional?
-  public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] smsTemplate) {
-    if (CollectionUtils.containsAny(
-        Arrays.asList(smsTemplate), List.of(TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY))) {
+  public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] emailTemplate) {
+    if (doesTemplateRequireNewUacQid(emailTemplate)) {
       return uacQidServiceClient.generateUacQid(QID_TYPE);
     }
     return null;
@@ -104,32 +94,5 @@ public class EmailRequestService {
     enrichedEmailFulfilmentEvent.getPayload().setEnrichedEmailFulfilment(enrichedEmailFulfilment);
 
     pubSubHelper.publishAndConfirm(emailFulfilmentTopic, enrichedEmailFulfilmentEvent);
-  }
-
-  public Map<String, String> buildPersonalisationFromTemplate(
-      EmailTemplate emailTemplate, Case caze, String uac, String qid) {
-    String[] template = emailTemplate.getTemplate();
-    Map<String, String> templateValues = new HashMap<>();
-
-    for (String templateItem : template) {
-
-      if (templateItem.equals(TEMPLATE_UAC_KEY)) {
-        templateValues.put(TEMPLATE_UAC_KEY, uac);
-
-      } else if (templateItem.equals(TEMPLATE_QID_KEY)) {
-        templateValues.put(TEMPLATE_QID_KEY, qid);
-
-      } else if (templateItem.startsWith(TEMPLATE_SENSITIVE_PREFIX)) {
-        templateValues.put(
-            templateItem,
-            caze.getSampleSensitive()
-                .get(templateItem.substring(TEMPLATE_SENSITIVE_PREFIX.length())));
-
-      } else {
-        templateValues.put(templateItem, caze.getSample().get(templateItem));
-      }
-    }
-
-    return templateValues;
   }
 }

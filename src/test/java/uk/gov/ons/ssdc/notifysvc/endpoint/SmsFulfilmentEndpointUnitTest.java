@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -99,12 +98,6 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(
-            Map.ofEntries(
-                entry(TEMPLATE_UAC_KEY, newUacQid.getUac()),
-                entry(TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -164,9 +157,6 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(Map.ofEntries(entry(TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -223,8 +213,6 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(null);
-    when(smsRequestService.buildPersonalisationFromTemplate(smsTemplate, testCase, null, null))
-        .thenReturn(Map.of());
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -278,12 +266,6 @@ class SmsFulfilmentEndpointUnitTest {
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(newUacQid);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(
-            Map.ofEntries(
-                entry(TEMPLATE_UAC_KEY, newUacQid.getUac()),
-                entry(TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     // Simulate an error when we attempt to send the SMS
     when(notificationClientApi.sendSms(any(), any(), any(), any()))

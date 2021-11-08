@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -11,7 +10,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
@@ -25,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
@@ -190,109 +187,5 @@ class SmsRequestServiceTest {
     assertThat(enrichedSmsFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
     assertThat(enrichedSmsFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
     assertThat(enrichedSmsFulfilment.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
-  }
-
-  @Test
-  void testBuildPersonalisationFromTemplate() {
-    // Given
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(
-        new String[] {
-          TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, "foo", TEMPLATE_SENSITIVE_PREFIX + "foo"
-        });
-
-    Case testCase = new Case();
-    testCase.setSample(Map.ofEntries(entry("foo", "bar")));
-    testCase.setSampleSensitive(Map.ofEntries(entry("foo", "secretBar")));
-
-    // When
-    Map<String, String> personalisationValues =
-        smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, TEST_UAC, TEST_QID);
-
-    // Then
-    assertThat(personalisationValues)
-        .containsEntry(TEMPLATE_UAC_KEY, TEST_UAC)
-        .containsEntry(TEMPLATE_QID_KEY, TEST_QID)
-        .containsEntry("foo", "bar")
-        .containsEntry(TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar");
-  }
-
-  @Test
-  void testBuildPersonalisationFromTemplateJustUac() {
-    // Given
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY});
-
-    Case testCase = new Case();
-
-    // When
-    Map<String, String> personalisationValues =
-        smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, TEST_UAC, TEST_QID);
-
-    // Then
-    assertThat(personalisationValues)
-        .containsEntry(TEMPLATE_UAC_KEY, TEST_UAC)
-        .containsOnlyKeys(TEMPLATE_UAC_KEY);
-  }
-
-  @Test
-  void testBuildPersonalisationFromTemplateJustQid() {
-    // Given
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY});
-
-    Case testCase = new Case();
-
-    // When
-    Map<String, String> personalisationValues =
-        smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, TEST_UAC, TEST_QID);
-
-    // Then
-    assertThat(personalisationValues)
-        .containsEntry(TEMPLATE_QID_KEY, TEST_QID)
-        .containsOnlyKeys(TEMPLATE_QID_KEY);
-  }
-
-  @Test
-  void testBuildPersonalisationFromTemplateJustSampleFields() {
-    // Given
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(new String[] {"foo", "spam"});
-
-    Case testCase = new Case();
-    testCase.setSample(Map.ofEntries(entry("foo", "bar"), entry("spam", "eggs")));
-
-    // When
-    Map<String, String> personalisationValues =
-        smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, TEST_UAC, TEST_QID);
-
-    // Then
-    assertThat(personalisationValues).containsEntry("foo", "bar").containsEntry("spam", "eggs");
-  }
-
-  @Test
-  void testBuildPersonalisationFromTemplateJustSampleSensitiveFields() {
-    // Given
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setTemplate(
-        new String[] {TEMPLATE_SENSITIVE_PREFIX + "foo", TEMPLATE_SENSITIVE_PREFIX + "spam"});
-
-    Case testCase = new Case();
-    testCase.setSampleSensitive(
-        Map.ofEntries(entry("foo", "secretBar"), entry("spam", "secretEggs")));
-
-    // When
-    Map<String, String> personalisationValues =
-        smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, TEST_UAC, TEST_QID);
-
-    // Then
-    assertThat(personalisationValues)
-        .containsEntry(TEMPLATE_SENSITIVE_PREFIX + "foo", "secretBar")
-        .containsEntry(TEMPLATE_SENSITIVE_PREFIX + "spam", "secretEggs");
   }
 }

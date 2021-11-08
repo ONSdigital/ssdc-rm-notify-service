@@ -1,5 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
+
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
@@ -103,7 +105,7 @@ public class EmailFulfilmentEndpoint {
     UacQidCreatedPayloadDTO newUacQidPair =
         emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate());
 
-    Map<String, String> emailTemplateValues =
+    Map<String, String> emailPersonalisation =
         buildPersonalisationTemplateValues(emailTemplate, caze, newUacQidPair);
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the email.
@@ -124,7 +126,7 @@ public class EmailFulfilmentEndpoint {
     sendEmail(
         request.getPayload().getEmailFulfilment().getEmail(),
         emailTemplate,
-        emailTemplateValues,
+        emailPersonalisation,
         request.getHeader().getCorrelationId().toString());
 
     return new ResponseEntity<>(createEmailSuccessResponse(newUacQidPair), HttpStatus.OK);
@@ -133,10 +135,10 @@ public class EmailFulfilmentEndpoint {
   private Map<String, String> buildPersonalisationTemplateValues(
       EmailTemplate emailTemplate, Case caze, UacQidCreatedPayloadDTO uacQidPair) {
     if (uacQidPair != null) {
-      return emailRequestService.buildPersonalisationFromTemplate(
-          emailTemplate, caze, uacQidPair.getUac(), uacQidPair.getQid());
+      return buildPersonalisationFromTemplate(
+          emailTemplate.getTemplate(), caze, uacQidPair.getUac(), uacQidPair.getQid());
     }
-    return emailRequestService.buildPersonalisationFromTemplate(emailTemplate, caze, null, null);
+    return buildPersonalisationFromTemplate(emailTemplate.getTemplate(), caze);
   }
 
   private EmailFulfilmentResponse createEmailSuccessResponse(

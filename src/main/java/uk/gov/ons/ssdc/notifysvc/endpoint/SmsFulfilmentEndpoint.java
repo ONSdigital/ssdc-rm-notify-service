@@ -1,5 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
+
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
@@ -107,7 +109,7 @@ public class SmsFulfilmentEndpoint {
     UacQidCreatedPayloadDTO newUacQidPair =
         smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
-    Map<String, String> smsTemplateValues =
+    Map<String, String> smsPersonalisation =
         buildPersonalisationTemplateValues(smsTemplate, caze, newUacQidPair);
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the SMS.
@@ -125,7 +127,7 @@ public class SmsFulfilmentEndpoint {
         request.getHeader().getOriginatingUser());
 
     sendSms(
-        request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsTemplateValues);
+        request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsPersonalisation);
 
     return new ResponseEntity<>(createSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
@@ -133,10 +135,10 @@ public class SmsFulfilmentEndpoint {
   private Map<String, String> buildPersonalisationTemplateValues(
       SmsTemplate smsTemplate, Case caze, UacQidCreatedPayloadDTO uacQidPair) {
     if (uacQidPair != null) {
-      return smsRequestService.buildPersonalisationFromTemplate(
-          smsTemplate, caze, uacQidPair.getUac(), uacQidPair.getQid());
+      return buildPersonalisationFromTemplate(
+          smsTemplate.getTemplate(), caze, uacQidPair.getUac(), uacQidPair.getQid());
     }
-    return smsRequestService.buildPersonalisationFromTemplate(smsTemplate, caze, null, null);
+    return buildPersonalisationFromTemplate(smsTemplate.getTemplate(), caze);
   }
 
   private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {

@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -96,12 +95,6 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(newUacQid);
-    when(emailRequestService.buildPersonalisationFromTemplate(
-            emailTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(
-            Map.ofEntries(
-                entry(TEMPLATE_UAC_KEY, newUacQid.getUac()),
-                entry(TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -162,9 +155,6 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(newUacQid);
-    when(emailRequestService.buildPersonalisationFromTemplate(
-            emailTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(Map.ofEntries(entry(TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -222,8 +212,6 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(null);
-    when(emailRequestService.buildPersonalisationFromTemplate(emailTemplate, testCase, null, null))
-        .thenReturn(Map.of());
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -279,12 +267,6 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(newUacQid);
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
-    when(emailRequestService.buildPersonalisationFromTemplate(
-            emailTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(
-            Map.ofEntries(
-                entry(TEMPLATE_UAC_KEY, newUacQid.getUac()),
-                entry(TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     // Simulate an error when we attempt to send the email
     when(notificationClientApi.sendEmail(any(), any(), any(), any()))

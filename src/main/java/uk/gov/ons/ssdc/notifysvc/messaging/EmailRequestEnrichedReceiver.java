@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,6 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
-import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
@@ -25,17 +25,14 @@ public class EmailRequestEnrichedReceiver {
 
   private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
-  private final EmailRequestService emailRequestService;
   private final NotificationClientApi notificationClientApi;
 
   public EmailRequestEnrichedReceiver(
       EmailTemplateRepository emailTemplateRepository,
       CaseRepository caseRepository,
-      EmailRequestService emailRequestService,
       NotificationClientApi notificationClientApi) {
     this.emailTemplateRepository = emailTemplateRepository;
     this.caseRepository = caseRepository;
-    this.emailRequestService = emailRequestService;
     this.notificationClientApi = notificationClientApi;
   }
 
@@ -66,8 +63,11 @@ public class EmailRequestEnrichedReceiver {
                         "Case not found with ID: " + emailRequestEnriched.getCaseId()));
 
     Map<String, String> personalisationTemplateValues =
-        emailRequestService.buildPersonalisationFromTemplate(
-            emailTemplate, caze, emailRequestEnriched.getUac(), emailRequestEnriched.getQid());
+        buildPersonalisationFromTemplate(
+            emailTemplate.getTemplate(),
+            caze,
+            emailRequestEnriched.getUac(),
+            emailRequestEnriched.getQid());
 
     try {
       notificationClientApi.sendEmail(

@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,6 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
-import uk.gov.ons.ssdc.notifysvc.service.SmsRequestService;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
@@ -28,17 +28,14 @@ public class SmsRequestEnrichedReceiver {
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
-  private final SmsRequestService smsRequestService;
   private final NotificationClientApi notificationClientApi;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      SmsRequestService smsRequestService,
       NotificationClientApi notificationClientApi) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
-    this.smsRequestService = smsRequestService;
     this.notificationClientApi = notificationClientApi;
   }
 
@@ -69,8 +66,11 @@ public class SmsRequestEnrichedReceiver {
                         "Case not found with ID: " + smsRequestEnriched.getCaseId()));
 
     Map<String, String> personalisationTemplateValues =
-        smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, caze, smsRequestEnriched.getUac(), smsRequestEnriched.getQid());
+        buildPersonalisationFromTemplate(
+            smsTemplate.getTemplate(),
+            caze,
+            smsRequestEnriched.getUac(),
+            smsRequestEnriched.getQid());
 
     try {
       notificationClientApi.sendSms(
