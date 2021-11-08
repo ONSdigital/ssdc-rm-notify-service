@@ -61,9 +61,12 @@ class EmailRequestServiceTest {
       strings = {
         "example@example.com",
         "foo@bar.co.uk",
+        "email@subdomain.example.com",
+        "email@123.123.123.123",
+        "foo+bar@example.com",
+        "1234567890@example.com",
       })
   void testValidateEmailAddressValid(String emailAddress) {
-    // TODO
     assertTrue(emailRequestService.validateEmailAddress(emailAddress));
   }
 
@@ -77,8 +80,7 @@ class EmailRequestServiceTest {
         "@.com",
       })
   void testValidateEmailAddressInvalid(String emailAddress) {
-    // TODO
-    //    assertFalse(emailRequestService.validateEmailAddress(emailAddress));
+    assertFalse(emailRequestService.validateEmailAddress(emailAddress));
   }
 
   @Test
