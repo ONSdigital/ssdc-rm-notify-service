@@ -176,7 +176,8 @@ class SmsFulfilmentEndpointIT {
     smsFulfilmentEvent.setPayload(payload);
 
     // Stub the Notify API endpoint with a success code and random response to keep the client happy
-    NotifyApiSendSmsResponse notifyApiSendSmsResponse = easyRandom.nextObject(NotifyApiSendSmsResponse.class);
+    NotifyApiSendSmsResponse notifyApiSendSmsResponse =
+        easyRandom.nextObject(NotifyApiSendSmsResponse.class);
     String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendSmsResponse);
     wireMockServer.stubFor(
         WireMock.post(WireMock.urlEqualTo(SMS_NOTIFY_API_ENDPOINT))

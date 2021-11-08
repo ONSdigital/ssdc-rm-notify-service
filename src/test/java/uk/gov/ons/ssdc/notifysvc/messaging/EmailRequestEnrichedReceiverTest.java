@@ -90,6 +90,6 @@ class EmailRequestEnrichedReceiverTest {
             emailTemplate.getNotifyTemplateId().toString(),
             emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched().getEmail(),
             personalisationValues,
-            emailRequestEnrichedEvent.getHeader().getCorrelationId().toString() );
+            emailRequestEnrichedEvent.getHeader().getCorrelationId().toString());
   }
 }

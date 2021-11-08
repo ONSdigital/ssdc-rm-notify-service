@@ -43,7 +43,6 @@ import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendEmailResponse;
-import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendSmsResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestHeaderDTO;
@@ -181,7 +180,8 @@ class EmailFulfilmentEndpointIT {
     emailFulfilmentEvent.setPayload(payload);
 
     // Stub the Notify API endpoint with a success code and random response to keep the client happy
-    NotifyApiSendEmailResponse notifyApiSendEmailResponse = easyRandom.nextObject(NotifyApiSendEmailResponse.class);
+    NotifyApiSendEmailResponse notifyApiSendEmailResponse =
+        easyRandom.nextObject(NotifyApiSendEmailResponse.class);
     String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendEmailResponse);
     wireMockServer.stubFor(
         WireMock.post(WireMock.urlEqualTo(EMAIL_NOTIFY_API_ENDPOINT))

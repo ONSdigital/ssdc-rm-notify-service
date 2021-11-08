@@ -169,7 +169,8 @@ class SmsRequestReceiverIT {
     // Stub the Notify API endpoint with a success code and random response to keep the client
     // happy, this is to stop the enriched receiver from failing and nacking the resulting enriched
     // message
-    NotifyApiSendSmsResponse notifyApiSendSmsResponse = easyRandom.nextObject(NotifyApiSendSmsResponse.class);
+    NotifyApiSendSmsResponse notifyApiSendSmsResponse =
+        easyRandom.nextObject(NotifyApiSendSmsResponse.class);
     String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendSmsResponse);
     wireMockServer.stubFor(
         WireMock.post(urlEqualTo(SMS_NOTIFY_API_ENDPOINT))

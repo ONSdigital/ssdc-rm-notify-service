@@ -34,7 +34,7 @@ import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
-import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendSmsResponse;
+import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendEmailResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequest;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedEmailFulfilment;
@@ -146,7 +146,7 @@ class EmailRequestReceiverIT {
     testCase = caseRepository.saveAndFlush(testCase);
 
     EmailTemplate emailTemplate = new EmailTemplate();
-    emailTemplate.setPackCode("TEST_PACK_CODE");
+    emailTemplate.setPackCode("TEST_PACK_CODE_12343");
     emailTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
     emailTemplate.setDescription("Test description");
@@ -174,8 +174,9 @@ class EmailRequestReceiverIT {
     // Stub the Notify API endpoint with a success code and random response to keep the client
     // happy, this is to stop the enriched receiver from failing and nacking the resulting enriched
     // message
-    NotifyApiSendSmsResponse notifyApiSendSmsResponse = easyRandom.nextObject(NotifyApiSendSmsResponse.class);
-    String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendSmsResponse);
+    NotifyApiSendEmailResponse notifyApiSendEmailResponse =
+        easyRandom.nextObject(NotifyApiSendEmailResponse.class);
+    String notifyApiResponseJson = objectMapper.writeValueAsString(notifyApiSendEmailResponse);
     wireMockServer.stubFor(
         WireMock.post(urlEqualTo(EMAIL_NOTIFY_API_ENDPOINT))
             .willReturn(
