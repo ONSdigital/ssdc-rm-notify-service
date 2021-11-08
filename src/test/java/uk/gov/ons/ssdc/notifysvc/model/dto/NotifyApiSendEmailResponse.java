@@ -14,7 +14,7 @@ public class NotifyApiSendEmailResponse {
   public class Content {
     public String subject;
     public String body;
-    public String from_number;
+    public String from_email;
   }
 
   @Data
