@@ -70,7 +70,7 @@ class SmsRequestReceiverTest {
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQidCreated);
+        .thenReturn(Optional.of(newUacQidCreated));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
@@ -105,7 +105,7 @@ class SmsRequestReceiverTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
-            newUacQidCreated,
+            Optional.of(newUacQidCreated),
             smsRequestEvent.getHeader().getSource(),
             smsRequestEvent.getHeader().getChannel(),
             smsRequestEvent.getHeader().getCorrelationId(),
@@ -126,7 +126,7 @@ class SmsRequestReceiverTest {
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(null);
+        .thenReturn(Optional.empty());
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
@@ -161,7 +161,7 @@ class SmsRequestReceiverTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
-            null,
+            Optional.empty(),
             smsRequestEvent.getHeader().getSource(),
             smsRequestEvent.getHeader().getChannel(),
             smsRequestEvent.getHeader().getCorrelationId(),

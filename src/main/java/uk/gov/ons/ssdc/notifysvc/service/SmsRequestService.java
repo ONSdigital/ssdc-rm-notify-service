@@ -5,6 +5,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.does
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -39,12 +40,11 @@ public class SmsRequestService {
     this.pubSubHelper = pubSubHelper;
   }
 
-  // TODO make this return an optional?
-  public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] smsTemplate) {
+  public Optional<UacQidCreatedPayloadDTO> fetchNewUacQidPairIfRequired(String[] smsTemplate) {
     if (doesTemplateRequireNewUacQid(smsTemplate)) {
-      return uacQidServiceClient.generateUacQid(QID_TYPE);
+      return Optional.of(uacQidServiceClient.generateUacQid(QID_TYPE));
     }
-    return null;
+    return Optional.empty();
   }
 
   public boolean isSmsTemplateAllowedOnSurvey(SmsTemplate smsTemplate, Survey survey) {
@@ -63,7 +63,7 @@ public class SmsRequestService {
       UUID caseId,
       String packCode,
       Object uacMetadata,
-      UacQidCreatedPayloadDTO newUacQidPair,
+      Optional<UacQidCreatedPayloadDTO> newUacQidPair,
       String source,
       String channel,
       UUID correlationId,
@@ -73,9 +73,9 @@ public class SmsRequestService {
     enrichedSmsFulfilment.setPackCode(packCode);
     enrichedSmsFulfilment.setUacMetadata(uacMetadata);
 
-    if (newUacQidPair != null) {
-      enrichedSmsFulfilment.setUac(newUacQidPair.getUac());
-      enrichedSmsFulfilment.setQid(newUacQidPair.getQid());
+    if (newUacQidPair.isPresent()) {
+      enrichedSmsFulfilment.setUac(newUacQidPair.get().getUac());
+      enrichedSmsFulfilment.setQid(newUacQidPair.get().getQid());
     }
 
     EventDTO enrichedSmsFulfilmentEvent = new EventDTO();

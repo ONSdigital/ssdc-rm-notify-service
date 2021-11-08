@@ -51,7 +51,7 @@ import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
-class SmsFulfilmentEndpointUnitTest {
+class SmsFulfilmentEndpointTest {
 
   @Value("${notify.senderId}")
   private String senderId;
@@ -97,7 +97,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -120,7 +120,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -156,7 +156,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -179,7 +179,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -212,7 +212,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(null);
+        .thenReturn(Optional.empty());
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -233,7 +233,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            null,
+            Optional.empty(),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -264,7 +264,7 @@ class SmsFulfilmentEndpointUnitTest {
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     // Simulate an error when we attempt to send the SMS
@@ -290,7 +290,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,7 +107,7 @@ public class SmsFulfilmentEndpoint {
           responseStatusException.getStatus());
     }
 
-    UacQidCreatedPayloadDTO newUacQidPair =
+    Optional<UacQidCreatedPayloadDTO> newUacQidPair =
         smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
     Map<String, String> smsPersonalisation =
@@ -133,18 +134,19 @@ public class SmsFulfilmentEndpoint {
   }
 
   private Map<String, String> buildPersonalisationTemplateValues(
-      SmsTemplate smsTemplate, Case caze, UacQidCreatedPayloadDTO uacQidPair) {
-    if (uacQidPair != null) {
+      SmsTemplate smsTemplate, Case caze, Optional<UacQidCreatedPayloadDTO> uacQidPair) {
+    if (uacQidPair.isPresent()) {
       return buildPersonalisationFromTemplate(
-          smsTemplate.getTemplate(), caze, uacQidPair.getUac(), uacQidPair.getQid());
+          smsTemplate.getTemplate(), caze, uacQidPair.get().getUac(), uacQidPair.get().getQid());
     }
     return buildPersonalisationFromTemplate(smsTemplate.getTemplate(), caze);
   }
 
-  private SmsFulfilmentResponse createSmsSuccessResponse(UacQidCreatedPayloadDTO newUacQidPair) {
-    if (newUacQidPair != null) {
-      String uacHash = HashHelper.hash(newUacQidPair.getUac());
-      return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
+  private SmsFulfilmentResponse createSmsSuccessResponse(
+      Optional<UacQidCreatedPayloadDTO> newUacQidPair) {
+    if (newUacQidPair.isPresent()) {
+      String uacHash = HashHelper.hash(newUacQidPair.get().getUac());
+      return new SmsFulfilmentResponseSuccess(uacHash, newUacQidPair.get().getQid());
     } else {
       return new SmsFulfilmentEmptyResponseSuccess();
     }

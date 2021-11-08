@@ -3,6 +3,7 @@ package uk.gov.ons.ssdc.notifysvc.messaging;
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -63,7 +64,7 @@ public class SmsRequestReceiver {
       throw new RuntimeException("Case not found with ID: " + smsRequest.getCaseId());
     }
 
-    UacQidCreatedPayloadDTO newUacQidPair =
+    Optional<UacQidCreatedPayloadDTO> newUacQidPair =
         smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
     EventDTO smsRequestEnrichedEvent =
         buildSmsRequestEnrichedEvent(smsRequest, smsRequestHeader, newUacQidPair);
@@ -86,15 +87,17 @@ public class SmsRequestReceiver {
   }
 
   private EventDTO buildSmsRequestEnrichedEvent(
-      SmsRequest smsRequest, EventHeaderDTO smsRequestHeader, UacQidCreatedPayloadDTO uacQidPair) {
+      SmsRequest smsRequest,
+      EventHeaderDTO smsRequestHeader,
+      Optional<UacQidCreatedPayloadDTO> uacQidPair) {
     SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
     smsRequestEnriched.setCaseId(smsRequest.getCaseId());
     smsRequestEnriched.setPhoneNumber(smsRequest.getPhoneNumber());
     smsRequestEnriched.setPackCode(smsRequest.getPackCode());
 
-    if (uacQidPair != null) {
-      smsRequestEnriched.setUac(uacQidPair.getUac());
-      smsRequestEnriched.setQid(uacQidPair.getQid());
+    if (uacQidPair.isPresent()) {
+      smsRequestEnriched.setUac(uacQidPair.get().getUac());
+      smsRequestEnriched.setQid(uacQidPair.get().getQid());
     }
 
     EventHeaderDTO enrichedEventHeader = new EventHeaderDTO();

@@ -5,6 +5,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.does
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,11 +41,11 @@ public class EmailRequestService {
     this.pubSubHelper = pubSubHelper;
   }
 
-  public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] emailTemplate) {
+  public Optional<UacQidCreatedPayloadDTO> fetchNewUacQidPairIfRequired(String[] emailTemplate) {
     if (doesTemplateRequireNewUacQid(emailTemplate)) {
-      return uacQidServiceClient.generateUacQid(QID_TYPE);
+      return Optional.of(uacQidServiceClient.generateUacQid(QID_TYPE));
     }
-    return null;
+    return Optional.empty();
   }
 
   public boolean isEmailTemplateAllowedOnSurvey(EmailTemplate emailTemplate, Survey survey) {
@@ -63,7 +64,7 @@ public class EmailRequestService {
       UUID caseId,
       String packCode,
       Object uacMetadata,
-      UacQidCreatedPayloadDTO newUacQidPair,
+      Optional<UacQidCreatedPayloadDTO> newUacQidPair,
       String source,
       String channel,
       UUID correlationId,
@@ -73,9 +74,9 @@ public class EmailRequestService {
     enrichedEmailFulfilment.setPackCode(packCode);
     enrichedEmailFulfilment.setUacMetadata(uacMetadata);
 
-    if (newUacQidPair != null) {
-      enrichedEmailFulfilment.setUac(newUacQidPair.getUac());
-      enrichedEmailFulfilment.setQid(newUacQidPair.getQid());
+    if (newUacQidPair.isPresent()) {
+      enrichedEmailFulfilment.setUac(newUacQidPair.get().getUac());
+      enrichedEmailFulfilment.setQid(newUacQidPair.get().getQid());
     }
 
     EventDTO enrichedEmailFulfilmentEvent = new EventDTO();

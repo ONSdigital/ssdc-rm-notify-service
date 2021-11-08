@@ -71,7 +71,7 @@ class EmailRequestReceiverTest {
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
-        .thenReturn(newUacQidCreated);
+        .thenReturn(Optional.of(newUacQidCreated));
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
@@ -106,7 +106,7 @@ class EmailRequestReceiverTest {
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailRequestEvent.getPayload().getEmailRequest().getUacMetadata(),
-            newUacQidCreated,
+            Optional.of(newUacQidCreated),
             emailRequestEvent.getHeader().getSource(),
             emailRequestEvent.getHeader().getChannel(),
             emailRequestEvent.getHeader().getCorrelationId(),
@@ -127,7 +127,7 @@ class EmailRequestReceiverTest {
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
-        .thenReturn(null);
+        .thenReturn(Optional.empty());
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
@@ -162,7 +162,7 @@ class EmailRequestReceiverTest {
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailRequestEvent.getPayload().getEmailRequest().getUacMetadata(),
-            null,
+            Optional.empty(),
             emailRequestEvent.getHeader().getSource(),
             emailRequestEvent.getHeader().getChannel(),
             emailRequestEvent.getHeader().getCorrelationId(),

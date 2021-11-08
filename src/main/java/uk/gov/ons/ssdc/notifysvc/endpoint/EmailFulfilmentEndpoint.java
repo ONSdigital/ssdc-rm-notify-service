@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +103,7 @@ public class EmailFulfilmentEndpoint {
           responseStatusException.getStatus());
     }
 
-    UacQidCreatedPayloadDTO newUacQidPair =
+    Optional<UacQidCreatedPayloadDTO> newUacQidPair =
         emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate());
 
     Map<String, String> emailPersonalisation =
@@ -133,19 +134,19 @@ public class EmailFulfilmentEndpoint {
   }
 
   private Map<String, String> buildPersonalisationTemplateValues(
-      EmailTemplate emailTemplate, Case caze, UacQidCreatedPayloadDTO uacQidPair) {
-    if (uacQidPair != null) {
+      EmailTemplate emailTemplate, Case caze, Optional<UacQidCreatedPayloadDTO> uacQidPair) {
+    if (uacQidPair.isPresent()) {
       return buildPersonalisationFromTemplate(
-          emailTemplate.getTemplate(), caze, uacQidPair.getUac(), uacQidPair.getQid());
+          emailTemplate.getTemplate(), caze, uacQidPair.get().getUac(), uacQidPair.get().getQid());
     }
     return buildPersonalisationFromTemplate(emailTemplate.getTemplate(), caze);
   }
 
   private EmailFulfilmentResponse createEmailSuccessResponse(
-      UacQidCreatedPayloadDTO newUacQidPair) {
-    if (newUacQidPair != null) {
-      String uacHash = HashHelper.hash(newUacQidPair.getUac());
-      return new EmailFulfilmentResponseSuccess(uacHash, newUacQidPair.getQid());
+      Optional<UacQidCreatedPayloadDTO> newUacQidPair) {
+    if (newUacQidPair.isPresent()) {
+      String uacHash = HashHelper.hash(newUacQidPair.get().getUac());
+      return new EmailFulfilmentResponseSuccess(uacHash, newUacQidPair.get().getQid());
     } else {
       return new EmailFulfilmentEmptyResponseSuccess();
     }

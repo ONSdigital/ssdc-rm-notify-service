@@ -94,7 +94,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(true);
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -118,7 +118,7 @@ class EmailFulfilmentEndpointTest {
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             emailFulfilmentRequest.getHeader().getSource(),
             emailFulfilmentRequest.getHeader().getChannel(),
             emailFulfilmentRequest.getHeader().getCorrelationId(),
@@ -154,7 +154,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(true);
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -178,7 +178,7 @@ class EmailFulfilmentEndpointTest {
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             emailFulfilmentRequest.getHeader().getSource(),
             emailFulfilmentRequest.getHeader().getChannel(),
             emailFulfilmentRequest.getHeader().getCorrelationId(),
@@ -211,7 +211,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(true);
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
-        .thenReturn(null);
+        .thenReturn(Optional.empty());
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -233,7 +233,7 @@ class EmailFulfilmentEndpointTest {
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
-            null,
+            Optional.empty(),
             emailFulfilmentRequest.getHeader().getSource(),
             emailFulfilmentRequest.getHeader().getChannel(),
             emailFulfilmentRequest.getHeader().getCorrelationId(),
@@ -265,7 +265,7 @@ class EmailFulfilmentEndpointTest {
             emailTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
 
     // Simulate an error when we attempt to send the email
@@ -293,7 +293,7 @@ class EmailFulfilmentEndpointTest {
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             emailFulfilmentRequest.getHeader().getSource(),
             emailFulfilmentRequest.getHeader().getChannel(),
             emailFulfilmentRequest.getHeader().getCorrelationId(),

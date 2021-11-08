@@ -3,6 +3,7 @@ package uk.gov.ons.ssdc.notifysvc.messaging;
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -65,7 +66,7 @@ public class EmailRequestReceiver {
       throw new RuntimeException("Case not found with ID: " + emailRequest.getCaseId());
     }
 
-    UacQidCreatedPayloadDTO newUacQidPair =
+    Optional<UacQidCreatedPayloadDTO> newUacQidPair =
         emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate());
     EventDTO emailRequestEnrichedEvent =
         buildEmailRequestEnrichedEvent(emailRequest, emailRequestHeader, newUacQidPair);
@@ -90,15 +91,15 @@ public class EmailRequestReceiver {
   private EventDTO buildEmailRequestEnrichedEvent(
       EmailRequest emailRequest,
       EventHeaderDTO emailRequestHeader,
-      UacQidCreatedPayloadDTO uacQidPair) {
+      Optional<UacQidCreatedPayloadDTO> uacQidPair) {
     EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
     emailRequestEnriched.setCaseId(emailRequest.getCaseId());
     emailRequestEnriched.setEmail(emailRequest.getEmail());
     emailRequestEnriched.setPackCode(emailRequest.getPackCode());
 
-    if (uacQidPair != null) {
-      emailRequestEnriched.setUac(uacQidPair.getUac());
-      emailRequestEnriched.setQid(uacQidPair.getQid());
+    if (uacQidPair.isPresent()) {
+      emailRequestEnriched.setUac(uacQidPair.get().getUac());
+      emailRequestEnriched.setQid(uacQidPair.get().getQid());
     }
 
     EventHeaderDTO enrichedEventHeader = new EventHeaderDTO();

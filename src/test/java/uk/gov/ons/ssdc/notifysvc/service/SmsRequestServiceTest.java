@@ -2,7 +2,6 @@ package uk.gov.ons.ssdc.notifysvc.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -13,6 +12,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -90,11 +90,11 @@ class SmsRequestServiceTest {
   @Test
   void testFetchNewUacQidPairIfRequiredEmptyTemplate() {
     // When
-    UacQidCreatedPayloadDTO actualUacQidCreated =
+    Optional<UacQidCreatedPayloadDTO> actualUacQidCreated =
         smsRequestService.fetchNewUacQidPairIfRequired(new String[] {});
 
     // Then
-    assertNull(actualUacQidCreated);
+    assertThat(actualUacQidCreated).isEmpty();
     verifyNoInteractions(uacQidServiceClient);
   }
 
@@ -107,12 +107,12 @@ class SmsRequestServiceTest {
     when(uacQidServiceClient.generateUacQid(QID_TYPE)).thenReturn(newUacQidCreated);
 
     // When
-    UacQidCreatedPayloadDTO actualUacQidCreated =
+    Optional<UacQidCreatedPayloadDTO> actualUacQidCreated =
         smsRequestService.fetchNewUacQidPairIfRequired(
             new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
 
     // Then
-    assertThat(actualUacQidCreated).isEqualTo(newUacQidCreated);
+    assertThat(actualUacQidCreated).contains(newUacQidCreated);
   }
 
   @Test
@@ -157,7 +157,7 @@ class SmsRequestServiceTest {
         caseId,
         TEST_PACK_CODE,
         TEST_UAC_METADATA,
-        uacQidPair,
+        Optional.of(uacQidPair),
         TEST_SOURCE,
         TEST_CHANNEL,
         correlationId,
