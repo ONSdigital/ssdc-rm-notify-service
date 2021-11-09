@@ -8,8 +8,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMessageWithValidTimeStamp;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +60,7 @@ class SmsRequestReceiverTest {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
@@ -70,7 +70,7 @@ class SmsRequestReceiverTest {
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQidCreated);
+        .thenReturn(Optional.of(newUacQidCreated));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
@@ -105,7 +105,7 @@ class SmsRequestReceiverTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
-            newUacQidCreated,
+            Optional.of(newUacQidCreated),
             smsRequestEvent.getHeader().getSource(),
             smsRequestEvent.getHeader().getChannel(),
             smsRequestEvent.getHeader().getCorrelationId(),
@@ -126,7 +126,7 @@ class SmsRequestReceiverTest {
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(null);
+        .thenReturn(Optional.empty());
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
 
     EventDTO smsRequestEvent = buildEventDTO(smsRequestEnrichedTopic);
@@ -161,7 +161,7 @@ class SmsRequestReceiverTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
-            null,
+            Optional.empty(),
             smsRequestEvent.getHeader().getSource(),
             smsRequestEvent.getHeader().getChannel(),
             smsRequestEvent.getHeader().getCorrelationId(),
@@ -176,7 +176,7 @@ class SmsRequestReceiverTest {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
 
     String invalidPhoneNumber = "blah";
 
@@ -209,7 +209,7 @@ class SmsRequestReceiverTest {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
@@ -245,7 +245,7 @@ class SmsRequestReceiverTest {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {SMS_TEMPLATE_QID_KEY, SMS_TEMPLATE_UAC_KEY});
+    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);

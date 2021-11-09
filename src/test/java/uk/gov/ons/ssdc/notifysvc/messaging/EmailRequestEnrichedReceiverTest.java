@@ -19,31 +19,30 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
-import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
-import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
-class SmsRequestEnrichedReceiverTest {
-  @Mock SmsTemplateRepository smsTemplateRepository;
+class EmailRequestEnrichedReceiverTest {
+  @Mock EmailTemplateRepository emailTemplateRepository;
   @Mock CaseRepository caseRepository;
+  @Mock EmailRequestService emailRequestService;
   @Mock NotificationClientApi notificationClientApi;
 
-  @InjectMocks SmsRequestEnrichedReceiver smsRequestEnrichedReceiver;
-
-  @Value("${notify.senderId}")
-  private String senderId;
+  @InjectMocks EmailRequestEnrichedReceiver emailRequestEnrichedReceiver;
 
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
 
-  @Value("${queueconfig.sms-request-enriched-topic}")
-  private String smsRequestEnrichedTopic;
+  @Value("${queueconfig.email-request-enriched-topic}")
+  private String emailRequestEnrichedTopic;
 
   @Test
   void testReceiveMessageHappyPath() throws NotificationClientException {
@@ -52,42 +51,42 @@ class SmsRequestEnrichedReceiverTest {
     Case testCase = new Case();
     testCase.setId(UUID.randomUUID());
 
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
-    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode("TEST_PACK_CODE");
+    emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
+    emailTemplate.setNotifyTemplateId(UUID.randomUUID());
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
     newUacQidCreated.setQid(TEST_QID);
 
-    EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);
-    SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
-    smsRequestEnriched.setCaseId(testCase.getId());
-    smsRequestEnriched.setPackCode("TEST_PACK_CODE");
-    smsRequestEnriched.setUac(TEST_UAC);
-    smsRequestEnriched.setQid(TEST_QID);
-    smsRequestEnriched.setPhoneNumber("07564283939");
-    smsRequestEnrichedEvent.getPayload().setSmsRequestEnriched(smsRequestEnriched);
+    EventDTO emailRequestEnrichedEvent = buildEventDTO(emailRequestEnrichedTopic);
+    EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
+    emailRequestEnriched.setCaseId(testCase.getId());
+    emailRequestEnriched.setPackCode("TEST_PACK_CODE");
+    emailRequestEnriched.setUac(TEST_UAC);
+    emailRequestEnriched.setQid(TEST_QID);
+    emailRequestEnriched.setEmail("example@example.com");
+    emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
     Map<String, String> personalisationValues =
         Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
 
-    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
-        .thenReturn(Optional.of(smsTemplate));
+    when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
+        .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
 
-    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
     // When
-    smsRequestEnrichedReceiver.receiveMessage(eventMessage);
+    emailRequestEnrichedReceiver.receiveMessage(eventMessage);
 
     // Then
     verify(notificationClientApi)
-        .sendSms(
-            smsTemplate.getNotifyTemplateId().toString(),
-            smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getPhoneNumber(),
+        .sendEmail(
+            emailTemplate.getNotifyTemplateId().toString(),
+            emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched().getEmail(),
             personalisationValues,
-            senderId);
+            emailRequestEnrichedEvent.getHeader().getCorrelationId().toString());
   }
 }

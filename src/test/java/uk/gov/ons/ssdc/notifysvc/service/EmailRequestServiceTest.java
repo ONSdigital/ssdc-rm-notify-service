@@ -23,27 +23,27 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedEmailFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
-import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveyEmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 
 @ExtendWith(MockitoExtension.class)
-class SmsRequestServiceTest {
+class EmailRequestServiceTest {
 
-  @Mock private FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
+  @Mock private FulfilmentSurveyEmailTemplateRepository fulfilmentSurveyEmailTemplateRepository;
   @Mock private UacQidServiceClient uacQidServiceClient;
   @Mock private PubSubHelper pubSubHelper;
 
-  @InjectMocks private SmsRequestService smsRequestService;
+  @InjectMocks private EmailRequestService emailRequestService;
 
-  @Value("${queueconfig.sms-fulfilment-topic}")
-  private String smsFulfilmentTopic;
+  @Value("${queueconfig.email-fulfilment-topic}")
+  private String emailFulfilmentTopic;
 
   private final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private final String TEST_UAC = "TEST_UAC";
@@ -56,15 +56,15 @@ class SmsRequestServiceTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "07123456789",
-        "07876543456",
-        "+447123456789",
-        "00447123456789",
-        "447123456789",
-        "7123456789",
+        "example@example.com",
+        "foo@bar.co.uk",
+        "email@subdomain.example.com",
+        "email@123.123.123.123",
+        "foo+bar@example.com",
+        "1234567890@example.com",
       })
-  void testValidatePhoneNumberValid(String phoneNumber) {
-    assertTrue(smsRequestService.validatePhoneNumber(phoneNumber));
+  void testValidateEmailAddressValid(String emailAddress) {
+    assertTrue(emailRequestService.validateEmailAddress(emailAddress));
   }
 
   @ParameterizedTest
@@ -72,26 +72,19 @@ class SmsRequestServiceTest {
       strings = {
         "1",
         "foo",
-        "007",
-        "071234567890",
-        "0447123456789",
-        "000447123456789",
-        "+44 7123456789",
-        "44+7123456789",
-        "0712345678a",
-        "@7123456789",
-        "07123 456789",
-        "(+44) 07123456789"
+        "not@valid",
+        "not.valid.com",
+        "@.com",
       })
-  void testValidatePhoneNumberInvalid(String phoneNumber) {
-    assertFalse(smsRequestService.validatePhoneNumber(phoneNumber));
+  void testValidateEmailAddressInvalid(String emailAddress) {
+    assertFalse(emailRequestService.validateEmailAddress(emailAddress));
   }
 
   @Test
   void testFetchNewUacQidPairIfRequiredEmptyTemplate() {
     // When
     Optional<UacQidCreatedPayloadDTO> actualUacQidCreated =
-        smsRequestService.fetchNewUacQidPairIfRequired(new String[] {});
+        emailRequestService.fetchNewUacQidPairIfRequired(new String[] {});
 
     // Then
     assertThat(actualUacQidCreated).isEmpty();
@@ -108,7 +101,7 @@ class SmsRequestServiceTest {
 
     // When
     Optional<UacQidCreatedPayloadDTO> actualUacQidCreated =
-        smsRequestService.fetchNewUacQidPairIfRequired(
+        emailRequestService.fetchNewUacQidPairIfRequired(
             new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
 
     // Then
@@ -116,33 +109,35 @@ class SmsRequestServiceTest {
   }
 
   @Test
-  void testIsSmsTemplateAllowedOnSurvey() {
+  void testIsEmailTemplateAllowedOnSurvey() {
     // Given
     Survey survey = new Survey();
     survey.setId(UUID.randomUUID());
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode(TEST_PACK_CODE);
-    when(smsRequestService.isSmsTemplateAllowedOnSurvey(smsTemplate, survey)).thenReturn(true);
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode(TEST_PACK_CODE);
+    when(emailRequestService.isEmailTemplateAllowedOnSurvey(emailTemplate, survey))
+        .thenReturn(true);
 
     // When, then
-    assertTrue(smsRequestService.isSmsTemplateAllowedOnSurvey(smsTemplate, survey));
+    assertTrue(emailRequestService.isEmailTemplateAllowedOnSurvey(emailTemplate, survey));
   }
 
   @Test
-  void testIsSmsTemplateAllowedOnSurveyNotAllowed() {
+  void testIsEmailTemplateAllowedOnSurveyNotAllowed() {
     // Given
     Survey survey = new Survey();
     survey.setId(UUID.randomUUID());
-    SmsTemplate smsTemplate = new SmsTemplate();
-    smsTemplate.setPackCode(TEST_PACK_CODE);
-    when(smsRequestService.isSmsTemplateAllowedOnSurvey(smsTemplate, survey)).thenReturn(false);
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode(TEST_PACK_CODE);
+    when(emailRequestService.isEmailTemplateAllowedOnSurvey(emailTemplate, survey))
+        .thenReturn(false);
 
     // When, then
-    assertFalse(smsRequestService.isSmsTemplateAllowedOnSurvey(smsTemplate, survey));
+    assertFalse(emailRequestService.isEmailTemplateAllowedOnSurvey(emailTemplate, survey));
   }
 
   @Test
-  void testBuildEnrichedSmsFulfilment() {
+  void testBuildEnrichedEmailFulfilment() {
     // Given
     UUID caseId = UUID.randomUUID();
     UacQidCreatedPayloadDTO uacQidPair = new UacQidCreatedPayloadDTO();
@@ -153,7 +148,7 @@ class SmsRequestServiceTest {
     ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
 
     // When
-    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+    emailRequestService.buildAndSendEnrichedEmailFulfilment(
         caseId,
         TEST_PACK_CODE,
         TEST_UAC_METADATA,
@@ -166,26 +161,26 @@ class SmsRequestServiceTest {
     // Then
     // Check we're publishing the expected event
     verify(pubSubHelper)
-        .publishAndConfirm(eq(smsFulfilmentTopic), eventDTOArgumentCaptor.capture());
-    EventDTO enrichedSmsFulfilmentEvent = eventDTOArgumentCaptor.getValue();
+        .publishAndConfirm(eq(emailFulfilmentTopic), eventDTOArgumentCaptor.capture());
+    EventDTO enrichedEmailFulfilmentEvent = eventDTOArgumentCaptor.getValue();
 
     // Check the event header
-    EventHeaderDTO enrichedSmsFulfilmentHeader = enrichedSmsFulfilmentEvent.getHeader();
-    assertThat(enrichedSmsFulfilmentHeader.getOriginatingUser()).isEqualTo(TEST_USER);
-    assertThat(enrichedSmsFulfilmentHeader.getSource()).isEqualTo(TEST_SOURCE);
-    assertThat(enrichedSmsFulfilmentHeader.getChannel()).isEqualTo(TEST_CHANNEL);
-    assertThat(enrichedSmsFulfilmentHeader.getCorrelationId()).isEqualTo(correlationId);
-    assertThat(enrichedSmsFulfilmentHeader.getMessageId()).isNotNull();
-    assertThat(enrichedSmsFulfilmentHeader.getTopic()).isEqualTo(smsFulfilmentTopic);
-    assertThat(enrichedSmsFulfilmentHeader.getDateTime()).isNotNull();
+    EventHeaderDTO enrichedEmailFulfilmentHeader = enrichedEmailFulfilmentEvent.getHeader();
+    assertThat(enrichedEmailFulfilmentHeader.getOriginatingUser()).isEqualTo(TEST_USER);
+    assertThat(enrichedEmailFulfilmentHeader.getSource()).isEqualTo(TEST_SOURCE);
+    assertThat(enrichedEmailFulfilmentHeader.getChannel()).isEqualTo(TEST_CHANNEL);
+    assertThat(enrichedEmailFulfilmentHeader.getCorrelationId()).isEqualTo(correlationId);
+    assertThat(enrichedEmailFulfilmentHeader.getMessageId()).isNotNull();
+    assertThat(enrichedEmailFulfilmentHeader.getTopic()).isEqualTo(emailFulfilmentTopic);
+    assertThat(enrichedEmailFulfilmentHeader.getDateTime()).isNotNull();
 
     // Check the event payload
-    EnrichedSmsFulfilment enrichedSmsFulfilment =
-        enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
-    assertThat(enrichedSmsFulfilment.getCaseId()).isEqualTo(caseId);
-    assertThat(enrichedSmsFulfilment.getPackCode()).isEqualTo(TEST_PACK_CODE);
-    assertThat(enrichedSmsFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
-    assertThat(enrichedSmsFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
-    assertThat(enrichedSmsFulfilment.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
+    EnrichedEmailFulfilment enrichedEmailFulfilment =
+        enrichedEmailFulfilmentEvent.getPayload().getEnrichedEmailFulfilment();
+    assertThat(enrichedEmailFulfilment.getCaseId()).isEqualTo(caseId);
+    assertThat(enrichedEmailFulfilment.getPackCode()).isEqualTo(TEST_PACK_CODE);
+    assertThat(enrichedEmailFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
+    assertThat(enrichedEmailFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
+    assertThat(enrichedEmailFulfilment.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
   }
 }

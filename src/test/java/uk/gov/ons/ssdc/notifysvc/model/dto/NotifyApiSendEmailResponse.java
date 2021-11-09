@@ -4,7 +4,7 @@ import java.util.UUID;
 import lombok.Data;
 
 @Data
-public class NotifyApiResponse {
+public class NotifyApiSendEmailResponse {
   private UUID id;
   private UUID reference;
   private Content content;
@@ -12,8 +12,9 @@ public class NotifyApiResponse {
 
   @Data
   public class Content {
+    public String subject;
     public String body;
-    public String from_number;
+    public String from_email;
   }
 
   @Data

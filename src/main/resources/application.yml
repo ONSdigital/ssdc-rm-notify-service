@@ -51,6 +51,10 @@ queueconfig:
   sms-request-enriched-topic: rm-internal-sms-request-enriched
   sms-request-subscription: rm-internal-sms-request_notify-service
   sms-request-enriched-subscription: rm-internal-sms-request-enriched_notify-service
+  email-fulfilment-topic: rm-internal-email-fulfilment
+  email-request-enriched-topic: rm-internal-email-request-enriched
+  email-request-subscription: rm-internal-email-request_notify-service
+  email-request-enriched-subscription: rm-internal-email-request-enriched_notify-service
 
 
 notify:
@@ -76,3 +80,4 @@ messagelogging:
   logstacktraces: false
 
 sms-request-enriched-delay: 0  # milliseconds
+email-request-enriched-delay: 0  # milliseconds

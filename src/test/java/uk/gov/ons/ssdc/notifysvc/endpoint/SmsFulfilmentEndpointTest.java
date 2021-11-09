@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,8 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -52,7 +51,7 @@ import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
-class SmsFulfilmentEndpointUnitTest {
+class SmsFulfilmentEndpointTest {
 
   @Value("${notify.senderId}")
   private String senderId;
@@ -87,8 +86,7 @@ class SmsFulfilmentEndpointUnitTest {
   void testSmsFulfilmentHappyPathWithUacQid() throws Exception {
     // Given
     Case testCase = getTestCase();
-    SmsTemplate smsTemplate =
-        getTestSmsTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -99,13 +97,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQid);
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(
-            Map.ofEntries(
-                entry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac()),
-                entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
+        .thenReturn(Optional.of(newUacQid));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -128,7 +120,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -145,15 +137,15 @@ class SmsFulfilmentEndpointUnitTest {
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
-        .containsEntry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac())
-        .containsEntry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid());
+        .containsEntry(TEMPLATE_UAC_KEY, newUacQid.getUac())
+        .containsEntry(TEMPLATE_QID_KEY, newUacQid.getQid());
   }
 
   @Test
   void testSmsFulfilmentHappyPathWithOnlyQid() throws Exception {
     // Given
     Case testCase = getTestCase();
-    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {SMS_TEMPLATE_QID_KEY});
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -164,10 +156,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQid);
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(Map.ofEntries(entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
+        .thenReturn(Optional.of(newUacQid));
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -190,7 +179,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -206,8 +195,8 @@ class SmsFulfilmentEndpointUnitTest {
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
-        .containsEntry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())
-        .containsOnlyKeys(SMS_TEMPLATE_QID_KEY);
+        .containsEntry(TEMPLATE_QID_KEY, newUacQid.getQid())
+        .containsOnlyKeys(TEMPLATE_QID_KEY);
   }
 
   @Test
@@ -223,9 +212,7 @@ class SmsFulfilmentEndpointUnitTest {
         .thenReturn(true);
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(null);
-    when(smsRequestService.buildPersonalisationFromTemplate(smsTemplate, testCase, null, null))
-        .thenReturn(Map.of());
+        .thenReturn(Optional.empty());
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -246,7 +233,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            null,
+            Optional.empty(),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -268,8 +255,7 @@ class SmsFulfilmentEndpointUnitTest {
   void testSmsFulfilmentServerErrorFromNotify() throws Exception {
     // Given
     Case testCase = getTestCase();
-    SmsTemplate smsTemplate =
-        getTestSmsTemplate(new String[] {SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY});
+    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
@@ -278,14 +264,8 @@ class SmsFulfilmentEndpointUnitTest {
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
-        .thenReturn(newUacQid);
+        .thenReturn(Optional.of(newUacQid));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
-    when(smsRequestService.buildPersonalisationFromTemplate(
-            smsTemplate, testCase, newUacQid.getUac(), newUacQid.getQid()))
-        .thenReturn(
-            Map.ofEntries(
-                entry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac()),
-                entry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid())));
 
     // Simulate an error when we attempt to send the SMS
     when(notificationClientApi.sendSms(any(), any(), any(), any()))
@@ -310,7 +290,7 @@ class SmsFulfilmentEndpointUnitTest {
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
-            newUacQid,
+            Optional.of(newUacQid),
             smsFulfilmentRequest.getHeader().getSource(),
             smsFulfilmentRequest.getHeader().getChannel(),
             smsFulfilmentRequest.getHeader().getCorrelationId(),
@@ -327,25 +307,27 @@ class SmsFulfilmentEndpointUnitTest {
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
-        .containsEntry(SMS_TEMPLATE_UAC_KEY, newUacQid.getUac())
-        .containsEntry(SMS_TEMPLATE_QID_KEY, newUacQid.getQid());
+        .containsEntry(TEMPLATE_UAC_KEY, newUacQid.getUac())
+        .containsEntry(TEMPLATE_QID_KEY, newUacQid.getQid());
   }
 
   @Test
   void testSmsFulfilmentInvalidPhoneNumber() throws Exception {
     // Given
+    String invalidPhoneNumber = "07123 INVALID";
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(smsRequestService.isSmsTemplateAllowedOnSurvey(
             smsTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
+    when(smsRequestService.validatePhoneNumber(invalidPhoneNumber))
+        .thenReturn(false); // TODO how did this pass without this mock?
 
     RequestDTO smsFulfilmentRequest =
-        buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), "07123 INVALID");
+        buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), invalidPhoneNumber);
 
     // When we call with a bad phone number, we get a bad request response and descriptive reason
     mockMvc

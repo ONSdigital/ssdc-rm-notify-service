@@ -9,78 +9,76 @@ import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
-import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
-import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
+import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @MessageEndpoint
-public class SmsRequestEnrichedReceiver {
+public class EmailRequestEnrichedReceiver {
 
-  @Value("${notify.senderId}")
-  private String senderId;
+  @Value("${email-request-enriched-delay}")
+  private int emailRequestEnrichedDelay;
 
-  @Value("${sms-request-enriched-delay}")
-  private int smsRequestEnrichedDelay;
-
-  private final SmsTemplateRepository smsTemplateRepository;
+  private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
   private final NotificationClientApi notificationClientApi;
 
-  public SmsRequestEnrichedReceiver(
-      SmsTemplateRepository smsTemplateRepository,
+  public EmailRequestEnrichedReceiver(
+      EmailTemplateRepository emailTemplateRepository,
       CaseRepository caseRepository,
       NotificationClientApi notificationClientApi) {
-    this.smsTemplateRepository = smsTemplateRepository;
+    this.emailTemplateRepository = emailTemplateRepository;
     this.caseRepository = caseRepository;
     this.notificationClientApi = notificationClientApi;
   }
 
-  @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
+  @ServiceActivator(inputChannel = "emailRequestEnrichedInputChannel", adviceChain = "retryAdvice")
   public void receiveMessage(Message<byte[]> message) {
     try {
-      Thread.sleep(smsRequestEnrichedDelay);
+      Thread.sleep(emailRequestEnrichedDelay);
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted during throttling delay", e);
     }
 
     EventDTO event = convertJsonBytesToEvent(message.getPayload());
-    SmsRequestEnriched smsRequestEnriched = event.getPayload().getSmsRequestEnriched();
-    SmsTemplate smsTemplate =
-        smsTemplateRepository
-            .findById(smsRequestEnriched.getPackCode())
+    EmailRequestEnriched emailRequestEnriched = event.getPayload().getEmailRequestEnriched();
+    EmailTemplate emailTemplate =
+        emailTemplateRepository
+            .findById(emailRequestEnriched.getPackCode())
             .orElseThrow(
                 () ->
                     new RuntimeException(
-                        "SMS Template not found: " + smsRequestEnriched.getPackCode()));
+                        "Email template not found: " + emailRequestEnriched.getPackCode()));
 
     Case caze =
         caseRepository
-            .findById(smsRequestEnriched.getCaseId())
+            .findById(emailRequestEnriched.getCaseId())
             .orElseThrow(
                 () ->
                     new RuntimeException(
-                        "Case not found with ID: " + smsRequestEnriched.getCaseId()));
+                        "Case not found with ID: " + emailRequestEnriched.getCaseId()));
 
     Map<String, String> personalisationTemplateValues =
         buildPersonalisationFromTemplate(
-            smsTemplate.getTemplate(),
+            emailTemplate.getTemplate(),
             caze,
-            smsRequestEnriched.getUac(),
-            smsRequestEnriched.getQid());
+            emailRequestEnriched.getUac(),
+            emailRequestEnriched.getQid());
 
     try {
-      notificationClientApi.sendSms(
-          smsTemplate.getNotifyTemplateId().toString(),
-          smsRequestEnriched.getPhoneNumber(),
+      notificationClientApi.sendEmail(
+          emailTemplate.getNotifyTemplateId().toString(),
+          emailRequestEnriched.getEmail(),
           personalisationTemplateValues,
-          senderId);
+          event.getHeader().getCorrelationId().toString()); // Use the correlation ID as reference
     } catch (NotificationClientException e) {
       throw new RuntimeException(
-          "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
+          "Error with Gov Notify when attempting to send email (from enriched email request event)",
+          e);
     }
   }
 }

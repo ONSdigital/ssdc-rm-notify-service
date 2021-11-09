@@ -1,21 +1,14 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_QID_KEY;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_SENSITIVE_PREFIX;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.SMS_TEMPLATE_UAC_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.doesTemplateRequireNewUacQid;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
@@ -47,13 +40,11 @@ public class SmsRequestService {
     this.pubSubHelper = pubSubHelper;
   }
 
-  // TODO make this return an optional?
-  public UacQidCreatedPayloadDTO fetchNewUacQidPairIfRequired(String[] smsTemplate) {
-    if (CollectionUtils.containsAny(
-        Arrays.asList(smsTemplate), List.of(SMS_TEMPLATE_UAC_KEY, SMS_TEMPLATE_QID_KEY))) {
-      return uacQidServiceClient.generateUacQid(QID_TYPE);
+  public Optional<UacQidCreatedPayloadDTO> fetchNewUacQidPairIfRequired(String[] smsTemplate) {
+    if (doesTemplateRequireNewUacQid(smsTemplate)) {
+      return Optional.of(uacQidServiceClient.generateUacQid(QID_TYPE));
     }
-    return null;
+    return Optional.empty();
   }
 
   public boolean isSmsTemplateAllowedOnSurvey(SmsTemplate smsTemplate, Survey survey) {
@@ -72,7 +63,7 @@ public class SmsRequestService {
       UUID caseId,
       String packCode,
       Object uacMetadata,
-      UacQidCreatedPayloadDTO newUacQidPair,
+      Optional<UacQidCreatedPayloadDTO> newUacQidPair,
       String source,
       String channel,
       UUID correlationId,
@@ -82,9 +73,9 @@ public class SmsRequestService {
     enrichedSmsFulfilment.setPackCode(packCode);
     enrichedSmsFulfilment.setUacMetadata(uacMetadata);
 
-    if (newUacQidPair != null) {
-      enrichedSmsFulfilment.setUac(newUacQidPair.getUac());
-      enrichedSmsFulfilment.setQid(newUacQidPair.getQid());
+    if (newUacQidPair.isPresent()) {
+      enrichedSmsFulfilment.setUac(newUacQidPair.get().getUac());
+      enrichedSmsFulfilment.setQid(newUacQidPair.get().getQid());
     }
 
     EventDTO enrichedSmsFulfilmentEvent = new EventDTO();
@@ -103,32 +94,5 @@ public class SmsRequestService {
     enrichedSmsFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
 
     pubSubHelper.publishAndConfirm(smsFulfilmentTopic, enrichedSmsFulfilmentEvent);
-  }
-
-  public Map<String, String> buildPersonalisationFromTemplate(
-      SmsTemplate smsTemplate, Case caze, String uac, String qid) {
-    String[] template = smsTemplate.getTemplate();
-    Map<String, String> templateValues = new HashMap<>();
-
-    for (String templateItem : template) {
-
-      if (templateItem.equals(SMS_TEMPLATE_UAC_KEY)) {
-        templateValues.put(SMS_TEMPLATE_UAC_KEY, uac);
-
-      } else if (templateItem.equals(SMS_TEMPLATE_QID_KEY)) {
-        templateValues.put(SMS_TEMPLATE_QID_KEY, qid);
-
-      } else if (templateItem.startsWith(SMS_TEMPLATE_SENSITIVE_PREFIX)) {
-        templateValues.put(
-            templateItem,
-            caze.getSampleSensitive()
-                .get(templateItem.substring(SMS_TEMPLATE_SENSITIVE_PREFIX.length())));
-
-      } else {
-        templateValues.put(templateItem, caze.getSample().get(templateItem));
-      }
-    }
-
-    return templateValues;
   }
 }
