@@ -109,9 +109,8 @@ public class EmailFulfilmentEndpoint {
     Map<String, String> emailPersonalisation =
         buildPersonalisationTemplateValues(emailTemplate, caze, newUacQidPair);
 
-    // NOTE: Here we are sending the enriched event BEFORE we make the call to send the email.
-    // This is to be certain that the record of the UAC link is not lost. If we were to send the
-    // email
+    // NOTE: Here we are sending the enriched event BEFORE we make the call to send the email. This
+    // is to be certain that the record of the UAC link is not lost. If we were to send the email
     // first then the event publish failed it would leave the requester with a broken UAC we would
     // be unable to fix
     emailRequestService.buildAndSendEnrichedEmailFulfilment(
