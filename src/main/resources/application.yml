@@ -81,3 +81,8 @@ messagelogging:
 
 sms-request-enriched-delay: 0  # milliseconds
 email-request-enriched-delay: 0  # milliseconds
+
+logging:
+  profile: DEV
+  level:
+    root: INFO
