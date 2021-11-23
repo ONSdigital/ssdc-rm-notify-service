@@ -28,6 +28,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.CollectionExercise;
+import uk.gov.ons.ssdc.common.model.entity.CollectionInstrumentSelectionRule;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.FulfilmentSurveyEmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
@@ -130,6 +131,10 @@ class EmailRequestEnrichedReceiverIT {
     collectionExercise.setStartDate(OffsetDateTime.now());
     collectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
     collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_UPDATE_METADATA);
+    collectionExercise.setCollectionInstrumentSelectionRules(
+        new CollectionInstrumentSelectionRule[] {
+          new CollectionInstrumentSelectionRule(0, null, "testInstrumentUrl")
+        });
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
     Case testCase = new Case();

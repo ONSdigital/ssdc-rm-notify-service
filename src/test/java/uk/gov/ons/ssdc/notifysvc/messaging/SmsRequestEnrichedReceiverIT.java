@@ -117,6 +117,10 @@ class SmsRequestEnrichedReceiverIT {
     collectionExercise.setStartDate(OffsetDateTime.now());
     collectionExercise.setEndDate(OffsetDateTime.now().plusDays(2));
     collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_UPDATE_METADATA);
+    collectionExercise.setCollectionInstrumentSelectionRules(
+        new CollectionInstrumentSelectionRule[] {
+          new CollectionInstrumentSelectionRule(0, null, "testInstrumentUrl")
+        });
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
     Case testCase = new Case();
