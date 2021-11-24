@@ -73,8 +73,13 @@ management:
       enabled: false
   metrics:
     tags:
-      application: "Notify Service"
+      application: Notify Service
       pod: ${HOSTNAME}
+    export:
+      stackdriver:
+        project-id: dummy-project-id
+        enabled: false
+        step: PT1M
 
 messagelogging:
   logstacktraces: false
