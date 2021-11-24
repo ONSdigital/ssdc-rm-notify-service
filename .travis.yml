@@ -23,7 +23,9 @@ install: echo "SKIPPING DEFAULT INSTALL" # Travis has a default maven install. D
 script: travis_wait mvn verify jacoco:report
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - curl -Os https://uploader.codecov.io/latest/linux/codecov
+  - chmod +x codecov
+  - ./codecov
 
 cache:
   directories:
