@@ -8,6 +8,7 @@ import com.google.protobuf.ByteString;
 import net.logstash.logback.encoder.org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.MessagingException;
 import org.springframework.retry.RecoveryCallback;
 import org.springframework.retry.RetryContext;
@@ -32,7 +33,7 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
   }
 
   @Override
-  public Object recover(RetryContext retryContext) throws Exception {
+  public Object recover(RetryContext retryContext) {
     if (!(retryContext.getLastThrowable() instanceof MessagingException)) {
       log.error(
           "Super duper unexpected kind of error, so going to fail very noisily",
@@ -79,10 +80,9 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
     logMessage(
         reportResult, retryContext.getLastThrowable().getCause(), messageHash, stackTraceRootCause);
 
-    // Reject the original message where it'll be retried at some future point in time
-    originalMessage.nack();
-
-    return null;
+    // Reject the original message (auto nack'ed). It will be retried at some future point in time
+    throw new MessageHandlingException(
+        message, "Cannot process this message at this time, but it will be retried");
   }
 
   private ExceptionReportResponse getExceptionReportResponse(
