@@ -23,7 +23,12 @@ install: echo "SKIPPING DEFAULT INSTALL" # Travis has a default maven install. D
 script: travis_wait mvn verify jacoco:report
 
 after_success:
+  - gpg --no-default-keyring --keyring trustedkeys.gpg --import codecov_public_key.asc
   - curl -Os https://uploader.codecov.io/latest/linux/codecov
+  - curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+  - curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+  - gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+  - shasum -a 256 -c codecov.SHA256SUM
   - chmod +x codecov
   - ./codecov
 
