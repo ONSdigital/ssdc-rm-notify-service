@@ -1,5 +1,5 @@
-FROM openjdk:11-slim
-CMD ["/usr/local/openjdk-11/bin/java", "-jar", "/opt/ssdc-rm-notify-service.jar"]
+FROM openjdk:17-slim
+CMD ["/usr/local/openjdk-17/bin/java", "-jar", "/opt/ssdc-rm-notify-service.jar"]
 
 RUN groupadd --gid 999 notifyservice && \
     useradd --create-home --system --uid 999 --gid notifyservice notifyservice
