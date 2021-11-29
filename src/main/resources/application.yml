@@ -91,3 +91,4 @@ logging:
   profile: DEV
   level:
     root: INFO
+    com.google.cloud.spring.pubsub.integration.inbound.PubSubInboundChannelAdapter: ERROR
