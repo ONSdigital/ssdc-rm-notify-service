@@ -9,4 +9,5 @@ public class SmsRequest {
   private String phoneNumber;
   private String packCode;
   private Object uacMetadata;
+  private boolean scheduled;
 }

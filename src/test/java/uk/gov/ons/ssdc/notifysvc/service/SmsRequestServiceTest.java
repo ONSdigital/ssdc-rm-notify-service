@@ -27,9 +27,9 @@ import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsConfirmation;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 
@@ -158,6 +158,7 @@ class SmsRequestServiceTest {
         TEST_PACK_CODE,
         TEST_UAC_METADATA,
         Optional.of(uacQidPair),
+        true,
         TEST_SOURCE,
         TEST_CHANNEL,
         correlationId,
@@ -180,12 +181,11 @@ class SmsRequestServiceTest {
     assertThat(enrichedSmsFulfilmentHeader.getDateTime()).isNotNull();
 
     // Check the event payload
-    EnrichedSmsFulfilment enrichedSmsFulfilment =
-        enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
-    assertThat(enrichedSmsFulfilment.getCaseId()).isEqualTo(caseId);
-    assertThat(enrichedSmsFulfilment.getPackCode()).isEqualTo(TEST_PACK_CODE);
-    assertThat(enrichedSmsFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
-    assertThat(enrichedSmsFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
-    assertThat(enrichedSmsFulfilment.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
+    SmsConfirmation smsConfirmation = enrichedSmsFulfilmentEvent.getPayload().getSmsConfirmation();
+    assertThat(smsConfirmation.getCaseId()).isEqualTo(caseId);
+    assertThat(smsConfirmation.getPackCode()).isEqualTo(TEST_PACK_CODE);
+    assertThat(smsConfirmation.getUac()).isEqualTo(uacQidPair.getUac());
+    assertThat(smsConfirmation.getQid()).isEqualTo(uacQidPair.getQid());
+    assertThat(smsConfirmation.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
   }
 }

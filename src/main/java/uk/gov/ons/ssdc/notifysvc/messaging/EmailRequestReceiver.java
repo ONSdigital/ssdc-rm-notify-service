@@ -77,6 +77,7 @@ public class EmailRequestReceiver {
         emailRequest.getPackCode(),
         emailRequest.getUacMetadata(),
         newUacQidPair,
+        emailRequest.isScheduled(),
         emailRequestHeader.getSource(),
         emailRequestHeader.getChannel(),
         emailRequestHeader.getCorrelationId(),
@@ -96,6 +97,7 @@ public class EmailRequestReceiver {
     emailRequestEnriched.setCaseId(emailRequest.getCaseId());
     emailRequestEnriched.setEmail(emailRequest.getEmail());
     emailRequestEnriched.setPackCode(emailRequest.getPackCode());
+    emailRequestEnriched.setScheduled(emailRequest.isScheduled());
 
     if (uacQidPair.isPresent()) {
       emailRequestEnriched.setUac(uacQidPair.get().getUac());

@@ -8,10 +8,10 @@ import lombok.Data;
 @JsonInclude(Include.NON_NULL)
 public class PayloadDTO {
 
-  private EnrichedSmsFulfilment enrichedSmsFulfilment;
+  private SmsConfirmation smsConfirmation;
   private SmsRequest smsRequest;
   private SmsRequestEnriched smsRequestEnriched;
-  private EnrichedEmailFulfilment enrichedEmailFulfilment;
+  private EmailConfirmation emailConfirmation;
   private EmailRequest emailRequest;
   private EmailRequestEnriched emailRequestEnriched;
 }

@@ -122,6 +122,7 @@ public class SmsFulfilmentEndpoint {
         request.getPayload().getSmsFulfilment().getPackCode(),
         request.getPayload().getSmsFulfilment().getUacMetadata(),
         newUacQidPair,
+        false,
         request.getHeader().getSource(),
         request.getHeader().getChannel(),
         request.getHeader().getCorrelationId(),

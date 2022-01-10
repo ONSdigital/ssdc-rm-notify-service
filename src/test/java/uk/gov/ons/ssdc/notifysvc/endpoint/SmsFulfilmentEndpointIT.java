@@ -73,8 +73,8 @@ class SmsFulfilmentEndpointIT {
   private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
 
-  @Value("${queueconfig.sms-fulfilment-topic}")
-  private String smsFulfilmentTopic;
+  @Value("${queueconfig.sms-confirmation-topic}")
+  private String smsConfirmationTopic;
 
   @Autowired private CaseRepository caseRepository;
   @Autowired private SurveyRepository surveyRepository;
@@ -93,7 +93,7 @@ class SmsFulfilmentEndpointIT {
   @Transactional
   public void setUp() {
     clearDownData();
-    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsConfirmationTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -219,18 +219,18 @@ class SmsFulfilmentEndpointIT {
       actualEnrichedEvent = smsFulfilmentQueueSpy.checkExpectedMessageReceived();
     }
 
-    assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(smsFulfilmentTopic);
+    assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(smsConfirmationTopic);
     assertThat(actualEnrichedEvent.getHeader().getCorrelationId())
         .isEqualTo(smsFulfilmentEvent.getHeader().getCorrelationId());
 
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getCaseId())
+    assertThat(actualEnrichedEvent.getPayload().getSmsConfirmation().getCaseId())
         .isEqualTo(testCase.getId());
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getPackCode())
+    assertThat(actualEnrichedEvent.getPayload().getSmsConfirmation().getPackCode())
         .isEqualTo(smsFulfilment.getPackCode());
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getUacMetadata())
+    assertThat(actualEnrichedEvent.getPayload().getSmsConfirmation().getUacMetadata())
         .isEqualTo(smsFulfilment.getUacMetadata());
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getUac()).isNotEmpty();
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedSmsFulfilment().getQid()).isNotEmpty();
+    assertThat(actualEnrichedEvent.getPayload().getSmsConfirmation().getUac()).isNotEmpty();
+    assertThat(actualEnrichedEvent.getPayload().getSmsConfirmation().getQid()).isNotEmpty();
 
     // Check the Notify API stub was indeed called
     verify(postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));

@@ -14,7 +14,7 @@ import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedEmailFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailConfirmation;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
@@ -25,8 +25,8 @@ import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 @Service
 public class EmailRequestService {
 
-  @Value("${queueconfig.email-fulfilment-topic}")
-  private String emailFulfilmentTopic;
+  @Value("${queueconfig.email-confirmation-topic}")
+  private String emailConfirmationTopic;
 
   private final UacQidServiceClient uacQidServiceClient;
   private final FulfilmentSurveyEmailTemplateRepository fulfilmentSurveyEmailTemplateRepository;
@@ -65,24 +65,26 @@ public class EmailRequestService {
       String packCode,
       Object uacMetadata,
       Optional<UacQidCreatedPayloadDTO> newUacQidPair,
+      boolean scheduled,
       String source,
       String channel,
       UUID correlationId,
       String originatingUser) {
-    EnrichedEmailFulfilment enrichedEmailFulfilment = new EnrichedEmailFulfilment();
-    enrichedEmailFulfilment.setCaseId(caseId);
-    enrichedEmailFulfilment.setPackCode(packCode);
-    enrichedEmailFulfilment.setUacMetadata(uacMetadata);
+    EmailConfirmation emailConfirmation = new EmailConfirmation();
+    emailConfirmation.setCaseId(caseId);
+    emailConfirmation.setPackCode(packCode);
+    emailConfirmation.setUacMetadata(uacMetadata);
+    emailConfirmation.setScheduled(scheduled);
 
     if (newUacQidPair.isPresent()) {
-      enrichedEmailFulfilment.setUac(newUacQidPair.get().getUac());
-      enrichedEmailFulfilment.setQid(newUacQidPair.get().getQid());
+      emailConfirmation.setUac(newUacQidPair.get().getUac());
+      emailConfirmation.setQid(newUacQidPair.get().getQid());
     }
 
     EventDTO enrichedEmailFulfilmentEvent = new EventDTO();
 
     EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setTopic(emailFulfilmentTopic);
+    eventHeader.setTopic(emailConfirmationTopic);
     eventHeader.setSource(source);
     eventHeader.setChannel(channel);
     eventHeader.setCorrelationId(correlationId);
@@ -92,8 +94,8 @@ public class EmailRequestService {
     eventHeader.setMessageId(UUID.randomUUID());
     enrichedEmailFulfilmentEvent.setHeader(eventHeader);
     enrichedEmailFulfilmentEvent.setPayload(new PayloadDTO());
-    enrichedEmailFulfilmentEvent.getPayload().setEnrichedEmailFulfilment(enrichedEmailFulfilment);
+    enrichedEmailFulfilmentEvent.getPayload().setEmailConfirmation(emailConfirmation);
 
-    pubSubHelper.publishAndConfirm(emailFulfilmentTopic, enrichedEmailFulfilmentEvent);
+    pubSubHelper.publishAndConfirm(emailConfirmationTopic, enrichedEmailFulfilmentEvent);
   }
 }

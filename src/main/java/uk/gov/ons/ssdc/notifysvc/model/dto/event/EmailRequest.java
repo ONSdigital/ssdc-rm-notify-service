@@ -9,4 +9,5 @@ public class EmailRequest {
   private String email;
   private String packCode;
   private Object uacMetadata;
+  private boolean scheduled;
 }
