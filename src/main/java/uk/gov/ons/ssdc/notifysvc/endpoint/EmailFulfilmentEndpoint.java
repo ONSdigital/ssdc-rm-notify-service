@@ -118,6 +118,7 @@ public class EmailFulfilmentEndpoint {
         request.getPayload().getEmailFulfilment().getPackCode(),
         request.getPayload().getEmailFulfilment().getUacMetadata(),
         newUacQidPair,
+        false,
         request.getHeader().getSource(),
         request.getHeader().getChannel(),
         request.getHeader().getCorrelationId(),

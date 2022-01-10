@@ -75,6 +75,7 @@ public class SmsRequestReceiver {
         smsRequest.getPackCode(),
         smsRequest.getUacMetadata(),
         newUacQidPair,
+        smsRequest.isScheduled(),
         smsRequestHeader.getSource(),
         smsRequestHeader.getChannel(),
         smsRequestHeader.getCorrelationId(),
@@ -94,6 +95,7 @@ public class SmsRequestReceiver {
     smsRequestEnriched.setCaseId(smsRequest.getCaseId());
     smsRequestEnriched.setPhoneNumber(smsRequest.getPhoneNumber());
     smsRequestEnriched.setPackCode(smsRequest.getPackCode());
+    smsRequestEnriched.setScheduled(smsRequest.isScheduled());
 
     if (uacQidPair.isPresent()) {
       smsRequestEnriched.setUac(uacQidPair.get().getUac());

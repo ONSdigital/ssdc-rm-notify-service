@@ -36,9 +36,9 @@ import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendEmailResponse;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailConfirmation;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequest;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedEmailFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
@@ -82,8 +82,8 @@ class EmailRequestReceiverIT {
   @Value("${queueconfig.email-request-enriched-topic}")
   private String emailRequestEnrichedTopic;
 
-  @Value("${queueconfig.email-fulfilment-topic}")
-  private String emailFulfilmentTopic;
+  @Value("${queueconfig.email-confirmation-topic}")
+  private String emailConfirmationTopic;
 
   public static final String EMAIL_NOTIFY_API_ENDPOINT = "/v2/notifications/email";
 
@@ -95,7 +95,7 @@ class EmailRequestReceiverIT {
     clearDownData();
     pubSubTestHelper.purgeMessages(
         TEST_EMAIL_REQUEST_ENRICHED_SUBSCRIPTION, emailRequestEnrichedTopic);
-    pubSubTestHelper.purgeMessages(ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION, emailFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION, emailConfirmationTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -232,20 +232,16 @@ class EmailRequestReceiverIT {
     // Check the message bodies
     EmailRequestEnriched emailRequestEnriched =
         emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched();
-    EnrichedEmailFulfilment enrichedEmailFulfilment =
-        enrichedEmailFulfilmentEvent.getPayload().getEnrichedEmailFulfilment();
-    assertThat(emailRequestEnriched.getQid())
-        .isEqualTo(enrichedEmailFulfilment.getQid())
-        .isNotEmpty();
-    assertThat(emailRequestEnriched.getUac())
-        .isEqualTo(enrichedEmailFulfilment.getUac())
-        .isNotEmpty();
-    assertThat(enrichedEmailFulfilment.getUacMetadata()).isNotNull();
+    EmailConfirmation emailConfirmation =
+        enrichedEmailFulfilmentEvent.getPayload().getEmailConfirmation();
+    assertThat(emailRequestEnriched.getQid()).isEqualTo(emailConfirmation.getQid()).isNotEmpty();
+    assertThat(emailRequestEnriched.getUac()).isEqualTo(emailConfirmation.getUac()).isNotEmpty();
+    assertThat(emailConfirmation.getUacMetadata()).isNotNull();
     assertThat(emailRequestEnriched.getCaseId())
-        .isEqualTo(enrichedEmailFulfilment.getCaseId())
+        .isEqualTo(emailConfirmation.getCaseId())
         .isEqualTo(emailRequest.getCaseId());
     assertThat(emailRequestEnriched.getPackCode())
-        .isEqualTo(enrichedEmailFulfilment.getPackCode())
+        .isEqualTo(emailConfirmation.getPackCode())
         .isEqualTo(emailRequest.getPackCode());
     assertThat(emailRequestEnriched.getEmail()).isEqualTo(emailRequest.getEmail());
   }

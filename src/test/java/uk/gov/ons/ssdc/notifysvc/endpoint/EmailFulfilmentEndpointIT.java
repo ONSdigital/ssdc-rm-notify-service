@@ -73,8 +73,8 @@ class EmailFulfilmentEndpointIT {
   private static final String ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION =
       "rm-internal-email-fulfilment_notify-service-it";
 
-  @Value("${queueconfig.email-fulfilment-topic}")
-  private String emailFulfilmentTopic;
+  @Value("${queueconfig.email-confirmation-topic}")
+  private String emailConfirmationTopic;
 
   @Autowired private CaseRepository caseRepository;
   @Autowired private SurveyRepository surveyRepository;
@@ -96,7 +96,7 @@ class EmailFulfilmentEndpointIT {
   @Transactional
   public void setUp() {
     clearDownData();
-    pubSubTestHelper.purgeMessages(ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION, emailFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION, emailConfirmationTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -223,18 +223,18 @@ class EmailFulfilmentEndpointIT {
       actualEnrichedEvent = emailFulfilmentQueueSpy.checkExpectedMessageReceived();
     }
 
-    assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(emailFulfilmentTopic);
+    assertThat(actualEnrichedEvent.getHeader().getTopic()).isEqualTo(emailConfirmationTopic);
     assertThat(actualEnrichedEvent.getHeader().getCorrelationId())
         .isEqualTo(emailFulfilmentEvent.getHeader().getCorrelationId());
 
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedEmailFulfilment().getCaseId())
+    assertThat(actualEnrichedEvent.getPayload().getEmailConfirmation().getCaseId())
         .isEqualTo(testCase.getId());
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedEmailFulfilment().getPackCode())
+    assertThat(actualEnrichedEvent.getPayload().getEmailConfirmation().getPackCode())
         .isEqualTo(emailFulfilment.getPackCode());
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedEmailFulfilment().getUacMetadata())
+    assertThat(actualEnrichedEvent.getPayload().getEmailConfirmation().getUacMetadata())
         .isEqualTo(emailFulfilment.getUacMetadata());
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedEmailFulfilment().getUac()).isNotEmpty();
-    assertThat(actualEnrichedEvent.getPayload().getEnrichedEmailFulfilment().getQid()).isNotEmpty();
+    assertThat(actualEnrichedEvent.getPayload().getEmailConfirmation().getUac()).isNotEmpty();
+    assertThat(actualEnrichedEvent.getPayload().getEmailConfirmation().getQid()).isNotEmpty();
 
     // Check the Notify API stub was indeed called
     verify(postRequestedFor(urlEqualTo(EMAIL_NOTIFY_API_ENDPOINT)));

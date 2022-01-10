@@ -36,9 +36,9 @@ import uk.gov.ons.ssdc.common.validation.ColumnValidator;
 import uk.gov.ons.ssdc.common.validation.MandatoryRule;
 import uk.gov.ons.ssdc.common.validation.Rule;
 import uk.gov.ons.ssdc.notifysvc.model.dto.NotifyApiSendSmsResponse;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsConfirmation;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequest;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
@@ -79,8 +79,8 @@ class SmsRequestReceiverIT {
   @Value("${queueconfig.sms-request-enriched-topic}")
   private String smsRequestEnrichedTopic;
 
-  @Value("${queueconfig.sms-fulfilment-topic}")
-  private String smsFulfilmentTopic;
+  @Value("${queueconfig.sms-confirmation-topic}")
+  private String smsConfirmationTopic;
 
   public static final String SMS_NOTIFY_API_ENDPOINT = "/v2/notifications/sms";
 
@@ -91,7 +91,7 @@ class SmsRequestReceiverIT {
   public void setUp() {
     clearDownData();
     pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
-    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsFulfilmentTopic);
+    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsConfirmationTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -227,16 +227,15 @@ class SmsRequestReceiverIT {
     // Check the message bodies
     SmsRequestEnriched smsRequestEnriched =
         smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
-    EnrichedSmsFulfilment enrichedSmsFulfilment =
-        enrichedSmsFulfilmentEvent.getPayload().getEnrichedSmsFulfilment();
-    assertThat(smsRequestEnriched.getQid()).isEqualTo(enrichedSmsFulfilment.getQid()).isNotEmpty();
-    assertThat(smsRequestEnriched.getUac()).isEqualTo(enrichedSmsFulfilment.getUac()).isNotEmpty();
-    assertThat(enrichedSmsFulfilment.getUacMetadata()).isNotNull();
+    SmsConfirmation smsConfirmation = enrichedSmsFulfilmentEvent.getPayload().getSmsConfirmation();
+    assertThat(smsRequestEnriched.getQid()).isEqualTo(smsConfirmation.getQid()).isNotEmpty();
+    assertThat(smsRequestEnriched.getUac()).isEqualTo(smsConfirmation.getUac()).isNotEmpty();
+    assertThat(smsConfirmation.getUacMetadata()).isNotNull();
     assertThat(smsRequestEnriched.getCaseId())
-        .isEqualTo(enrichedSmsFulfilment.getCaseId())
+        .isEqualTo(smsConfirmation.getCaseId())
         .isEqualTo(smsRequest.getCaseId());
     assertThat(smsRequestEnriched.getPackCode())
-        .isEqualTo(enrichedSmsFulfilment.getPackCode())
+        .isEqualTo(smsConfirmation.getPackCode())
         .isEqualTo(smsRequest.getPackCode());
     assertThat(smsRequestEnriched.getPhoneNumber()).isEqualTo(smsRequest.getPhoneNumber());
   }

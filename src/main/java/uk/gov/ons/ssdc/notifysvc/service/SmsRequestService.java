@@ -13,10 +13,10 @@ import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedSmsFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.PayloadDTO;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsConfirmation;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveySmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.utils.Constants;
 import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
@@ -24,8 +24,8 @@ import uk.gov.ons.ssdc.notifysvc.utils.PubSubHelper;
 @Service
 public class SmsRequestService {
 
-  @Value("${queueconfig.sms-fulfilment-topic}")
-  private String smsFulfilmentTopic;
+  @Value("${queueconfig.sms-confirmation-topic}")
+  private String smsConfirmationTopic;
 
   private final UacQidServiceClient uacQidServiceClient;
   private final FulfilmentSurveySmsTemplateRepository fulfilmentSurveySmsTemplateRepository;
@@ -64,24 +64,26 @@ public class SmsRequestService {
       String packCode,
       Object uacMetadata,
       Optional<UacQidCreatedPayloadDTO> newUacQidPair,
+      boolean scheduled,
       String source,
       String channel,
       UUID correlationId,
       String originatingUser) {
-    EnrichedSmsFulfilment enrichedSmsFulfilment = new EnrichedSmsFulfilment();
-    enrichedSmsFulfilment.setCaseId(caseId);
-    enrichedSmsFulfilment.setPackCode(packCode);
-    enrichedSmsFulfilment.setUacMetadata(uacMetadata);
+    SmsConfirmation smsConfirmation = new SmsConfirmation();
+    smsConfirmation.setCaseId(caseId);
+    smsConfirmation.setPackCode(packCode);
+    smsConfirmation.setUacMetadata(uacMetadata);
+    smsConfirmation.setScheduled(scheduled);
 
     if (newUacQidPair.isPresent()) {
-      enrichedSmsFulfilment.setUac(newUacQidPair.get().getUac());
-      enrichedSmsFulfilment.setQid(newUacQidPair.get().getQid());
+      smsConfirmation.setUac(newUacQidPair.get().getUac());
+      smsConfirmation.setQid(newUacQidPair.get().getQid());
     }
 
     EventDTO enrichedSmsFulfilmentEvent = new EventDTO();
 
     EventHeaderDTO eventHeader = new EventHeaderDTO();
-    eventHeader.setTopic(smsFulfilmentTopic);
+    eventHeader.setTopic(smsConfirmationTopic);
     eventHeader.setSource(source);
     eventHeader.setChannel(channel);
     eventHeader.setCorrelationId(correlationId);
@@ -91,8 +93,8 @@ public class SmsRequestService {
     eventHeader.setMessageId(UUID.randomUUID());
     enrichedSmsFulfilmentEvent.setHeader(eventHeader);
     enrichedSmsFulfilmentEvent.setPayload(new PayloadDTO());
-    enrichedSmsFulfilmentEvent.getPayload().setEnrichedSmsFulfilment(enrichedSmsFulfilment);
+    enrichedSmsFulfilmentEvent.getPayload().setSmsConfirmation(smsConfirmation);
 
-    pubSubHelper.publishAndConfirm(smsFulfilmentTopic, enrichedSmsFulfilmentEvent);
+    pubSubHelper.publishAndConfirm(smsConfirmationTopic, enrichedSmsFulfilmentEvent);
   }
 }

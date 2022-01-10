@@ -10,4 +10,5 @@ public class EmailRequestEnriched {
   private String packCode;
   private String uac;
   private String qid;
+  private boolean scheduled;
 }

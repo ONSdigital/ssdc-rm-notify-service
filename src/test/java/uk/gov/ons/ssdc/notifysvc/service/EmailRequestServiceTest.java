@@ -27,7 +27,7 @@ import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
-import uk.gov.ons.ssdc.notifysvc.model.dto.event.EnrichedEmailFulfilment;
+import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailConfirmation;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.FulfilmentSurveyEmailTemplateRepository;
@@ -42,8 +42,8 @@ class EmailRequestServiceTest {
 
   @InjectMocks private EmailRequestService emailRequestService;
 
-  @Value("${queueconfig.email-fulfilment-topic}")
-  private String emailFulfilmentTopic;
+  @Value("${queueconfig.email-confirmation-topic}")
+  private String emailConfirmationTopic;
 
   private final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private final String TEST_UAC = "TEST_UAC";
@@ -153,6 +153,7 @@ class EmailRequestServiceTest {
         TEST_PACK_CODE,
         TEST_UAC_METADATA,
         Optional.of(uacQidPair),
+        false,
         TEST_SOURCE,
         TEST_CHANNEL,
         correlationId,
@@ -161,7 +162,7 @@ class EmailRequestServiceTest {
     // Then
     // Check we're publishing the expected event
     verify(pubSubHelper)
-        .publishAndConfirm(eq(emailFulfilmentTopic), eventDTOArgumentCaptor.capture());
+        .publishAndConfirm(eq(emailConfirmationTopic), eventDTOArgumentCaptor.capture());
     EventDTO enrichedEmailFulfilmentEvent = eventDTOArgumentCaptor.getValue();
 
     // Check the event header
@@ -171,16 +172,16 @@ class EmailRequestServiceTest {
     assertThat(enrichedEmailFulfilmentHeader.getChannel()).isEqualTo(TEST_CHANNEL);
     assertThat(enrichedEmailFulfilmentHeader.getCorrelationId()).isEqualTo(correlationId);
     assertThat(enrichedEmailFulfilmentHeader.getMessageId()).isNotNull();
-    assertThat(enrichedEmailFulfilmentHeader.getTopic()).isEqualTo(emailFulfilmentTopic);
+    assertThat(enrichedEmailFulfilmentHeader.getTopic()).isEqualTo(emailConfirmationTopic);
     assertThat(enrichedEmailFulfilmentHeader.getDateTime()).isNotNull();
 
     // Check the event payload
-    EnrichedEmailFulfilment enrichedEmailFulfilment =
-        enrichedEmailFulfilmentEvent.getPayload().getEnrichedEmailFulfilment();
-    assertThat(enrichedEmailFulfilment.getCaseId()).isEqualTo(caseId);
-    assertThat(enrichedEmailFulfilment.getPackCode()).isEqualTo(TEST_PACK_CODE);
-    assertThat(enrichedEmailFulfilment.getUac()).isEqualTo(uacQidPair.getUac());
-    assertThat(enrichedEmailFulfilment.getQid()).isEqualTo(uacQidPair.getQid());
-    assertThat(enrichedEmailFulfilment.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
+    EmailConfirmation emailConfirmation =
+        enrichedEmailFulfilmentEvent.getPayload().getEmailConfirmation();
+    assertThat(emailConfirmation.getCaseId()).isEqualTo(caseId);
+    assertThat(emailConfirmation.getPackCode()).isEqualTo(TEST_PACK_CODE);
+    assertThat(emailConfirmation.getUac()).isEqualTo(uacQidPair.getUac());
+    assertThat(emailConfirmation.getQid()).isEqualTo(uacQidPair.getQid());
+    assertThat(emailConfirmation.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
   }
 }
