@@ -11,7 +11,7 @@ env:
     - IMAGE_NAME="$DOCKER_GCP_LOCATION/ssdc-rm-notify-service"
 
 before_install:
-  - mvn fmt:check
+  - mvn fmt:check pmd:check
   - docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" https://europe-west2-docker.pkg.dev;
   - docker login -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}";
   - docker network create ssdcrmdockerdev_default
@@ -20,7 +20,7 @@ before_install:
 
 install: echo "SKIPPING DEFAULT INSTALL" # Travis has a default maven install. Don't build twice!
 
-script: travis_wait mvn verify jacoco:report
+script: travis_wait mvn compile verify jacoco:report
 
 after_success:
   - gpg --no-default-keyring --keyring trustedkeys.gpg --import codecov_public_key.asc

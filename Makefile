@@ -10,6 +10,9 @@ format:
 format-check:
 	mvn fmt:check
 
+check:
+	mvn compile pmd:check fmt:check
+
 test:
 	mvn clean verify jacoco:report
 
