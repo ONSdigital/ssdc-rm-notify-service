@@ -188,10 +188,10 @@
 				<artifactId>maven-pmd-plugin</artifactId>
 				<version>3.16.0</version>
 				<configuration>
-					<failurePriority>3</failurePriority>
-					<verbose>true</verbose>
 					<excludeFromFailureFile>exclude-pmd.properties</excludeFromFailureFile>
+					<failurePriority>3</failurePriority>
 					<failOnViolation>true</failOnViolation>
+					<verbose>true</verbose>
 					<rulesets>
 						<ruleset>/category/java/bestpractices.xml</ruleset>
 						<ruleset>/category/java/security.xml</ruleset>
