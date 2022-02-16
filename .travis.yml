@@ -20,7 +20,7 @@ before_install:
 
 install: echo "SKIPPING DEFAULT INSTALL" # Travis has a default maven install. Don't build twice!
 
-script: travis_wait mvn compile verify jacoco:report
+script: travis_wait mvn verify jacoco:report
 
 after_success:
   - gpg --no-default-keyring --keyring trustedkeys.gpg --import codecov_public_key.asc
