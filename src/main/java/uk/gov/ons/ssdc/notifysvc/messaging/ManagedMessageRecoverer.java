@@ -65,13 +65,7 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
     ExceptionReportResponse reportResult =
         getExceptionReportResponse(cause, messageHash, stackTraceRootCause, subscriptionName);
 
-    if (skipMessage(
-        reportResult,
-        messageHash,
-        rawMessageBody,
-        retryContext.getLastThrowable(),
-        originalMessage,
-        subscriptionName)) {
+    if (skipMessage(reportResult, messageHash, rawMessageBody, subscriptionName)) {
       return null; // Our work here is done
     }
 
@@ -104,8 +98,6 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
       ExceptionReportResponse reportResult,
       String messageHash,
       byte[] rawMessageBody,
-      Throwable cause,
-      BasicAcknowledgeablePubsubMessage originalMessage,
       String subscriptionName) {
 
     if (reportResult == null || !reportResult.isSkipIt()) {

@@ -11,7 +11,7 @@ format-check:
 	mvn fmt:check
 
 check:
-	mvn compile pmd:check fmt:check
+	mvn compile fmt:check pmd:check
 
 test:
 	mvn clean verify jacoco:report
