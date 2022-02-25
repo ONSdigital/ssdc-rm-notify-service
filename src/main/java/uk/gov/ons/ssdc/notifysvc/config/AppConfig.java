@@ -13,7 +13,7 @@ public class AppConfig {
 
   @PostConstruct
   public void init() {
-    if (loggingProfile.equals("STRUCTURED")) {
+    if ("STRUCTURED".equals(loggingProfile)) {
       LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
     }
 
