@@ -352,6 +352,38 @@ class EmailFulfilmentEndpointTest {
   }
 
   @Test
+  void testEmailFulfilmentTemplateNotAllowedOnSurvey() throws Exception {
+    // Given
+    String invalidEmailAddress = "not.valid";
+    Case testCase = getTestCase();
+    EmailTemplate emailTemplate = getTestEmailTemplate(new String[] {});
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
+        .thenReturn(Optional.of(emailTemplate));
+    when(emailRequestService.isEmailTemplateAllowedOnSurvey(
+            emailTemplate, testCase.getCollectionExercise().getSurvey()))
+        .thenReturn(false);
+
+    RequestDTO emailFulfilmentRequest =
+        buildEmailFulfilmentRequest(
+            testCase.getId(), emailTemplate.getPackCode(), invalidEmailAddress);
+
+    // When we call with a bad email address, we get a bad request response and descriptive reason
+    mockMvc
+        .perform(
+            post(EMAIL_FULFILMENT_ENDPOINT)
+                .content(objectMapper.writeValueAsBytes(emailFulfilmentRequest))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("error", is("The template for this pack code is not allowed on this survey")))
+        .andExpect(handler().handlerType(EmailFulfilmentEndpoint.class));
+
+    // Then
+    verifyNoInteractions(notificationClientApi);
+  }
+
+  @Test
   void testValidateEmailFulfilmentRequestHappyPath() {
     // Given
     Case testCase = getTestCase();
@@ -458,7 +490,9 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("Invalid request header");
+    assertThat(thrown.getMessage())
+        .contains(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
   }
 
   @Test
@@ -481,7 +515,9 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("Invalid request header");
+    assertThat(thrown.getMessage())
+        .contains(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
   }
 
   @Test
@@ -504,7 +540,9 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("Invalid request header");
+    assertThat(thrown.getMessage())
+        .contains(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
   }
 
   private RequestDTO buildEmailFulfilmentRequest(
