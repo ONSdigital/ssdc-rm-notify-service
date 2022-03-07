@@ -101,7 +101,7 @@ class EmailRequestEnrichedReceiverTest {
 
     EmailTemplate emailTemplate = new EmailTemplate();
     emailTemplate.setPackCode("TEST_PACK_CODE");
-    emailTemplate.setTemplate(new String[]{TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
+    emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
@@ -118,21 +118,25 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
     Map<String, String> personalisationValues =
-            Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
+        Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
 
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
-            .thenReturn(Optional.of(emailTemplate));
+        .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
-    when(notificationClientApi.sendEmail(any(), any(), any(), any())).thenThrow(new NotificationClientException("Test Throw"));
+    when(notificationClientApi.sendEmail(any(), any(), any(), any()))
+        .thenThrow(new NotificationClientException("Test Throw"));
 
     // When
     RuntimeException thrown =
-            assertThrows(RuntimeException.class, () ->     emailRequestEnrichedReceiver.receiveMessage(eventMessage));
+        assertThrows(
+            RuntimeException.class,
+            () -> emailRequestEnrichedReceiver.receiveMessage(eventMessage));
     assertThat(thrown.getMessage())
-            .isEqualTo("Error with Gov Notify when attempting to send email (from enriched email request event)");
+        .isEqualTo(
+            "Error with Gov Notify when attempting to send email (from enriched email request event)");
   }
 
   @Test
@@ -143,16 +147,16 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnriched.setPackCode("TEST_PACK_CODE");
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
-    when(emailTemplateRepository.findById(any()))
-            .thenReturn(Optional.empty());
+    when(emailTemplateRepository.findById(any())).thenReturn(Optional.empty());
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
     // When
     RuntimeException thrown =
-            assertThrows(RuntimeException.class, () ->     emailRequestEnrichedReceiver.receiveMessage(eventMessage));
-    assertThat(thrown.getMessage())
-            .isEqualTo("Email template not found: TEST_PACK_CODE");
+        assertThrows(
+            RuntimeException.class,
+            () -> emailRequestEnrichedReceiver.receiveMessage(eventMessage));
+    assertThat(thrown.getMessage()).isEqualTo("Email template not found: TEST_PACK_CODE");
   }
 
   @Test
@@ -163,7 +167,7 @@ class EmailRequestEnrichedReceiverTest {
 
     EmailTemplate emailTemplate = new EmailTemplate();
     emailTemplate.setPackCode("TEST_PACK_CODE");
-    emailTemplate.setTemplate(new String[]{TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
+    emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
@@ -180,18 +184,19 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
     Map<String, String> personalisationValues =
-            Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
+        Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
 
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
-            .thenReturn(Optional.of(emailTemplate));
+        .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.empty());
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
     // When
     RuntimeException thrown =
-            assertThrows(RuntimeException.class, () ->     emailRequestEnrichedReceiver.receiveMessage(eventMessage));
-    assertThat(thrown.getMessage())
-            .isEqualTo("Case not found with ID: " + testCase.getId());
+        assertThrows(
+            RuntimeException.class,
+            () -> emailRequestEnrichedReceiver.receiveMessage(eventMessage));
+    assertThat(thrown.getMessage()).isEqualTo("Case not found with ID: " + testCase.getId());
   }
 }
