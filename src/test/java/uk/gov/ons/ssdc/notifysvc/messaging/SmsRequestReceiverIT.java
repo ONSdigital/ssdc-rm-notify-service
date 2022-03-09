@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -70,7 +71,7 @@ class SmsRequestReceiverIT {
   private static final String TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION =
       "TEST-sms-request-enriched_notify-service";
 
-  private static final String ENRICHED_SMS_FULFILMENT_SUBSCRIPTION =
+  private static final String SMS_CONFIRMATION_SUBSCRIPTION =
       "rm-internal-sms-fulfilment_notify-service-it";
 
   private static final Map<String, String> TEST_COLLECTION_EXERCISE_UPDATE_METADATA =
@@ -91,7 +92,7 @@ class SmsRequestReceiverIT {
   public void setUp() {
     clearDownData();
     pubSubTestHelper.purgeMessages(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, smsRequestEnrichedTopic);
-    pubSubTestHelper.purgeMessages(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, smsConfirmationTopic);
+    pubSubTestHelper.purgeMessages(SMS_CONFIRMATION_SUBSCRIPTION, smsConfirmationTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -148,7 +149,8 @@ class SmsRequestReceiverIT {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
-    smsTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    smsTemplate.setTemplate(
+        new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, TEMPLATE_REQUEST_PREFIX + "name"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate.setDescription("Test description");
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
@@ -164,6 +166,8 @@ class SmsRequestReceiverIT {
     smsRequest.setCaseId(testCase.getId());
     smsRequest.setPackCode(smsTemplate.getPackCode());
     smsRequest.setPhoneNumber("07123456789");
+    Map<String, String> personalisation = Map.of("name", "Mr. Test");
+    smsRequest.setPersonalisation(personalisation);
 
     Map<String, String> uacMetadata = new HashMap<>();
     uacMetadata.put("waveOfContact", "1");
@@ -191,14 +195,14 @@ class SmsRequestReceiverIT {
     // Then
     // Get the two expected pubsub messages
     EventDTO smsRequestEnrichedEvent;
-    EventDTO enrichedSmsFulfilmentEvent;
+    EventDTO smsConfirmationEvent;
     try (QueueSpy<EventDTO> smsRequestEnrichedQueueSpy =
         pubSubTestHelper.listen(TEST_SMS_REQUEST_ENRICHED_SUBSCRIPTION, EventDTO.class)) {
       smsRequestEnrichedEvent = smsRequestEnrichedQueueSpy.checkExpectedMessageReceived();
     }
-    try (QueueSpy<EventDTO> enrichedSmsFulfilmentQueueSpy =
-        pubSubTestHelper.listen(ENRICHED_SMS_FULFILMENT_SUBSCRIPTION, EventDTO.class)) {
-      enrichedSmsFulfilmentEvent = enrichedSmsFulfilmentQueueSpy.checkExpectedMessageReceived();
+    try (QueueSpy<EventDTO> smsConfirmationQueueSpy =
+        pubSubTestHelper.listen(SMS_CONFIRMATION_SUBSCRIPTION, EventDTO.class)) {
+      smsConfirmationEvent = smsConfirmationQueueSpy.checkExpectedMessageReceived();
     }
 
     // Check the message headers
@@ -213,23 +217,26 @@ class SmsRequestReceiverIT {
         .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
     assertThat(smsRequestEnrichedHeader.getMessageId()).isNotNull();
 
-    EventHeaderDTO enrichedSmsFulfilmentHeader = enrichedSmsFulfilmentEvent.getHeader();
-    assertThat(enrichedSmsFulfilmentHeader.getCorrelationId())
+    EventHeaderDTO smsConfirmationHeader = smsConfirmationEvent.getHeader();
+    assertThat(smsConfirmationHeader.getCorrelationId())
         .isEqualTo(smsRequestEvent.getHeader().getCorrelationId());
-    assertThat(enrichedSmsFulfilmentHeader.getSource())
+    assertThat(smsConfirmationHeader.getSource())
         .isEqualTo(smsRequestEvent.getHeader().getSource());
-    assertThat(enrichedSmsFulfilmentHeader.getChannel())
+    assertThat(smsConfirmationHeader.getChannel())
         .isEqualTo(smsRequestEvent.getHeader().getChannel());
-    assertThat(enrichedSmsFulfilmentHeader.getOriginatingUser())
+    assertThat(smsConfirmationHeader.getOriginatingUser())
         .isEqualTo(smsRequestEvent.getHeader().getOriginatingUser());
-    assertThat(enrichedSmsFulfilmentHeader.getMessageId()).isNotNull();
+    assertThat(smsConfirmationHeader.getMessageId()).isNotNull();
 
     // Check the message bodies
     SmsRequestEnriched smsRequestEnriched =
         smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched();
-    SmsConfirmation smsConfirmation = enrichedSmsFulfilmentEvent.getPayload().getSmsConfirmation();
+    SmsConfirmation smsConfirmation = smsConfirmationEvent.getPayload().getSmsConfirmation();
     assertThat(smsRequestEnriched.getQid()).isEqualTo(smsConfirmation.getQid()).isNotEmpty();
     assertThat(smsRequestEnriched.getUac()).isEqualTo(smsConfirmation.getUac()).isNotEmpty();
+    assertThat(smsRequestEnriched.getPersonalisation())
+        .isEqualTo(smsConfirmation.getPersonalisation())
+        .isEqualTo(personalisation);
     assertThat(smsConfirmation.getUacMetadata()).isNotNull();
     assertThat(smsRequestEnriched.getCaseId())
         .isEqualTo(smsConfirmation.getCaseId())

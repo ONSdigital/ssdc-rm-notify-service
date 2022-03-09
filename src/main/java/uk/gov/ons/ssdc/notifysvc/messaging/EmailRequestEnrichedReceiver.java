@@ -67,7 +67,8 @@ public class EmailRequestEnrichedReceiver {
             emailTemplate.getTemplate(),
             caze,
             emailRequestEnriched.getUac(),
-            emailRequestEnriched.getQid());
+            emailRequestEnriched.getQid(),
+            emailRequestEnriched.getPersonalisation());
 
     try {
       notificationClientApi.sendEmail(

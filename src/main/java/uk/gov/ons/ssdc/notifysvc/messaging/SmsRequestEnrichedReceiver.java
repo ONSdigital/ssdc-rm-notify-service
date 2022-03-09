@@ -70,7 +70,8 @@ public class SmsRequestEnrichedReceiver {
             smsTemplate.getTemplate(),
             caze,
             smsRequestEnriched.getUac(),
-            smsRequestEnriched.getQid());
+            smsRequestEnriched.getQid(),
+            smsRequestEnriched.getPersonalisation());
 
     try {
       notificationClientApi.sendSms(

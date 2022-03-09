@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -81,6 +82,8 @@ class EmailRequestEnrichedReceiverIT {
 
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
+  private final Map<String, String> TEST_PERSONALISATION =
+      Map.of(TEMPLATE_REQUEST_PREFIX + "name", "Mr. Test");
 
   @BeforeEach
   @Transactional
@@ -145,7 +148,8 @@ class EmailRequestEnrichedReceiverIT {
 
     EmailTemplate emailTemplate = new EmailTemplate();
     emailTemplate.setPackCode(TEST_PACK_CODE);
-    emailTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    emailTemplate.setTemplate(
+        new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, TEMPLATE_REQUEST_PREFIX + "name"});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
     emailTemplate.setDescription("Test description");
     emailTemplate = emailTemplateRepository.saveAndFlush(emailTemplate);
@@ -163,6 +167,7 @@ class EmailRequestEnrichedReceiverIT {
     emailRequestEnriched.setPackCode(TEST_PACK_CODE);
     emailRequestEnriched.setUac(TEST_UAC);
     emailRequestEnriched.setQid(TEST_QID);
+    emailRequestEnriched.setPersonalisation(TEST_PERSONALISATION);
     emailRequestEnriched.setEmail("example@example.com");
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
@@ -178,9 +183,11 @@ class EmailRequestEnrichedReceiverIT {
                     .withBody(notifyApiResponseJson)
                     .withHeader("Content-Type", "application/json")));
 
+    // When
     pubSubHelper.publishAndConfirm(emailRequestEnrichedTopic, emailRequestEnrichedEvent);
-
     Thread.sleep(1000);
+
+    // Then
     verify(postRequestedFor(urlEqualTo(EMAIL_NOTIFY_API_ENDPOINT)));
   }
 }

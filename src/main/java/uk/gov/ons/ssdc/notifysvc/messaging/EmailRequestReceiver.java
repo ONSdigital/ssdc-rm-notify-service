@@ -72,10 +72,11 @@ public class EmailRequestReceiver {
         buildEmailRequestEnrichedEvent(emailRequest, emailRequestHeader, newUacQidPair);
 
     // Send the event, including the UAC/QID pair if required, to be linked and logged
-    emailRequestService.buildAndSendEnrichedEmailFulfilment(
+    emailRequestService.buildAndSendEmailConfirmation(
         emailRequest.getCaseId(),
         emailRequest.getPackCode(),
         emailRequest.getUacMetadata(),
+        emailRequest.getPersonalisation(),
         newUacQidPair,
         emailRequest.isScheduled(),
         emailRequestHeader.getSource(),
@@ -98,6 +99,7 @@ public class EmailRequestReceiver {
     emailRequestEnriched.setEmail(emailRequest.getEmail());
     emailRequestEnriched.setPackCode(emailRequest.getPackCode());
     emailRequestEnriched.setScheduled(emailRequest.isScheduled());
+    emailRequestEnriched.setPersonalisation(emailRequest.getPersonalisation());
 
     if (uacQidPair.isPresent()) {
       emailRequestEnriched.setUac(uacQidPair.get().getUac());

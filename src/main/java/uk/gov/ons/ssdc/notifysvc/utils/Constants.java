@@ -9,5 +9,6 @@ public class Constants {
   public static final String TEMPLATE_UAC_KEY = "__uac__";
   public static final String TEMPLATE_QID_KEY = "__qid__";
   public static final String TEMPLATE_SENSITIVE_PREFIX = "__sensitive__.";
+  public static final String TEMPLATE_REQUEST_PREFIX = "__request__.";
   public static final int QID_TYPE = 1;
 }

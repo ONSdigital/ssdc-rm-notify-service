@@ -51,6 +51,7 @@ class EmailRequestServiceTest {
   private final String TEST_SOURCE = "TEST_SOURCE";
   private final String TEST_CHANNEL = "TEST_CHANNEL";
   private final String TEST_USER = "test@example.test";
+  private final Map<String, String> TEST_PERSONALSATION = Map.of("foo", "bar");
   private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
 
   @ParameterizedTest
@@ -137,7 +138,7 @@ class EmailRequestServiceTest {
   }
 
   @Test
-  void testBuildEnrichedEmailFulfilment() {
+  void testBuildAndSendEmailConfirmation() {
     // Given
     UUID caseId = UUID.randomUUID();
     UacQidCreatedPayloadDTO uacQidPair = new UacQidCreatedPayloadDTO();
@@ -148,10 +149,11 @@ class EmailRequestServiceTest {
     ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
 
     // When
-    emailRequestService.buildAndSendEnrichedEmailFulfilment(
+    emailRequestService.buildAndSendEmailConfirmation(
         caseId,
         TEST_PACK_CODE,
         TEST_UAC_METADATA,
+        TEST_PERSONALSATION,
         Optional.of(uacQidPair),
         false,
         TEST_SOURCE,
@@ -183,5 +185,57 @@ class EmailRequestServiceTest {
     assertThat(emailConfirmation.getUac()).isEqualTo(uacQidPair.getUac());
     assertThat(emailConfirmation.getQid()).isEqualTo(uacQidPair.getQid());
     assertThat(emailConfirmation.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
+    assertThat(emailConfirmation.getPersonalisation()).isEqualTo(TEST_PERSONALSATION);
+  }
+
+  @Test
+  void testBuildAndSendEmailConfirmationNoPersonalisation() {
+    // Given
+    UUID caseId = UUID.randomUUID();
+    UacQidCreatedPayloadDTO uacQidPair = new UacQidCreatedPayloadDTO();
+    uacQidPair.setUac(TEST_UAC);
+    uacQidPair.setQid(TEST_QID);
+    UUID correlationId = UUID.randomUUID();
+
+    ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+
+    // When
+    emailRequestService.buildAndSendEmailConfirmation(
+        caseId,
+        TEST_PACK_CODE,
+        TEST_UAC_METADATA,
+        null,
+        Optional.of(uacQidPair),
+        false,
+        TEST_SOURCE,
+        TEST_CHANNEL,
+        correlationId,
+        TEST_USER);
+
+    // Then
+    // Check we're publishing the expected event
+    verify(pubSubHelper)
+        .publishAndConfirm(eq(emailConfirmationTopic), eventDTOArgumentCaptor.capture());
+    EventDTO enrichedEmailFulfilmentEvent = eventDTOArgumentCaptor.getValue();
+
+    // Check the event header
+    EventHeaderDTO enrichedEmailFulfilmentHeader = enrichedEmailFulfilmentEvent.getHeader();
+    assertThat(enrichedEmailFulfilmentHeader.getOriginatingUser()).isEqualTo(TEST_USER);
+    assertThat(enrichedEmailFulfilmentHeader.getSource()).isEqualTo(TEST_SOURCE);
+    assertThat(enrichedEmailFulfilmentHeader.getChannel()).isEqualTo(TEST_CHANNEL);
+    assertThat(enrichedEmailFulfilmentHeader.getCorrelationId()).isEqualTo(correlationId);
+    assertThat(enrichedEmailFulfilmentHeader.getMessageId()).isNotNull();
+    assertThat(enrichedEmailFulfilmentHeader.getTopic()).isEqualTo(emailConfirmationTopic);
+    assertThat(enrichedEmailFulfilmentHeader.getDateTime()).isNotNull();
+
+    // Check the event payload
+    EmailConfirmation emailConfirmation =
+        enrichedEmailFulfilmentEvent.getPayload().getEmailConfirmation();
+    assertThat(emailConfirmation.getCaseId()).isEqualTo(caseId);
+    assertThat(emailConfirmation.getPackCode()).isEqualTo(TEST_PACK_CODE);
+    assertThat(emailConfirmation.getUac()).isEqualTo(uacQidPair.getUac());
+    assertThat(emailConfirmation.getQid()).isEqualTo(uacQidPair.getQid());
+    assertThat(emailConfirmation.getUacMetadata()).isEqualTo(TEST_UAC_METADATA);
+    assertThat(emailConfirmation.getPersonalisation()).isNullOrEmpty();
   }
 }

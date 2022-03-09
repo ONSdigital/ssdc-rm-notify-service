@@ -114,10 +114,11 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     verify(emailRequestService)
-        .buildAndSendEnrichedEmailFulfilment(
+        .buildAndSendEmailConfirmation(
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
+            emailFulfilmentRequest.getPayload().getEmailFulfilment().getPersonalisation(),
             Optional.of(newUacQid),
             false,
             emailFulfilmentRequest.getHeader().getSource(),
@@ -175,10 +176,11 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     verify(emailRequestService)
-        .buildAndSendEnrichedEmailFulfilment(
+        .buildAndSendEmailConfirmation(
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
+            emailFulfilmentRequest.getPayload().getEmailFulfilment().getPersonalisation(),
             Optional.of(newUacQid),
             false,
             emailFulfilmentRequest.getHeader().getSource(),
@@ -231,10 +233,11 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     verify(emailRequestService)
-        .buildAndSendEnrichedEmailFulfilment(
+        .buildAndSendEmailConfirmation(
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
+            emailFulfilmentRequest.getPayload().getEmailFulfilment().getPersonalisation(),
             Optional.empty(),
             false,
             emailFulfilmentRequest.getHeader().getSource(),
@@ -292,10 +295,11 @@ class EmailFulfilmentEndpointTest {
 
     // Then
     verify(emailRequestService)
-        .buildAndSendEnrichedEmailFulfilment(
+        .buildAndSendEmailConfirmation(
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailFulfilmentRequest.getPayload().getEmailFulfilment().getUacMetadata(),
+            emailFulfilmentRequest.getPayload().getEmailFulfilment().getPersonalisation(),
             Optional.of(newUacQid),
             false,
             emailFulfilmentRequest.getHeader().getSource(),

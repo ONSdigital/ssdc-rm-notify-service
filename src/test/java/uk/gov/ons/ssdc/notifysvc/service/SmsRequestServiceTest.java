@@ -51,6 +51,7 @@ class SmsRequestServiceTest {
   private final String TEST_SOURCE = "TEST_SOURCE";
   private final String TEST_CHANNEL = "TEST_CHANNEL";
   private final String TEST_USER = "test@example.test";
+  private static final Map<String, String> TEST_PERSONALISATION = Map.of("foo", "bar");
   private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
 
   @ParameterizedTest
@@ -153,10 +154,11 @@ class SmsRequestServiceTest {
     ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
 
     // When
-    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+    smsRequestService.buildAndSendSmsConfirmation(
         caseId,
         TEST_PACK_CODE,
         TEST_UAC_METADATA,
+        TEST_PERSONALISATION,
         Optional.of(uacQidPair),
         true,
         TEST_SOURCE,

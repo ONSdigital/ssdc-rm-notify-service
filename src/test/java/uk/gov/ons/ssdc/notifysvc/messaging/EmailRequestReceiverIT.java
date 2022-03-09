@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -73,7 +74,7 @@ class EmailRequestReceiverIT {
   private static final String TEST_EMAIL_REQUEST_ENRICHED_SUBSCRIPTION =
       "TEST-email-request-enriched_notify-service";
 
-  private static final String ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION =
+  private static final String EMAIL_FULFILMENT_CONFIRMATION_SUBSCRIPTION =
       "rm-internal-email-fulfilment_notify-service-it";
 
   private static final Map<String, String> TEST_COLLECTION_EXERCISE_UPDATE_METADATA =
@@ -95,7 +96,8 @@ class EmailRequestReceiverIT {
     clearDownData();
     pubSubTestHelper.purgeMessages(
         TEST_EMAIL_REQUEST_ENRICHED_SUBSCRIPTION, emailRequestEnrichedTopic);
-    pubSubTestHelper.purgeMessages(ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION, emailConfirmationTopic);
+    pubSubTestHelper.purgeMessages(
+        EMAIL_FULFILMENT_CONFIRMATION_SUBSCRIPTION, emailConfirmationTopic);
     this.wireMockServer = new WireMockServer(8089);
     wireMockServer.start();
     configureFor(wireMockServer.port());
@@ -152,7 +154,8 @@ class EmailRequestReceiverIT {
 
     EmailTemplate emailTemplate = new EmailTemplate();
     emailTemplate.setPackCode("TEST_PACK_CODE_12343");
-    emailTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    emailTemplate.setTemplate(
+        new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, TEMPLATE_REQUEST_PREFIX + "name"});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
     emailTemplate.setDescription("Test description");
     emailTemplate = emailTemplateRepository.saveAndFlush(emailTemplate);
@@ -169,6 +172,8 @@ class EmailRequestReceiverIT {
     emailRequest.setCaseId(testCase.getId());
     emailRequest.setPackCode(emailTemplate.getPackCode());
     emailRequest.setEmail("example@example.com");
+    Map<String, String> requestPersonalisation = Map.of("name", "Mr. Test");
+    emailRequest.setPersonalisation(requestPersonalisation);
 
     Map<String, Object> uacMetadata = new HashMap<>();
     uacMetadata.put("wave", 1);
@@ -196,14 +201,14 @@ class EmailRequestReceiverIT {
     // Then
     // Get the two expected pubsub messages
     EventDTO emailRequestEnrichedEvent;
-    EventDTO enrichedEmailFulfilmentEvent;
+    EventDTO emailConfirmationEvent;
     try (QueueSpy<EventDTO> emailRequestEnrichedQueueSpy =
         pubSubTestHelper.listen(TEST_EMAIL_REQUEST_ENRICHED_SUBSCRIPTION, EventDTO.class)) {
       emailRequestEnrichedEvent = emailRequestEnrichedQueueSpy.checkExpectedMessageReceived();
     }
-    try (QueueSpy<EventDTO> enrichedEmailFulfilmentQueueSpy =
-        pubSubTestHelper.listen(ENRICHED_EMAIL_FULFILMENT_SUBSCRIPTION, EventDTO.class)) {
-      enrichedEmailFulfilmentEvent = enrichedEmailFulfilmentQueueSpy.checkExpectedMessageReceived();
+    try (QueueSpy<EventDTO> emailConfirmationQueueSpy =
+        pubSubTestHelper.listen(EMAIL_FULFILMENT_CONFIRMATION_SUBSCRIPTION, EventDTO.class)) {
+      emailConfirmationEvent = emailConfirmationQueueSpy.checkExpectedMessageReceived();
     }
 
     // Check the message headers
@@ -218,25 +223,26 @@ class EmailRequestReceiverIT {
         .isEqualTo(emailRequestEvent.getHeader().getOriginatingUser());
     assertThat(emailRequestEnrichedHeader.getMessageId()).isNotNull();
 
-    EventHeaderDTO enrichedEmailFulfilmentHeader = enrichedEmailFulfilmentEvent.getHeader();
-    assertThat(enrichedEmailFulfilmentHeader.getCorrelationId())
+    EventHeaderDTO emailConfirmationHeader = emailConfirmationEvent.getHeader();
+    assertThat(emailConfirmationHeader.getCorrelationId())
         .isEqualTo(emailRequestEvent.getHeader().getCorrelationId());
-    assertThat(enrichedEmailFulfilmentHeader.getSource())
+    assertThat(emailConfirmationHeader.getSource())
         .isEqualTo(emailRequestEvent.getHeader().getSource());
-    assertThat(enrichedEmailFulfilmentHeader.getChannel())
+    assertThat(emailConfirmationHeader.getChannel())
         .isEqualTo(emailRequestEvent.getHeader().getChannel());
-    assertThat(enrichedEmailFulfilmentHeader.getOriginatingUser())
+    assertThat(emailConfirmationHeader.getOriginatingUser())
         .isEqualTo(emailRequestEvent.getHeader().getOriginatingUser());
-    assertThat(enrichedEmailFulfilmentHeader.getMessageId()).isNotNull();
+    assertThat(emailConfirmationHeader.getMessageId()).isNotNull();
 
     // Check the message bodies
     EmailRequestEnriched emailRequestEnriched =
         emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched();
     EmailConfirmation emailConfirmation =
-        enrichedEmailFulfilmentEvent.getPayload().getEmailConfirmation();
+        emailConfirmationEvent.getPayload().getEmailConfirmation();
     assertThat(emailRequestEnriched.getQid()).isEqualTo(emailConfirmation.getQid()).isNotEmpty();
     assertThat(emailRequestEnriched.getUac()).isEqualTo(emailConfirmation.getUac()).isNotEmpty();
     assertThat(emailConfirmation.getUacMetadata()).isNotNull();
+    assertThat(emailConfirmation.getPersonalisation()).isEqualTo(requestPersonalisation);
     assertThat(emailRequestEnriched.getCaseId())
         .isEqualTo(emailConfirmation.getCaseId())
         .isEqualTo(emailRequest.getCaseId());
@@ -244,5 +250,6 @@ class EmailRequestReceiverIT {
         .isEqualTo(emailConfirmation.getPackCode())
         .isEqualTo(emailRequest.getPackCode());
     assertThat(emailRequestEnriched.getEmail()).isEqualTo(emailRequest.getEmail());
+    assertThat(emailRequestEnriched.getPersonalisation()).isEqualTo(requestPersonalisation);
   }
 }

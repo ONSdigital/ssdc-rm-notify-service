@@ -70,10 +70,11 @@ public class SmsRequestReceiver {
         buildSmsRequestEnrichedEvent(smsRequest, smsRequestHeader, newUacQidPair);
 
     // Send the event, including the UAC/QID pair if required, to be linked and logged
-    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+    smsRequestService.buildAndSendSmsConfirmation(
         smsRequest.getCaseId(),
         smsRequest.getPackCode(),
         smsRequest.getUacMetadata(),
+        smsRequest.getPersonalisation(),
         newUacQidPair,
         smsRequest.isScheduled(),
         smsRequestHeader.getSource(),
@@ -96,6 +97,7 @@ public class SmsRequestReceiver {
     smsRequestEnriched.setPhoneNumber(smsRequest.getPhoneNumber());
     smsRequestEnriched.setPackCode(smsRequest.getPackCode());
     smsRequestEnriched.setScheduled(smsRequest.isScheduled());
+    smsRequestEnriched.setPersonalisation(smsRequest.getPersonalisation());
 
     if (uacQidPair.isPresent()) {
       smsRequestEnriched.setUac(uacQidPair.get().getUac());

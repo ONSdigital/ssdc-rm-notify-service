@@ -5,6 +5,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.does
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -60,10 +61,11 @@ public class EmailRequestService {
     return emailPattern.matcher(emailAddress).find();
   }
 
-  public void buildAndSendEnrichedEmailFulfilment(
+  public void buildAndSendEmailConfirmation(
       UUID caseId,
       String packCode,
       Object uacMetadata,
+      Map<String, String> personalisation,
       Optional<UacQidCreatedPayloadDTO> newUacQidPair,
       boolean scheduled,
       String source,
@@ -75,6 +77,7 @@ public class EmailRequestService {
     emailConfirmation.setPackCode(packCode);
     emailConfirmation.setUacMetadata(uacMetadata);
     emailConfirmation.setScheduled(scheduled);
+    emailConfirmation.setPersonalisation(personalisation);
 
     if (newUacQidPair.isPresent()) {
       emailConfirmation.setUac(newUacQidPair.get().getUac());

@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.utils;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
@@ -13,7 +14,11 @@ import uk.gov.ons.ssdc.common.model.entity.Case;
 
 public class PersonalisationTemplateHelper {
   public static Map<String, String> buildPersonalisationFromTemplate(
-      String[] template, Case caze, String uac, String qid) {
+      String[] template,
+      Case caze,
+      String uac,
+      String qid,
+      Map<String, String> requestPersonalisation) {
     Map<String, String> templateValues = new HashMap<>();
 
     for (String templateItem : template) {
@@ -30,6 +35,14 @@ public class PersonalisationTemplateHelper {
             caze.getSampleSensitive()
                 .get(templateItem.substring(TEMPLATE_SENSITIVE_PREFIX.length())));
 
+      } else if (templateItem.startsWith(TEMPLATE_REQUEST_PREFIX)) {
+        if (requestPersonalisation != null
+            && requestPersonalisation.containsKey(
+                templateItem.substring(TEMPLATE_REQUEST_PREFIX.length()))) {
+          templateValues.put(
+              templateItem,
+              requestPersonalisation.get(templateItem.substring(TEMPLATE_REQUEST_PREFIX.length())));
+        }
       } else {
         templateValues.put(templateItem, caze.getSample().get(templateItem));
       }
@@ -38,8 +51,9 @@ public class PersonalisationTemplateHelper {
     return templateValues;
   }
 
-  public static Map<String, String> buildPersonalisationFromTemplate(String[] template, Case caze) {
-    return buildPersonalisationFromTemplate(template, caze, null, null);
+  public static Map<String, String> buildPersonalisationFromTemplate(
+      String[] template, Case caze, Map<String, String> requestPersonalisation) {
+    return buildPersonalisationFromTemplate(template, caze, null, null, requestPersonalisation);
   }
 
   public static boolean doesTemplateRequireNewUacQid(String[] template) {
