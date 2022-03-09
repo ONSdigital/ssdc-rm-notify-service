@@ -4,13 +4,28 @@ services:
   - docker
 
 language: java
-jdk: openjdk17
+#put back when travis fixed
+#jdk: openjdk17
 
 env:
   global:
     - IMAGE_NAME="$DOCKER_GCP_LOCATION/ssdc-rm-notify-service"
 
 before_install:
+  #  remove after travis fixed
+  - java -version
+  - sudo apt-get -y remove default-jdk
+  - sudo apt -y autoremove
+  - curl -s "https://get.sdkman.io" | bash
+  - source "$HOME/.sdkman/bin/sdkman-init.sh"
+  - sdk install java 17.0.2-open
+  - java -version
+  - export JAVA_HOME=`/usr/libexec/java_home -v 17`; java -version
+  - wget https://archive.apache.org/dist/maven/maven-3/3.8.4/binaries/apache-maven-3.8.4-bin.zip
+  - unzip -qq apache-maven-3.8.4-bin.zip
+  - export M2_HOME=$PWD/apache-maven-3.8.4
+  - export PATH=$M2_HOME/bin:$PATH
+  # remove down to here
   - mvn fmt:check pmd:check
   - docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" https://europe-west2-docker.pkg.dev;
   - docker login -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}";
