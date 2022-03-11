@@ -93,7 +93,7 @@ class EmailRequestEnrichedReceiverTest {
   }
 
   @Test
-  void testReceiveMessagSendException() throws NotificationClientException {
+  void testReceiveMessageSendException() throws NotificationClientException {
 
     // Given
     Case testCase = new Case();
