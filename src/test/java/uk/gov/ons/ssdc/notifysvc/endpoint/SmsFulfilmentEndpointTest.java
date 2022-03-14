@@ -279,12 +279,20 @@ class SmsFulfilmentEndpointTest {
 
     // When we call with the SMS fulfilment and the notify client errors, we get an internal server
     // error
+
+    String expectedErrorMsg =
+        "500 INTERNAL_SERVER_ERROR \"Error with Gov Notify when attempting to send SMS\";"
+            + " nested exception is uk.gov.service.notify.NotificationClientException: Test";
+
     mockMvc
         .perform(
             post(SMS_FULFILMENT_ENDPOINT)
                 .content(objectMapper.writeValueAsBytes(smsFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isInternalServerError())
+        .andExpect(
+            result ->
+                assertThat(result.getResolvedException().getMessage()).isEqualTo(expectedErrorMsg))
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
@@ -365,46 +373,6 @@ class SmsFulfilmentEndpointTest {
   }
 
   @Test
-  void testValidateSmsFulfilmentRequestCaseNotFound() {
-    // Given
-    Case testCase = getTestCase();
-    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    RequestDTO invalidRequest =
-        buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
-
-    // When
-    ResponseStatusException thrown =
-        assertThrows(
-            ResponseStatusException.class,
-            () ->
-                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
-                    invalidRequest, testCase, smsTemplate));
-
-    // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-  }
-
-  @Test
-  void testValidateSmsFulfilmentRequestPackCodeNotFound() {
-    // Given
-    Case testCase = getTestCase();
-    SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    RequestDTO invalidRequest =
-        buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
-
-    // When
-    ResponseStatusException thrown =
-        assertThrows(
-            ResponseStatusException.class,
-            () ->
-                smsFulfilmentEndpoint.validateRequestAndFetchSmsTemplate(
-                    invalidRequest, testCase, smsTemplate));
-
-    // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-  }
-
-  @Test
   void testValidateSmsFulfilmentRequestTemplateNotAllowedOnSurvey() {
     // Given
     Case testCase = getTestCase();
@@ -426,7 +394,9 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("pack code is not allowed on this survey");
+    assertThat(thrown.getMessage())
+        .contains(
+            "400 BAD_REQUEST \"The template for this pack code is not allowed on this survey\"");
   }
 
   @Test
@@ -448,7 +418,9 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("Invalid request header");
+    assertThat(thrown.getMessage())
+        .isEqualTo(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
   }
 
   @Test
@@ -470,7 +442,9 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("Invalid request header");
+    assertThat(thrown.getMessage())
+        .isEqualTo(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
   }
 
   @Test
@@ -492,7 +466,12 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(thrown.getMessage()).contains("Invalid request header");
+    assertThat(thrown.getMessage())
+        .isEqualTo(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
+    assertThat(thrown.getMessage())
+        .isEqualTo(
+            "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
   }
 
   private RequestDTO buildSmsFulfilmentRequest(UUID caseId, String packCode, String phoneNumber) {
