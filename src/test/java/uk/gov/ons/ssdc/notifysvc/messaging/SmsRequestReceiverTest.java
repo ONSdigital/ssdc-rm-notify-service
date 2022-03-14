@@ -199,7 +199,7 @@ class SmsRequestReceiverTest {
     Exception thrown =
         assertThrows(RuntimeException.class, () -> smsRequestReceiver.receiveMessage(eventMessage));
 
-    assertThat(thrown.getMessage()).containsIgnoringCase("invalid phone number");
+    assertThat(thrown.getMessage()).isEqualTo("Invalid phone number on SMS request message");
     verifyNoInteractions(caseRepository);
     verifyNoInteractions(smsTemplateRepository);
     verifyNoInteractions(pubSubHelper);
@@ -237,7 +237,7 @@ class SmsRequestReceiverTest {
     Exception thrown =
         assertThrows(RuntimeException.class, () -> smsRequestReceiver.receiveMessage(eventMessage));
 
-    assertThat(thrown.getMessage()).containsIgnoringCase("case not found");
+    assertThat(thrown.getMessage()).isEqualTo("Case not found with ID: " + smsRequest.getCaseId());
     verifyNoInteractions(pubSubHelper);
   }
 
@@ -271,7 +271,7 @@ class SmsRequestReceiverTest {
     Exception thrown =
         assertThrows(RuntimeException.class, () -> smsRequestReceiver.receiveMessage(eventMessage));
 
-    assertThat(thrown.getMessage()).containsIgnoringCase("SMS template not found");
+    assertThat(thrown.getMessage()).isEqualTo("SMS Template not found: " + TEST_PACK_CODE);
     verifyNoInteractions(caseRepository);
     verifyNoInteractions(pubSubHelper);
   }
