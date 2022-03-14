@@ -107,16 +107,21 @@ public class EmailFulfilmentEndpoint {
         emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate());
 
     Map<String, String> emailPersonalisation =
-        buildPersonalisationTemplateValues(emailTemplate, caze, newUacQidPair);
+        buildPersonalisationTemplateValues(
+            emailTemplate,
+            caze,
+            newUacQidPair,
+            request.getPayload().getEmailFulfilment().getPersonalisation());
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the email. This
     // is to be certain that the record of the UAC link is not lost. If we were to send the email
     // first then the event publish failed it would leave the requester with a broken UAC we would
     // be unable to fix
-    emailRequestService.buildAndSendEnrichedEmailFulfilment(
+    emailRequestService.buildAndSendEmailConfirmation(
         request.getPayload().getEmailFulfilment().getCaseId(),
         request.getPayload().getEmailFulfilment().getPackCode(),
         request.getPayload().getEmailFulfilment().getUacMetadata(),
+        request.getPayload().getEmailFulfilment().getPersonalisation(),
         newUacQidPair,
         false,
         request.getHeader().getSource(),
@@ -134,12 +139,20 @@ public class EmailFulfilmentEndpoint {
   }
 
   private Map<String, String> buildPersonalisationTemplateValues(
-      EmailTemplate emailTemplate, Case caze, Optional<UacQidCreatedPayloadDTO> uacQidPair) {
+      EmailTemplate emailTemplate,
+      Case caze,
+      Optional<UacQidCreatedPayloadDTO> uacQidPair,
+      Map<String, String> requestPersonalisation) {
     if (uacQidPair.isPresent()) {
       return buildPersonalisationFromTemplate(
-          emailTemplate.getTemplate(), caze, uacQidPair.get().getUac(), uacQidPair.get().getQid());
+          emailTemplate.getTemplate(),
+          caze,
+          uacQidPair.get().getUac(),
+          uacQidPair.get().getQid(),
+          requestPersonalisation);
     }
-    return buildPersonalisationFromTemplate(emailTemplate.getTemplate(), caze);
+    return buildPersonalisationFromTemplate(
+        emailTemplate.getTemplate(), caze, requestPersonalisation);
   }
 
   private EmailFulfilmentResponse createEmailSuccessResponse(

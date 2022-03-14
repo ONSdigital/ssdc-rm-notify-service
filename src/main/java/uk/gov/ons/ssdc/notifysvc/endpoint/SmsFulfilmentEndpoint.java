@@ -111,16 +111,21 @@ public class SmsFulfilmentEndpoint {
         smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate());
 
     Map<String, String> smsPersonalisation =
-        buildPersonalisationTemplateValues(smsTemplate, caze, newUacQidPair);
+        buildPersonalisationTemplateValues(
+            smsTemplate,
+            caze,
+            newUacQidPair,
+            request.getPayload().getSmsFulfilment().getPersonalisation());
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the SMS.
     // This is to be certain that the record of the UAC link is not lost. If we were to send the SMS
     // first then the event publish failed it would leave the requester with a broken UAC we would
     // be unable to fix
-    smsRequestService.buildAndSendEnrichedSmsFulfilment(
+    smsRequestService.buildAndSendSmsConfirmation(
         request.getPayload().getSmsFulfilment().getCaseId(),
         request.getPayload().getSmsFulfilment().getPackCode(),
         request.getPayload().getSmsFulfilment().getUacMetadata(),
+        request.getPayload().getSmsFulfilment().getPersonalisation(),
         newUacQidPair,
         false,
         request.getHeader().getSource(),
@@ -135,12 +140,20 @@ public class SmsFulfilmentEndpoint {
   }
 
   private Map<String, String> buildPersonalisationTemplateValues(
-      SmsTemplate smsTemplate, Case caze, Optional<UacQidCreatedPayloadDTO> uacQidPair) {
+      SmsTemplate smsTemplate,
+      Case caze,
+      Optional<UacQidCreatedPayloadDTO> uacQidPair,
+      Map<String, String> requestPersonalisation) {
     if (uacQidPair.isPresent()) {
       return buildPersonalisationFromTemplate(
-          smsTemplate.getTemplate(), caze, uacQidPair.get().getUac(), uacQidPair.get().getQid());
+          smsTemplate.getTemplate(),
+          caze,
+          uacQidPair.get().getUac(),
+          uacQidPair.get().getQid(),
+          requestPersonalisation);
     }
-    return buildPersonalisationFromTemplate(smsTemplate.getTemplate(), caze);
+    return buildPersonalisationFromTemplate(
+        smsTemplate.getTemplate(), caze, requestPersonalisation);
   }
 
   private SmsFulfilmentResponse createSmsSuccessResponse(

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMessageWithValidTimeStamp;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
@@ -42,6 +43,7 @@ class EmailRequestEnrichedReceiverTest {
 
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
+  private final Map<String, String> TEST_PERSONALISATION = Map.of("foo", "bar");
 
   @Value("${queueconfig.email-request-enriched-topic}")
   private String emailRequestEnrichedTopic;
@@ -55,7 +57,59 @@ class EmailRequestEnrichedReceiverTest {
 
     EmailTemplate emailTemplate = new EmailTemplate();
     emailTemplate.setPackCode("TEST_PACK_CODE");
-    emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
+    emailTemplate.setTemplate(
+        new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
+    emailTemplate.setNotifyTemplateId(UUID.randomUUID());
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    EventDTO emailRequestEnrichedEvent = buildEventDTO(emailRequestEnrichedTopic);
+    EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
+    emailRequestEnriched.setCaseId(testCase.getId());
+    emailRequestEnriched.setPackCode("TEST_PACK_CODE");
+    emailRequestEnriched.setUac(TEST_UAC);
+    emailRequestEnriched.setQid(TEST_QID);
+    emailRequestEnriched.setPersonalisation(TEST_PERSONALISATION);
+    emailRequestEnriched.setEmail("example@example.com");
+    emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
+
+    Map<String, String> personalisationValues =
+        Map.ofEntries(
+            entry(TEMPLATE_UAC_KEY, TEST_UAC),
+            entry(TEMPLATE_QID_KEY, TEST_QID),
+            entry(TEMPLATE_REQUEST_PREFIX + "foo", "bar"));
+
+    when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
+        .thenReturn(Optional.of(emailTemplate));
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
+
+    // When
+    emailRequestEnrichedReceiver.receiveMessage(eventMessage);
+
+    // Then
+    verify(notificationClientApi)
+        .sendEmail(
+            emailTemplate.getNotifyTemplateId().toString(),
+            emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched().getEmail(),
+            personalisationValues,
+            emailRequestEnrichedEvent.getHeader().getCorrelationId().toString());
+  }
+
+  @Test
+  void testReceiveMessageNoPersonalisationSupplied() throws NotificationClientException {
+
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode("TEST_PACK_CODE");
+    emailTemplate.setTemplate(
+        new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();

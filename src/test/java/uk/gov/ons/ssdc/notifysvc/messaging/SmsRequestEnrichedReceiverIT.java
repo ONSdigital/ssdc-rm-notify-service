@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -69,6 +70,7 @@ class SmsRequestEnrichedReceiverIT {
 
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
+  private final Map<String, String> TEST_PERSONALISATION = Map.of("name", "Mr. Test");
 
   @BeforeEach
   @Transactional
@@ -131,7 +133,8 @@ class SmsRequestEnrichedReceiverIT {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode(TEST_PACK_CODE);
-    smsTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    smsTemplate.setTemplate(
+        new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, TEMPLATE_REQUEST_PREFIX + "name"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate.setDescription("Test description");
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
@@ -148,6 +151,7 @@ class SmsRequestEnrichedReceiverIT {
     smsRequestEnriched.setPackCode("TEST_PACK_CODE");
     smsRequestEnriched.setUac(TEST_UAC);
     smsRequestEnriched.setQid(TEST_QID);
+    smsRequestEnriched.setPersonalisation(TEST_PERSONALISATION);
     smsRequestEnriched.setPhoneNumber("07564283939");
     smsRequestEnrichedEvent.getPayload().setSmsRequestEnriched(smsRequestEnriched);
 
@@ -163,9 +167,12 @@ class SmsRequestEnrichedReceiverIT {
                     .withBody(notifyApiResponseJson)
                     .withHeader("Content-Type", "application/json")));
 
+    // When
     pubSubHelper.publishAndConfirm(smsRequestEnrichedTopic, smsRequestEnrichedEvent);
 
     Thread.sleep(1000);
+
+    // Then
     verify(postRequestedFor(urlEqualTo(SMS_NOTIFY_API_ENDPOINT)));
   }
 }

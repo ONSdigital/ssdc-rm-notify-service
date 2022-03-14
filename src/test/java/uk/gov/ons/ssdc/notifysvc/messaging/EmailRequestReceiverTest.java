@@ -50,11 +50,76 @@ class EmailRequestReceiverTest {
   private final String TEST_PACK_CODE = "TEST_PACK_CODE";
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
+  private final String TEST_REQUEST_NAME = "__request__.name";
+  private final Map<String, String> TEST_PERSONALISATION = Map.of("name", "foo");
   private final String VALID_EMAIL_ADDRESS = "example@example.com";
   private static final Map<String, String> TEST_UAC_METADATA = Map.of("TEST_UAC_METADATA", "TEST");
 
   @Test
   void testReceiveMessageHappyPathWithUacQid() {
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode("TEST_PACK_CODE");
+    emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEST_REQUEST_NAME});
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
+        .thenReturn(Optional.of(emailTemplate));
+    when(caseRepository.existsById(testCase.getId())).thenReturn(true);
+    when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
+        .thenReturn(Optional.of(newUacQidCreated));
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+
+    EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
+    EmailRequest emailRequest = new EmailRequest();
+    emailRequest.setCaseId(testCase.getId());
+    emailRequest.setPackCode(TEST_PACK_CODE);
+    emailRequest.setEmail(VALID_EMAIL_ADDRESS);
+    emailRequest.setPersonalisation(TEST_PERSONALISATION);
+    emailRequest.setUacMetadata(TEST_UAC_METADATA);
+    emailRequestEvent.getPayload().setEmailRequest(emailRequest);
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEvent);
+
+    // When
+    emailRequestReceiver.receiveMessage(eventMessage);
+
+    // Then
+    ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+    verify(pubSubHelper)
+        .publishAndConfirm(eq(emailRequestEnrichedTopic), eventDTOArgumentCaptor.capture());
+    EventDTO sentEvent = eventDTOArgumentCaptor.getValue();
+    assertThat(sentEvent.getHeader().getCorrelationId())
+        .isEqualTo(emailRequestEvent.getHeader().getCorrelationId());
+    EmailRequestEnriched emailRequestEnriched = sentEvent.getPayload().getEmailRequestEnriched();
+    assertThat(emailRequestEnriched.getPackCode()).isEqualTo(emailRequest.getPackCode());
+    assertThat(emailRequestEnriched.getCaseId()).isEqualTo(emailRequest.getCaseId());
+    assertThat(emailRequestEnriched.getEmail()).isEqualTo(emailRequest.getEmail());
+    assertThat(emailRequestEnriched.getUac()).isEqualTo(newUacQidCreated.getUac());
+    assertThat(emailRequestEnriched.getQid()).isEqualTo(newUacQidCreated.getQid());
+
+    verify(emailRequestService)
+        .buildAndSendEmailConfirmation(
+            testCase.getId(),
+            emailTemplate.getPackCode(),
+            emailRequestEvent.getPayload().getEmailRequest().getUacMetadata(),
+            TEST_PERSONALISATION,
+            Optional.of(newUacQidCreated),
+            false,
+            emailRequestEvent.getHeader().getSource(),
+            emailRequestEvent.getHeader().getChannel(),
+            emailRequestEvent.getHeader().getCorrelationId(),
+            emailRequestEvent.getHeader().getOriginatingUser());
+  }
+
+  @Test
+  void testReceiveMessageHappyPathWithNoPersonalisation() {
     // Given
     Case testCase = new Case();
     testCase.setId(UUID.randomUUID());
@@ -102,10 +167,11 @@ class EmailRequestReceiverTest {
     assertThat(emailRequestEnriched.getQid()).isEqualTo(newUacQidCreated.getQid());
 
     verify(emailRequestService)
-        .buildAndSendEnrichedEmailFulfilment(
+        .buildAndSendEmailConfirmation(
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailRequestEvent.getPayload().getEmailRequest().getUacMetadata(),
+            null,
             Optional.of(newUacQidCreated),
             false,
             emailRequestEvent.getHeader().getSource(),
@@ -159,10 +225,70 @@ class EmailRequestReceiverTest {
     assertThat(emailRequestEnriched.getQid()).isNull();
 
     verify(emailRequestService)
-        .buildAndSendEnrichedEmailFulfilment(
+        .buildAndSendEmailConfirmation(
             testCase.getId(),
             emailTemplate.getPackCode(),
             emailRequestEvent.getPayload().getEmailRequest().getUacMetadata(),
+            null,
+            Optional.empty(),
+            false,
+            emailRequestEvent.getHeader().getSource(),
+            emailRequestEvent.getHeader().getChannel(),
+            emailRequestEvent.getHeader().getCorrelationId(),
+            emailRequestEvent.getHeader().getOriginatingUser());
+  }
+
+  @Test
+  void testReceiveMessageHappyPathWithPersonalisation() {
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode("TEST_PACK_CODE");
+    emailTemplate.setTemplate(new String[] {"foobar", "__request__.spam"});
+
+    when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
+        .thenReturn(Optional.of(emailTemplate));
+    when(caseRepository.existsById(testCase.getId())).thenReturn(true);
+    when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
+        .thenReturn(Optional.empty());
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+
+    EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
+    EmailRequest emailRequest = new EmailRequest();
+    emailRequest.setCaseId(testCase.getId());
+    emailRequest.setPackCode(TEST_PACK_CODE);
+    emailRequest.setEmail(VALID_EMAIL_ADDRESS);
+    emailRequest.setUacMetadata(TEST_UAC_METADATA);
+    emailRequest.setPersonalisation(TEST_PERSONALISATION);
+    emailRequestEvent.getPayload().setEmailRequest(emailRequest);
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEvent);
+
+    // When
+    emailRequestReceiver.receiveMessage(eventMessage);
+
+    // Then
+    ArgumentCaptor<EventDTO> eventDTOArgumentCaptor = ArgumentCaptor.forClass(EventDTO.class);
+    verify(pubSubHelper)
+        .publishAndConfirm(eq(emailRequestEnrichedTopic), eventDTOArgumentCaptor.capture());
+    EventDTO sentEvent = eventDTOArgumentCaptor.getValue();
+    assertThat(sentEvent.getHeader().getCorrelationId())
+        .isEqualTo(emailRequestEvent.getHeader().getCorrelationId());
+    EmailRequestEnriched emailRequestEnriched = sentEvent.getPayload().getEmailRequestEnriched();
+    assertThat(emailRequestEnriched.getPackCode()).isEqualTo(emailRequest.getPackCode());
+    assertThat(emailRequestEnriched.getCaseId()).isEqualTo(emailRequest.getCaseId());
+    assertThat(emailRequestEnriched.getEmail()).isEqualTo(emailRequest.getEmail());
+    assertThat(emailRequestEnriched.getUac()).isNull();
+    assertThat(emailRequestEnriched.getQid()).isNull();
+
+    verify(emailRequestService)
+        .buildAndSendEmailConfirmation(
+            testCase.getId(),
+            emailTemplate.getPackCode(),
+            emailRequestEvent.getPayload().getEmailRequest().getUacMetadata(),
+            TEST_PERSONALISATION,
             Optional.empty(),
             false,
             emailRequestEvent.getHeader().getSource(),

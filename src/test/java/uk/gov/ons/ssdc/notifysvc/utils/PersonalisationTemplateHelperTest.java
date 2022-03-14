@@ -3,6 +3,7 @@ package uk.gov.ons.ssdc.notifysvc.utils;
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_SENSITIVE_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
@@ -13,6 +14,8 @@ import uk.gov.ons.ssdc.common.model.entity.Case;
 class PersonalisationTemplateHelperTest {
   private static final String TEST_UAC = "TEST_UAC";
   private static final String TEST_QID = "TEST_QID";
+  private static final Map<String, String> TEST_PERSONALISATION =
+      Map.of("fooRequest", "barRequest");
 
   @Test
   void testBuildPersonalisationFromTemplate() {
@@ -27,7 +30,7 @@ class PersonalisationTemplateHelperTest {
     // When
     Map<String, String> personalisationValues =
         PersonalisationTemplateHelper.buildPersonalisationFromTemplate(
-            template, testCase, TEST_UAC, TEST_QID);
+            template, testCase, TEST_UAC, TEST_QID, TEST_PERSONALISATION);
 
     // Then
     assertThat(personalisationValues)
@@ -47,7 +50,7 @@ class PersonalisationTemplateHelperTest {
     // When
     Map<String, String> personalisationValues =
         PersonalisationTemplateHelper.buildPersonalisationFromTemplate(
-            template, testCase, TEST_UAC, TEST_QID);
+            template, testCase, TEST_UAC, TEST_QID, TEST_PERSONALISATION);
 
     // Then
     assertThat(personalisationValues)
@@ -65,7 +68,7 @@ class PersonalisationTemplateHelperTest {
     // When
     Map<String, String> personalisationValues =
         PersonalisationTemplateHelper.buildPersonalisationFromTemplate(
-            template, testCase, TEST_UAC, TEST_QID);
+            template, testCase, TEST_UAC, TEST_QID, TEST_PERSONALISATION);
 
     // Then
     assertThat(personalisationValues)
@@ -84,7 +87,7 @@ class PersonalisationTemplateHelperTest {
     // When
     Map<String, String> personalisationValues =
         PersonalisationTemplateHelper.buildPersonalisationFromTemplate(
-            template, testCase, TEST_UAC, TEST_QID);
+            template, testCase, TEST_UAC, TEST_QID, TEST_PERSONALISATION);
 
     // Then
     assertThat(personalisationValues).containsEntry("foo", "bar").containsEntry("spam", "eggs");
@@ -103,7 +106,7 @@ class PersonalisationTemplateHelperTest {
     // When
     Map<String, String> personalisationValues =
         PersonalisationTemplateHelper.buildPersonalisationFromTemplate(
-            template, testCase, TEST_UAC, TEST_QID);
+            template, testCase, TEST_UAC, TEST_QID, Map.of());
 
     // Then
     assertThat(personalisationValues)
@@ -114,16 +117,36 @@ class PersonalisationTemplateHelperTest {
   @Test
   void testBuildPersonalisationFromTemplateNoUacQidGiven() {
     // Given
-    String[] template = new String[] {"foo", "spam"};
+    String[] template = new String[] {"foo", "spam", "__request__.fooRequest"};
 
     Case testCase = new Case();
     testCase.setSample(Map.ofEntries(entry("foo", "bar"), entry("spam", "eggs")));
 
     // When
     Map<String, String> personalisationValues =
-        PersonalisationTemplateHelper.buildPersonalisationFromTemplate(template, testCase);
+        PersonalisationTemplateHelper.buildPersonalisationFromTemplate(
+            template, testCase, TEST_PERSONALISATION);
 
     // Then
-    assertThat(personalisationValues).containsEntry("foo", "bar").containsEntry("spam", "eggs");
+    assertThat(personalisationValues)
+        .containsEntry("foo", "bar")
+        .containsEntry("spam", "eggs")
+        .containsEntry("__request__.fooRequest", "barRequest");
+  }
+
+  @Test
+  void testBuildPersonalisationFromTemplateNoPersonalisation() {
+    // Given
+    String[] template = new String[] {"foo", TEMPLATE_REQUEST_PREFIX + "foo"};
+
+    Case testCase = new Case();
+    testCase.setSample(Map.ofEntries(entry("foo", "bar")));
+
+    // When
+    Map<String, String> personalisationValues =
+        PersonalisationTemplateHelper.buildPersonalisationFromTemplate(template, testCase, null);
+
+    // Then
+    assertThat(personalisationValues).containsEntry("foo", "bar");
   }
 }

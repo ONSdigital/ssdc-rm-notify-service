@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Map;
 import java.util.UUID;
 import lombok.Data;
 
@@ -22,4 +23,11 @@ public class SmsFulfilment {
 
   @Schema(description = "Metadata for UACQIDLinks")
   private Object uacMetadata;
+
+  @Schema(
+      description =
+          "Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored",
+      example = "{\"name\":\"Joe Bloggs\"}",
+      nullable = true)
+  private Map<String, String> personalisation;
 }

@@ -1,5 +1,6 @@
 package uk.gov.ons.ssdc.notifysvc.model.dto.event;
 
+import java.util.Map;
 import java.util.UUID;
 import lombok.Data;
 
@@ -10,4 +11,5 @@ public class SmsRequest {
   private String packCode;
   private Object uacMetadata;
   private boolean scheduled;
+  private Map<String, String> personalisation;
 }

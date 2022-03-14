@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMessageWithValidTimeStamp;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import java.util.Map;
@@ -41,6 +42,7 @@ class SmsRequestEnrichedReceiverTest {
 
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
+  private final Map<String, String> TEST_PERSONALISATION = Map.of("foo", "bar");
 
   @Value("${queueconfig.sms-request-enriched-topic}")
   private String smsRequestEnrichedTopic;
@@ -54,7 +56,105 @@ class SmsRequestEnrichedReceiverTest {
 
     SmsTemplate smsTemplate = new SmsTemplate();
     smsTemplate.setPackCode("TEST_PACK_CODE");
+    smsTemplate.setTemplate(
+        new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
+    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);
+    SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
+    smsRequestEnriched.setCaseId(testCase.getId());
+    smsRequestEnriched.setPackCode("TEST_PACK_CODE");
+    smsRequestEnriched.setUac(TEST_UAC);
+    smsRequestEnriched.setQid(TEST_QID);
+    smsRequestEnriched.setPersonalisation(TEST_PERSONALISATION);
+    smsRequestEnriched.setPhoneNumber("07564283939");
+    smsRequestEnrichedEvent.getPayload().setSmsRequestEnriched(smsRequestEnriched);
+
+    Map<String, String> personalisationValues =
+        Map.ofEntries(
+            entry(TEMPLATE_UAC_KEY, TEST_UAC),
+            entry(TEMPLATE_QID_KEY, TEST_QID),
+            entry(TEMPLATE_REQUEST_PREFIX + "foo", "bar"));
+
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
+
+    // When
+    smsRequestEnrichedReceiver.receiveMessage(eventMessage);
+
+    // Then
+    verify(notificationClientApi)
+        .sendSms(
+            smsTemplate.getNotifyTemplateId().toString(),
+            smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getPhoneNumber(),
+            personalisationValues,
+            senderId);
+  }
+
+  @Test
+  void testReceiveMessageNoPersonalisationOnTemplate() throws NotificationClientException {
+
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("TEST_PACK_CODE");
     smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
+    smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);
+    SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
+    smsRequestEnriched.setCaseId(testCase.getId());
+    smsRequestEnriched.setPackCode("TEST_PACK_CODE");
+    smsRequestEnriched.setUac(TEST_UAC);
+    smsRequestEnriched.setQid(TEST_QID);
+    smsRequestEnriched.setPhoneNumber("07564283939");
+    smsRequestEnrichedEvent.getPayload().setSmsRequestEnriched(smsRequestEnriched);
+
+    Map<String, String> personalisationValues =
+        Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
+
+    when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
+        .thenReturn(Optional.of(smsTemplate));
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
+
+    // When
+    smsRequestEnrichedReceiver.receiveMessage(eventMessage);
+
+    // Then
+    verify(notificationClientApi)
+        .sendSms(
+            smsTemplate.getNotifyTemplateId().toString(),
+            smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getPhoneNumber(),
+            personalisationValues,
+            senderId);
+  }
+
+  @Test
+  void testReceiveMessageNoPersonalisationValuesSupplied() throws NotificationClientException {
+
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    SmsTemplate smsTemplate = new SmsTemplate();
+    smsTemplate.setPackCode("TEST_PACK_CODE");
+    smsTemplate.setTemplate(
+        new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();

@@ -5,6 +5,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.does
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,10 +60,11 @@ public class SmsRequestService {
     return sanitisedPhoneNumber.length() == 10 && sanitisedPhoneNumber.matches("^7[0-9]+$");
   }
 
-  public void buildAndSendEnrichedSmsFulfilment(
+  public void buildAndSendSmsConfirmation(
       UUID caseId,
       String packCode,
       Object uacMetadata,
+      Map<String, String> personalisation,
       Optional<UacQidCreatedPayloadDTO> newUacQidPair,
       boolean scheduled,
       String source,
@@ -74,6 +76,7 @@ public class SmsRequestService {
     smsConfirmation.setPackCode(packCode);
     smsConfirmation.setUacMetadata(uacMetadata);
     smsConfirmation.setScheduled(scheduled);
+    smsConfirmation.setPersonalisation(personalisation);
 
     if (newUacQidPair.isPresent()) {
       smsConfirmation.setUac(newUacQidPair.get().getUac());

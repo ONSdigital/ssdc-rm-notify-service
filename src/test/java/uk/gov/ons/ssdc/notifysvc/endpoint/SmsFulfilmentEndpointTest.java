@@ -116,10 +116,11 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     verify(smsRequestService)
-        .buildAndSendEnrichedSmsFulfilment(
+        .buildAndSendSmsConfirmation(
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getPersonalisation(),
             Optional.of(newUacQid),
             false,
             smsFulfilmentRequest.getHeader().getSource(),
@@ -176,10 +177,11 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     verify(smsRequestService)
-        .buildAndSendEnrichedSmsFulfilment(
+        .buildAndSendSmsConfirmation(
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getPersonalisation(),
             Optional.of(newUacQid),
             false,
             smsFulfilmentRequest.getHeader().getSource(),
@@ -231,10 +233,11 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     verify(smsRequestService)
-        .buildAndSendEnrichedSmsFulfilment(
+        .buildAndSendSmsConfirmation(
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getPersonalisation(),
             Optional.empty(),
             false,
             smsFulfilmentRequest.getHeader().getSource(),
@@ -297,10 +300,11 @@ class SmsFulfilmentEndpointTest {
 
     // Then
     verify(smsRequestService)
-        .buildAndSendEnrichedSmsFulfilment(
+        .buildAndSendSmsConfirmation(
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsFulfilmentRequest.getPayload().getSmsFulfilment().getUacMetadata(),
+            smsFulfilmentRequest.getPayload().getSmsFulfilment().getPersonalisation(),
             Optional.of(newUacQid),
             false,
             smsFulfilmentRequest.getHeader().getSource(),

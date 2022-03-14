@@ -101,10 +101,11 @@ class SmsRequestReceiverTest {
     assertThat(smsRequestEnriched.getQid()).isEqualTo(newUacQidCreated.getQid());
 
     verify(smsRequestService)
-        .buildAndSendEnrichedSmsFulfilment(
+        .buildAndSendSmsConfirmation(
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
+            smsRequestEvent.getPayload().getSmsRequest().getPersonalisation(),
             Optional.of(newUacQidCreated),
             false,
             smsRequestEvent.getHeader().getSource(),
@@ -158,10 +159,11 @@ class SmsRequestReceiverTest {
     assertThat(smsRequestEnriched.getQid()).isNull();
 
     verify(smsRequestService)
-        .buildAndSendEnrichedSmsFulfilment(
+        .buildAndSendSmsConfirmation(
             testCase.getId(),
             smsTemplate.getPackCode(),
             smsRequestEvent.getPayload().getSmsRequest().getUacMetadata(),
+            smsRequestEvent.getPayload().getSmsRequest().getPersonalisation(),
             Optional.empty(),
             false,
             smsRequestEvent.getHeader().getSource(),
