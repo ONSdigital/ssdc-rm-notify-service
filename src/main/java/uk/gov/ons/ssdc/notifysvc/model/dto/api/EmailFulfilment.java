@@ -25,7 +25,7 @@ public class EmailFulfilment {
 
   @Schema(
       description =
-          "Optional personalisation keys/value pairs to include in the sent email. Keys must match \"__request__.\" prefixed fields in the selected template, or they will be ignored",
+          "Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored",
       example = "{\"name\":\"Joe Bloggs\"}",
       nullable = true)
   private Map<String, String> personalisation;

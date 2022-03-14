@@ -544,8 +544,8 @@ This operation does not require authentication
 |caseId|string(uuid)|false|none|The case, which must exist in RM|
 |email|string|false|none|The target email address, to which we will send a fulfilment|
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
-|personalisation|object¦null|false|none|Optional personalisation keys/value pairs to include in the sent email. Keys must match "__request__." prefixed fields in the selected template, or they will be ignored|
-|» **additionalProperties**|string¦null|false|none|Optional personalisation keys/value pairs to include in the sent email. Keys must match "__request__." prefixed fields in the selected template, or they will be ignored|
+|personalisation|object¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
+|» **additionalProperties**|string¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
 |uacMetadata|object|false|none|Metadata for UACQIDLinks|
 
 <h2 id="tocS_EmailFulfilmentResponseError">EmailFulfilmentResponseError</h2>
@@ -726,8 +726,8 @@ This operation does not require authentication
 |---|---|---|---|---|
 |caseId|string(uuid)|false|none|The case, which must exist in RM|
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
-|personalisation|object¦null|false|none|Optional personalisation keys/value pairs to include in the sent email. Keys must match "__request__." prefixed fields in the selected template, or they will be ignored|
-|» **additionalProperties**|string¦null|false|none|Optional personalisation keys/value pairs to include in the sent email. Keys must match "__request__." prefixed fields in the selected template, or they will be ignored|
+|personalisation|object¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
+|» **additionalProperties**|string¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
 |phoneNumber|string|false|none|The phone number, which must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`).|
 |uacMetadata|object|false|none|Metadata for UACQIDLinks|
 
