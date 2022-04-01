@@ -54,4 +54,5 @@ services:
 
 networks:
   default:
+    external:
       name: ssdcrmdockerdev_default
