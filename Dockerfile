@@ -1,15 +1,9 @@
-FROM openjdk:17-slim
-CMD ["/usr/local/openjdk-17/bin/java", "-jar", "/opt/ssdc-rm-notify-service.jar"]
+FROM eclipse-temurin:17-jdk-alpine
 
-RUN groupadd --gid 999 notifyservice && \
-    useradd --create-home --system --uid 999 --gid notifyservice notifyservice
-
-RUN apt-get update && \
-apt-get -yq install curl && \
-apt-get -yq clean && \
-rm -rf /var/lib/apt/lists/*
-
+CMD ["java", "-jar","/opt/ssdc-rm-notify-service.jar"]
+COPY healthcheck.sh /opt/healthcheck.sh
+RUN addgroup --gid 1000 notifyservice && \
+    adduser --system --uid 1000 notifyservice notifyservice
 USER notifyservice
 
-ARG JAR_FILE=ssdc-rm-notify-service*.jar
-COPY target/$JAR_FILE /opt/ssdc-rm-notify-service.jar
+COPY target/ssdc-rm-notify-service*.jar /opt/ssdc-rm-notify-service.jar
