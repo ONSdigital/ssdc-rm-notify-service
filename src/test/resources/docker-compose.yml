@@ -23,9 +23,11 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notify-service-it:5432/postgres?sslmode=disable
       - SPRING_PROFILES_ACTIVE=dev
+    volumes:
+      - ./java_healthcheck:/opt/healthcheck/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8164/actuator/health"]
-      interval: 30s
+      test: [ "CMD", "java", "/opt/healthcheck/HealthCheck.java", "http://localhost:8164/actuator/health" ]
+      interval: 20s
       timeout: 10s
       retries: 10
 
