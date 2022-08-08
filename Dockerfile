@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 CMD ["java", "-jar","/opt/ssdc-rm-notify-service.jar"]
 COPY healthcheck.sh /opt/healthcheck.sh
