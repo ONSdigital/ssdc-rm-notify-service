@@ -43,14 +43,11 @@ import uk.gov.service.notify.NotificationClientException;
 @RestController
 @RequestMapping(value = "/sms-fulfilment")
 public class SmsFulfilmentEndpoint {
-
-  @Value("${notify.senderId}")
-  private String senderId;
-
   private final SmsRequestService smsRequestService;
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
   private final NotificationClientApi notificationClientApi;
+  private final String senderId;
 
   private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
@@ -59,11 +56,13 @@ public class SmsFulfilmentEndpoint {
       SmsRequestService smsRequestService,
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
-      NotificationClientApi notificationClientApi) {
+      NotificationClientApi notificationClientApi,
+      @Value("${notify.senderId}") String senderId) {
     this.smsRequestService = smsRequestService;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
     this.notificationClientApi = notificationClientApi;
+    this.senderId = senderId;
   }
 
   @Operation(description = "SMS Fulfilment Request")

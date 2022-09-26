@@ -20,23 +20,23 @@ import uk.gov.service.notify.NotificationClientException;
 @MessageEndpoint
 public class SmsRequestEnrichedReceiver {
 
-  @Value("${notify.senderId}")
-  private String senderId;
-
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
   private final NotificationClientApi notificationClientApi;
+  private final String senderId;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      NotificationClientApi notificationClientApi) {
+      NotificationClientApi notificationClientApi,
+      @Value("${notify.senderId}") String senderId) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
     this.notificationClientApi = notificationClientApi;
+    this.senderId = senderId;
   }
 
   @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
