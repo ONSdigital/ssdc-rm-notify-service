@@ -14,6 +14,19 @@ Just build the image
     mvn -DskipTests -DskipITs -DdockerCompose.skip
 ```
 
+### Local Docker Java Healthcheck
+
+Since docker compose health checks are run inside the container, we need a method of checking service health that can
+run in our minimal alpine Java JRE images. To accomplish this, we have a small Java health check class which simply
+calls a http endpoint and succeeds if it gets a success status. This is compiled into a JAR, which is then mounted into
+the containers, so it can be executed by the JRE at container runtime.
+
+#### Building Changes
+
+If you make changes to the [HealthCheck.java](src/test/resources/java_healthcheck/HealthCheck.java), you must then
+run `make rebuild-java-healthcheck` to compile and package the updated class into the jar, and commit the resulting
+built changes.
+
 ## Running Locally
 
 You can run this service dockerised with [docker dev](https://github.com/ONSdigital/ssdc-rm-docker-dev). 
