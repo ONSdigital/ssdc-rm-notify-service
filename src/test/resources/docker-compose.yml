@@ -26,7 +26,7 @@ services:
     volumes:
       - ./java_healthcheck:/opt/healthcheck/
     healthcheck:
-      test: [ "CMD", "java", "/opt/healthcheck/HealthCheck.java", "http://localhost:8164/actuator/health" ]
+      test: [ "CMD", "java", "-jar", "/opt/healthcheck/HealthCheck.jar", "http://localhost:8164/actuator/health" ]
       interval: 20s
       timeout: 10s
       retries: 10
