@@ -23,20 +23,20 @@ public class SmsRequestEnrichedReceiver {
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
+  @Value("${notify.sender-id}")
+  private String senderId;
+
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
   private final NotificationClientApi notificationClientApi;
-  private final String senderId;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      NotificationClientApi notificationClientApi,
-      @Value("${notify.sender-id}") String senderId) {
+      NotificationClientApi notificationClientApi) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
     this.notificationClientApi = notificationClientApi;
-    this.senderId = senderId;
   }
 
   @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
