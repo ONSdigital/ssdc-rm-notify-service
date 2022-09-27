@@ -12,7 +12,7 @@ public class NotifyConfiguration {
   private final String baseUrl;
 
   public NotifyConfiguration(
-      @Value("${notify.apiKey}") String apiKey, @Value("${notify.baseUrl}") String baseUrl) {
+      @Value("${notify.api-key}") String apiKey, @Value("${notify.base-url}") String baseUrl) {
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
   }

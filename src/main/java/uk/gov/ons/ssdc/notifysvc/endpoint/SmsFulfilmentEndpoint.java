@@ -57,7 +57,7 @@ public class SmsFulfilmentEndpoint {
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
       NotificationClientApi notificationClientApi,
-      @Value("${notify.senderId}") String senderId) {
+      @Value("${notify.sender-id}") String senderId) {
     this.smsRequestService = smsRequestService;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;

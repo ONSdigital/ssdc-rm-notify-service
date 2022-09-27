@@ -32,7 +32,7 @@ public class SmsRequestEnrichedReceiver {
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
       NotificationClientApi notificationClientApi,
-      @Value("${notify.senderId}") String senderId) {
+      @Value("${notify.sender-id}") String senderId) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
     this.notificationClientApi = notificationClientApi;
