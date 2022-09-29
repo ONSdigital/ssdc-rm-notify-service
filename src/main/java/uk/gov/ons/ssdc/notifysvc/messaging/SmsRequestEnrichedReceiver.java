@@ -23,7 +23,7 @@ public class SmsRequestEnrichedReceiver {
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
-  @Value("${notify.sender-id}")
+  @Value("${notify.senderid}")
   private String senderId;
 
   private final SmsTemplateRepository smsTemplateRepository;
