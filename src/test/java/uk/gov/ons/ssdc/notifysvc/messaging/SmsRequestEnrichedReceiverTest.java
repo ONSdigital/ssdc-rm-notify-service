@@ -37,7 +37,7 @@ class SmsRequestEnrichedReceiverTest {
 
   @InjectMocks SmsRequestEnrichedReceiver smsRequestEnrichedReceiver;
 
-  @Value("${notify.senderid}")
+  @Value("${notify.sender-id}")
   private String senderId;
 
   private final String TEST_UAC = "TEST_UAC";

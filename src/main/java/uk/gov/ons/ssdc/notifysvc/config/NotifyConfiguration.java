@@ -8,10 +8,10 @@ import uk.gov.service.notify.NotificationClientApi;
 
 @Configuration
 public class NotifyConfiguration {
-  @Value("${notify.apikey}")
+  @Value("${notify.api-key}")
   private String apiKey;
 
-  @Value("${notify.baseurl}")
+  @Value("${notify.base-url}")
   private String baseUrl;
 
   @Bean

@@ -45,7 +45,7 @@ import uk.gov.service.notify.NotificationClientException;
 public class SmsFulfilmentEndpoint {
   private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
-  @Value("${notify.senderid}")
+  @Value("${notify.sender-id}")
   private String senderId;
 
   private final SmsRequestService smsRequestService;
