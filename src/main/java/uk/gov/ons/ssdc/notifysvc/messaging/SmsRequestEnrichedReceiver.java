@@ -20,11 +20,11 @@ import uk.gov.service.notify.NotificationClientException;
 @MessageEndpoint
 public class SmsRequestEnrichedReceiver {
 
-  @Value("${notify.senderId}")
-  private String senderId;
-
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
+
+  @Value("${notify.sender-id}")
+  private String senderId;
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
