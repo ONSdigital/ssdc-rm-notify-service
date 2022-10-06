@@ -53,7 +53,7 @@ import uk.gov.service.notify.NotificationClientException;
 @ExtendWith(MockitoExtension.class)
 class SmsFulfilmentEndpointTest {
 
-  @Value("${notify.senderId}")
+  @Value("${notify.sender-id}")
   private String senderId;
 
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";

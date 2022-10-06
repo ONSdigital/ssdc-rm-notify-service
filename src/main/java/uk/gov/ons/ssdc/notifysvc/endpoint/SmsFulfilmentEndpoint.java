@@ -43,16 +43,15 @@ import uk.gov.service.notify.NotificationClientException;
 @RestController
 @RequestMapping(value = "/sms-fulfilment")
 public class SmsFulfilmentEndpoint {
+  private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
-  @Value("${notify.senderId}")
+  @Value("${notify.sender-id}")
   private String senderId;
 
   private final SmsRequestService smsRequestService;
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
   private final NotificationClientApi notificationClientApi;
-
-  private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
   @Autowired
   public SmsFulfilmentEndpoint(
