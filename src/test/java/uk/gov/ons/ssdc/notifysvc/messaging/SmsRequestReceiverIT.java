@@ -137,7 +137,7 @@ class SmsRequestReceiverIT {
     collectionExercise.setMetadata(TEST_COLLECTION_EXERCISE_UPDATE_METADATA);
     collectionExercise.setCollectionInstrumentSelectionRules(
         new CollectionInstrumentSelectionRule[] {
-          new CollectionInstrumentSelectionRule(0, null, "testInstrumentUrl")
+          new CollectionInstrumentSelectionRule(0, null, "testInstrumentUrl", null)
         });
     collectionExercise = collectionExerciseRepository.saveAndFlush(collectionExercise);
 
