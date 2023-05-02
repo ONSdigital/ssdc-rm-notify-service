@@ -74,7 +74,8 @@ class EmailRequestReceiverTest {
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQidCreated));
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequest emailRequest = new EmailRequest();
@@ -137,7 +138,8 @@ class EmailRequestReceiverTest {
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQidCreated));
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequest emailRequest = new EmailRequest();
@@ -195,7 +197,8 @@ class EmailRequestReceiverTest {
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.empty());
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequest emailRequest = new EmailRequest();
@@ -253,7 +256,8 @@ class EmailRequestReceiverTest {
     when(caseRepository.existsById(testCase.getId())).thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.empty());
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequest emailRequest = new EmailRequest();
@@ -298,7 +302,7 @@ class EmailRequestReceiverTest {
   }
 
   @Test
-  void testReceiveMessageExceptionOnInvalidPhoneNumber() {
+  void testReceiveMessageExceptionOnInvalidEmailAddress() {
     // Given
     Case testCase = new Case();
     testCase.setId(UUID.randomUUID());
@@ -309,7 +313,8 @@ class EmailRequestReceiverTest {
 
     String invalidEmailAddress = "blah";
 
-    when(emailRequestService.validateEmailAddress(invalidEmailAddress)).thenReturn(false);
+    when(emailRequestService.validateEmailAddress(invalidEmailAddress))
+        .thenReturn(Optional.of("Email is invalid"));
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequest emailRequest = new EmailRequest();
@@ -347,7 +352,8 @@ class EmailRequestReceiverTest {
 
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
     when(caseRepository.existsById(testCase.getId())).thenReturn(false);
 
     EventDTO emailRequestEvent = buildEventDTO(emailRequestEnrichedTopic);
@@ -382,7 +388,8 @@ class EmailRequestReceiverTest {
     newUacQidCreated.setUac(TEST_UAC);
     newUacQidCreated.setQid(TEST_QID);
 
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.empty());
 

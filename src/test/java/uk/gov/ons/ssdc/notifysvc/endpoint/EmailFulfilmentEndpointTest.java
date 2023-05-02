@@ -92,7 +92,8 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.isEmailTemplateAllowedOnSurvey(
             emailTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
 
@@ -154,7 +155,8 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.isEmailTemplateAllowedOnSurvey(
             emailTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
 
@@ -213,7 +215,8 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.isEmailTemplateAllowedOnSurvey(
             emailTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.empty());
 
@@ -272,7 +275,8 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(true);
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
 
     // Simulate an error when we attempt to send the email
     when(notificationClientApi.sendEmail(any(), any(), any(), any()))
@@ -335,7 +339,9 @@ class EmailFulfilmentEndpointTest {
             emailTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
     when(emailRequestService.validateEmailAddress(invalidEmailAddress))
-        .thenReturn(false); // TODO how did this pass without this mock?
+        .thenReturn(
+            Optional.of(
+                "Mock email address is invalid")); // TODO how did this pass without this mock?
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -348,7 +354,7 @@ class EmailFulfilmentEndpointTest {
                 .content(objectMapper.writeValueAsBytes(emailFulfilmentRequest))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("error", is("Invalid email address")))
+        .andExpect(jsonPath("error", is("Invalid email address: Mock email address is invalid")))
         .andExpect(handler().handlerType(EmailFulfilmentEndpoint.class));
 
     // Then
@@ -399,7 +405,8 @@ class EmailFulfilmentEndpointTest {
     when(emailRequestService.isEmailTemplateAllowedOnSurvey(
             emailTemplate, testCase.getCollectionExercise().getSurvey()))
         .thenReturn(true);
-    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS)).thenReturn(true);
+    when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
+        .thenReturn(Optional.empty());
 
     // When validated, then no exception is thrown
     emailFulfilmentEndpoint.validateRequestAndFetchEmailTemplate(

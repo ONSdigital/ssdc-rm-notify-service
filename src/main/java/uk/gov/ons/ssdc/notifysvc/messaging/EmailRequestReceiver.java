@@ -44,15 +44,21 @@ public class EmailRequestReceiver {
     this.pubSubHelper = pubSubHelper;
   }
 
+  private void validateEmailAddress(String emailAddress) {
+    Optional<String> validationFailure = emailRequestService.validateEmailAddress(emailAddress);
+    if (validationFailure.isPresent()) {
+      String responseMessage = String.format("Invalid email address: %s", validationFailure.get());
+      throw new RuntimeException(responseMessage);
+    }
+  }
+
   @ServiceActivator(inputChannel = "emailRequestInputChannel", adviceChain = "retryAdvice")
   public void receiveMessage(Message<byte[]> message) {
     EventDTO emailRequestEvent = convertJsonBytesToEvent(message.getPayload());
     EventHeaderDTO emailRequestHeader = emailRequestEvent.getHeader();
     EmailRequest emailRequest = emailRequestEvent.getPayload().getEmailRequest();
 
-    if (!emailRequestService.validateEmailAddress(emailRequest.getEmail())) {
-      throw new RuntimeException("Invalid email address on email request message");
-    }
+    validateEmailAddress(emailRequest.getEmail());
 
     EmailTemplate emailTemplate =
         emailTemplateRepository

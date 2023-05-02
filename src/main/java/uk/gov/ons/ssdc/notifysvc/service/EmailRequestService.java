@@ -8,11 +8,11 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.common.validation.EmailRule;
 import uk.gov.ons.ssdc.notifysvc.client.UacQidServiceClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailConfirmation;
@@ -32,6 +32,8 @@ public class EmailRequestService {
   private final UacQidServiceClient uacQidServiceClient;
   private final FulfilmentSurveyEmailTemplateRepository fulfilmentSurveyEmailTemplateRepository;
   private final PubSubHelper pubSubHelper;
+
+  private final EmailRule emailValidationRule = new EmailRule(true);
 
   public EmailRequestService(
       UacQidServiceClient uacQidServiceClient,
@@ -54,11 +56,8 @@ public class EmailRequestService {
         emailTemplate, survey);
   }
 
-  public boolean validateEmailAddress(String emailAddress) {
-    Pattern emailPattern =
-        Pattern.compile(
-            "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
-    return emailPattern.matcher(emailAddress).find();
+  public Optional<String> validateEmailAddress(String emailAddress) {
+    return emailValidationRule.checkValidity(emailAddress);
   }
 
   public void buildAndSendEmailConfirmation(
