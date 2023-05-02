@@ -184,8 +184,10 @@ public class EmailFulfilmentEndpoint {
   }
 
   private void validateEmailAddress(String emailAddress) {
-    if (!emailRequestService.validateEmailAddress(emailAddress)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email address");
+    Optional<String> validationFailure = emailRequestService.validateEmailAddress(emailAddress);
+    if (validationFailure.isPresent()) {
+      String responseMessage = String.format("Invalid email address: %s", validationFailure.get());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, responseMessage);
     }
   }
 

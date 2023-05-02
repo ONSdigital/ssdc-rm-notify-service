@@ -21,7 +21,7 @@ services:
     external_links:
       - postgres-notify-service-it
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notify-service-it:5432/postgres?sslmode=disable
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notify-service-it:5432/rm?sslmode=disable
       - SPRING_PROFILES_ACTIVE=dev
     volumes:
       - ./java_healthcheck:/opt/healthcheck/

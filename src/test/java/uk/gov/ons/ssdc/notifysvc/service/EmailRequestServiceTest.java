@@ -60,12 +60,11 @@ class EmailRequestServiceTest {
         "example@example.com",
         "foo@bar.co.uk",
         "email@subdomain.example.com",
-        "email@123.123.123.123",
         "foo+bar@example.com",
         "1234567890@example.com",
       })
   void testValidateEmailAddressValid(String emailAddress) {
-    assertTrue(emailRequestService.validateEmailAddress(emailAddress));
+    assertThat(emailRequestService.validateEmailAddress(emailAddress)).isEmpty();
   }
 
   @ParameterizedTest
@@ -78,7 +77,7 @@ class EmailRequestServiceTest {
         "@.com",
       })
   void testValidateEmailAddressInvalid(String emailAddress) {
-    assertFalse(emailRequestService.validateEmailAddress(emailAddress));
+    assertThat(emailRequestService.validateEmailAddress(emailAddress)).isPresent();
   }
 
   @Test
