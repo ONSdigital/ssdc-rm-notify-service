@@ -12,7 +12,6 @@ on:
 jobs:
 
   build:
-    name: Java Check, Build and Test
     runs-on: ubuntu-latest
     steps:
 
@@ -39,20 +38,20 @@ jobs:
           password: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
 
 
-      - name: Set up JDK 17
+      - name: Set Up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: temurin
           cache: maven
 
-      - name: Set up Docker Network
+      - name: Set Up Docker Network
         run: docker network create ssdcrmdockerdev_default
 
       - name: Maven Checks
         run: mvn fmt:check pmd:check
 
-      - name: Run tests
+      - name: Run Tests
         run: mvn verify jacoco:report
 
       - name: Run Codecov
