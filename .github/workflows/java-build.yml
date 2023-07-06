@@ -1,5 +1,5 @@
 ---
-name: Java Check, Build and Test
+name: Java Checks and Tests
 # This workflow will build a Java project with Maven
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
@@ -57,3 +57,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          # NB: fail_ci_if_error is enabled to make any teething issues with Codecov visible.
+          # If Codecov has outage issues in the future, this can be toggled to false to allow the action to pass.
+          fail_ci_if_error: true
