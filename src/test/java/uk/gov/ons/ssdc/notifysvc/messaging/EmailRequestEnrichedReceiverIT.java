@@ -152,6 +152,7 @@ class EmailRequestEnrichedReceiverIT {
         new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, TEMPLATE_REQUEST_PREFIX + "name"});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
     emailTemplate.setDescription("Test description");
+    emailTemplate.setNotifyServiceRef("test-service");
     emailTemplate = emailTemplateRepository.saveAndFlush(emailTemplate);
 
     FulfilmentSurveyEmailTemplate fulfilmentSurveyEmailTemplate =

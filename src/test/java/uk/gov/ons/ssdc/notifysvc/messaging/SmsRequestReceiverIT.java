@@ -153,6 +153,7 @@ class SmsRequestReceiverIT {
         new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY, TEMPLATE_REQUEST_PREFIX + "name"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate.setDescription("Test description");
+    smsTemplate.setNotifyServiceRef("test-service");
     smsTemplate = smsTemplateRepository.saveAndFlush(smsTemplate);
 
     FulfilmentSurveySmsTemplate fulfilmentSurveySmsTemplate = new FulfilmentSurveySmsTemplate();
