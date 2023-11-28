@@ -12,11 +12,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,7 +37,6 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.SmsRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
 import uk.gov.service.notify.NotificationClient;
-import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @RestController
@@ -48,24 +44,18 @@ import uk.gov.service.notify.NotificationClientException;
 public class SmsFulfilmentEndpoint {
   private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
-
   private final SmsRequestService smsRequestService;
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
-  public void setNotify(Map<String, Map<String, String>> notify) {
-    this.notify = notify;
-  }
-  private final Map<String, NotificationClient> notificationClientApi;
 
-  @Getter
-  private Map<String,Map<String,String>> notify;
+  private final Map<String, Map<String, Object>> notificationClientApi;
 
   @Autowired
   public SmsFulfilmentEndpoint(
       SmsRequestService smsRequestService,
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
-      Map<String, NotificationClient> notificationClientApi) {
+      Map<String, Map<String, Object>> notificationClientApi) {
     this.smsRequestService = smsRequestService;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
@@ -140,10 +130,16 @@ public class SmsFulfilmentEndpoint {
         request.getHeader().getOriginatingUser());
 
     String notifyServiceRef = smsTemplate.getNotifyServiceRef();
-    String senderId = notify.get(notifyServiceRef).get("sender-id");
+    Map<String, Object> service = notificationClientApi.get(notifyServiceRef);
+    String senderId = (String) service.get("sender-id");
+    NotificationClient notificationClient = (NotificationClient) service.get("client");
 
     sendSms(
-        request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsPersonalisation,senderId,notifyServiceRef);
+        request.getPayload().getSmsFulfilment().getPhoneNumber(),
+        smsTemplate,
+        smsPersonalisation,
+        senderId,
+        notificationClient);
 
     return new ResponseEntity<>(createSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
@@ -200,8 +196,11 @@ public class SmsFulfilmentEndpoint {
   }
 
   private void sendSms(
-      String phoneNumber, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues,String senderId, String notifyServiceRef) {
-    NotificationClient notificationClient = notificationClientApi.get(notifyServiceRef);
+      String phoneNumber,
+      SmsTemplate smsTemplate,
+      Map<String, String> smsTemplateValues,
+      String senderId,
+      NotificationClient notificationClient) {
     try {
       notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(), phoneNumber, smsTemplateValues, senderId);

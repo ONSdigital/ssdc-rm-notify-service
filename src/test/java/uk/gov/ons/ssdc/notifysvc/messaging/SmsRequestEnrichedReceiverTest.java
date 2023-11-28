@@ -9,6 +9,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,19 +27,16 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
 class SmsRequestEnrichedReceiverTest {
   @Mock SmsTemplateRepository smsTemplateRepository;
   @Mock CaseRepository caseRepository;
-  @Mock NotificationClientApi notificationClientApi;
-
+  @Mock private Map<String, Map<String, Object>> notificationClientApi;
+  @Mock NotificationClient notificationClient;
   @InjectMocks SmsRequestEnrichedReceiver smsRequestEnrichedReceiver;
-
-  @Value("${notify.sender-id}")
-  private String senderId;
 
   private final String TEST_UAC = "TEST_UAC";
   private final String TEST_QID = "TEST_QID";
@@ -59,10 +57,14 @@ class SmsRequestEnrichedReceiverTest {
     smsTemplate.setTemplate(
         new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+    smsTemplate.setNotifyServiceRef("test-service");
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
     newUacQidCreated.setQid(TEST_QID);
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
 
     EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);
     SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
@@ -83,6 +85,7 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 
@@ -90,12 +93,12 @@ class SmsRequestEnrichedReceiverTest {
     smsRequestEnrichedReceiver.receiveMessage(eventMessage);
 
     // Then
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             smsTemplate.getNotifyTemplateId().toString(),
             smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getPhoneNumber(),
             personalisationValues,
-            senderId);
+            (String) notifyConfig.get("sender-id"));
   }
 
   @Test
@@ -109,6 +112,10 @@ class SmsRequestEnrichedReceiverTest {
     smsTemplate.setPackCode("TEST_PACK_CODE");
     smsTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
+    smsTemplate.setNotifyServiceRef("test-service");
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
@@ -129,6 +136,7 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 
@@ -136,12 +144,12 @@ class SmsRequestEnrichedReceiverTest {
     smsRequestEnrichedReceiver.receiveMessage(eventMessage);
 
     // Then
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             smsTemplate.getNotifyTemplateId().toString(),
             smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getPhoneNumber(),
             personalisationValues,
-            senderId);
+            (String) notifyConfig.get("sender-id"));
   }
 
   @Test
@@ -156,10 +164,13 @@ class SmsRequestEnrichedReceiverTest {
     smsTemplate.setTemplate(
         new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
-
+    smsTemplate.setNotifyServiceRef("test-service");
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
     newUacQidCreated.setQid(TEST_QID);
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
 
     EventDTO smsRequestEnrichedEvent = buildEventDTO(smsRequestEnrichedTopic);
     SmsRequestEnriched smsRequestEnriched = new SmsRequestEnriched();
@@ -176,6 +187,7 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 
@@ -183,11 +195,11 @@ class SmsRequestEnrichedReceiverTest {
     smsRequestEnrichedReceiver.receiveMessage(eventMessage);
 
     // Then
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             smsTemplate.getNotifyTemplateId().toString(),
             smsRequestEnrichedEvent.getPayload().getSmsRequestEnriched().getPhoneNumber(),
             personalisationValues,
-            senderId);
+            (String) notifyConfig.get("sender-id"));
   }
 }

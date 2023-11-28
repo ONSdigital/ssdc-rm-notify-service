@@ -37,7 +37,6 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
 import uk.gov.service.notify.NotificationClient;
-import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @RestController
@@ -47,7 +46,7 @@ public class EmailFulfilmentEndpoint {
   private final EmailRequestService emailRequestService;
   private final CaseRepository caseRepository;
   private final EmailTemplateRepository emailTemplateRepository;
-  private final Map<String, NotificationClient> notificationClientApi;
+  private final Map<String, Map<String, Object>> notificationClientApi;
 
   private static final Logger logger = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
 
@@ -56,7 +55,7 @@ public class EmailFulfilmentEndpoint {
       EmailRequestService emailRequestService,
       CaseRepository caseRepository,
       EmailTemplateRepository emailTemplateRepository,
-      Map<String, NotificationClient> notificationClientApi) {
+      Map<String, Map<String, Object>> notificationClientApi) {
     this.emailRequestService = emailRequestService;
     this.caseRepository = caseRepository;
     this.emailTemplateRepository = emailTemplateRepository;
@@ -136,7 +135,7 @@ public class EmailFulfilmentEndpoint {
         emailTemplate,
         emailPersonalisation,
         request.getHeader().getCorrelationId().toString(),
-            notifyServiceRef);
+        notifyServiceRef);
 
     return new ResponseEntity<>(createEmailSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
@@ -200,7 +199,8 @@ public class EmailFulfilmentEndpoint {
       Map<String, String> emailTemplatePersonalization,
       String reference,
       String notifyServiceRef) {
-    NotificationClient notificationClient = notificationClientApi.get(notifyServiceRef);
+    Map<String, Object> service = notificationClientApi.get(notifyServiceRef);
+    NotificationClient notificationClient = (NotificationClient) service.get("client");
 
     try {
       notificationClient.sendEmail(

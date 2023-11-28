@@ -156,6 +156,7 @@ class EmailFulfilmentEndpointIT {
     emailTemplate.setTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
     emailTemplate.setDescription("Test description");
+    emailTemplate.setNotifyServiceRef("test-service");
     emailTemplate = emailTemplateRepository.saveAndFlush(emailTemplate);
 
     FulfilmentSurveyEmailTemplate fulfilmentSurveyEmailTemplate =

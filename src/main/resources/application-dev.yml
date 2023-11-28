@@ -11,7 +11,6 @@ spring:
 
 
 notify:
-
   wcis-service:
     base-url: http://notifystub:5000
     api-key: dummykey-ffffffff-ffff-ffff-ffff-ffffffffffff-ffffffff-ffff-ffff-ffff-ffffffffffff

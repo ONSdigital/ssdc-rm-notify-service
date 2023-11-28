@@ -1,5 +1,9 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
+
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -13,11 +17,6 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
-import java.util.Map;
-
-import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
-import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
-
 @MessageEndpoint
 public class EmailRequestEnrichedReceiver {
 
@@ -26,12 +25,12 @@ public class EmailRequestEnrichedReceiver {
 
   private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
-  private final Map<String, NotificationClient> notificationClientApi;
+  private final Map<String, Map<String, Object>> notificationClientApi;
 
   public EmailRequestEnrichedReceiver(
       EmailTemplateRepository emailTemplateRepository,
       CaseRepository caseRepository,
-      Map<String, NotificationClient> notificationClientApi) {
+      Map<String, Map<String, Object>> notificationClientApi) {
     this.emailTemplateRepository = emailTemplateRepository;
     this.caseRepository = caseRepository;
     this.notificationClientApi = notificationClientApi;
@@ -71,7 +70,8 @@ public class EmailRequestEnrichedReceiver {
             emailRequestEnriched.getQid(),
             emailRequestEnriched.getPersonalisation());
     String notifyServiceRef = emailTemplate.getNotifyServiceRef();
-    NotificationClient notificationClient = notificationClientApi.get(notifyServiceRef);
+    Map<String, Object> service = notificationClientApi.get(notifyServiceRef);
+    NotificationClient notificationClient = (NotificationClient) service.get("client");
 
     try {
       notificationClient.sendEmail(

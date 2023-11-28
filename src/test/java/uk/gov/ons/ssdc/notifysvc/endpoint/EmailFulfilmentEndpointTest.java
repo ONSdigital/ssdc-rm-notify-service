@@ -18,6 +18,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,7 +47,7 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,7 +68,8 @@ class EmailFulfilmentEndpointTest {
   @Mock private EmailRequestService emailRequestService;
   @Mock private EmailTemplateRepository emailTemplateRepository;
   @Mock private CaseRepository caseRepository;
-  @Mock private NotificationClientApi notificationClientApi;
+  @Mock private Map<String, Map<String, Object>> notificationClientApi;
+  @Mock NotificationClient notificationClient;
 
   @InjectMocks private EmailFulfilmentEndpoint emailFulfilmentEndpoint;
 
@@ -84,6 +86,10 @@ class EmailFulfilmentEndpointTest {
     Case testCase = getTestCase();
     EmailTemplate emailTemplate =
         getTestEmailTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
+
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
@@ -96,6 +102,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -129,7 +136,7 @@ class EmailFulfilmentEndpointTest {
 
     // Check the email request
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendEmail(
             eq(emailTemplate.getNotifyTemplateId().toString()),
             eq(emailFulfilmentRequest.getPayload().getEmailFulfilment().getEmail()),
@@ -148,6 +155,10 @@ class EmailFulfilmentEndpointTest {
     Case testCase = getTestCase();
     EmailTemplate emailTemplate = getTestEmailTemplate(new String[] {TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
+
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
@@ -159,6 +170,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -191,7 +203,7 @@ class EmailFulfilmentEndpointTest {
             emailFulfilmentRequest.getHeader().getOriginatingUser());
 
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendEmail(
             eq(emailTemplate.getNotifyTemplateId().toString()),
             eq(emailFulfilmentRequest.getPayload().getEmailFulfilment().getEmail()),
@@ -209,6 +221,10 @@ class EmailFulfilmentEndpointTest {
     // Given
     Case testCase = getTestCase();
     EmailTemplate emailTemplate = getTestEmailTemplate(new String[] {});
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
+
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
@@ -219,6 +235,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.empty());
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -249,7 +266,7 @@ class EmailFulfilmentEndpointTest {
             emailFulfilmentRequest.getHeader().getOriginatingUser());
 
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendEmail(
             eq(emailTemplate.getNotifyTemplateId().toString()),
             eq(emailFulfilmentRequest.getPayload().getEmailFulfilment().getEmail()),
@@ -266,6 +283,10 @@ class EmailFulfilmentEndpointTest {
     Case testCase = getTestCase();
     EmailTemplate emailTemplate =
         getTestEmailTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
+    Map<String, Object> notifyConfig = new HashMap<>();
+    notifyConfig.put("sender-id", "senderid1234");
+    notifyConfig.put("client", notificationClient);
+
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
@@ -277,9 +298,10 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.of(newUacQid));
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
         .thenReturn(Optional.empty());
+    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
 
     // Simulate an error when we attempt to send the email
-    when(notificationClientApi.sendEmail(any(), any(), any(), any()))
+    when(notificationClient.sendEmail(any(), any(), any(), any()))
         .thenThrow(new NotificationClientException("Test"));
 
     RequestDTO emailFulfilmentRequest =
@@ -313,7 +335,7 @@ class EmailFulfilmentEndpointTest {
 
     // Check the email request did still happen as expected
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendEmail(
             eq(emailTemplate.getNotifyTemplateId().toString()),
             eq(emailFulfilmentRequest.getPayload().getEmailFulfilment().getEmail()),
@@ -358,7 +380,7 @@ class EmailFulfilmentEndpointTest {
         .andExpect(handler().handlerType(EmailFulfilmentEndpoint.class));
 
     // Then
-    verifyNoInteractions(notificationClientApi);
+    verifyNoInteractions(notificationClient);
   }
 
   @Test
@@ -390,7 +412,7 @@ class EmailFulfilmentEndpointTest {
         .andExpect(handler().handlerType(EmailFulfilmentEndpoint.class));
 
     // Then
-    verifyNoInteractions(notificationClientApi);
+    verifyNoInteractions(notificationClient);
   }
 
   @Test
@@ -588,6 +610,7 @@ class EmailFulfilmentEndpointTest {
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
     emailTemplate.setPackCode("TEST");
     emailTemplate.setTemplate(template);
+    emailTemplate.setNotifyServiceRef("test-service");
     return emailTemplate;
   }
 
