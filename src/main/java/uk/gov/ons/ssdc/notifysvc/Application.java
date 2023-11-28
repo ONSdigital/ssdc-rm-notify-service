@@ -6,8 +6,11 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyConfiguration;
 
 @SpringBootApplication
+@EnableConfigurationProperties
 @EntityScan("uk.gov.ons.ssdc.common.model.entity")
 @OpenAPIDefinition(
     info =

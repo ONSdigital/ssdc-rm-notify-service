@@ -3,8 +3,12 @@ package uk.gov.ons.ssdc.notifysvc.messaging;
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
@@ -14,26 +18,31 @@ import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientApi;
 import uk.gov.service.notify.NotificationClientException;
 
 @MessageEndpoint
+@ConfigurationProperties
 public class SmsRequestEnrichedReceiver {
 
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
-  @Value("${notify.sender-id}")
-  private String senderId;
+  public void setNotify(Map<String, Map<String, String>> notify) {
+    this.notify = notify;
+  }
 
+  @Getter
+  private Map<String,Map<String,String>> notify;
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
-  private final NotificationClientApi notificationClientApi;
+  private final Map<String, NotificationClient> notificationClientApi;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      NotificationClientApi notificationClientApi) {
+      Map<String, NotificationClient> notificationClientApi) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
     this.notificationClientApi = notificationClientApi;
@@ -72,13 +81,16 @@ public class SmsRequestEnrichedReceiver {
             smsRequestEnriched.getUac(),
             smsRequestEnriched.getQid(),
             smsRequestEnriched.getPersonalisation());
+    String notifyServiceRef = smsTemplate.getNotifyServiceRef();
+    String senderId = notify.get(notifyServiceRef).get("sender-id");
+    NotificationClient notificationClient = notificationClientApi.get(notifyServiceRef);
 
     try {
-      notificationClientApi.sendSms(
+      notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(),
           smsRequestEnriched.getPhoneNumber(),
           personalisationTemplateValues,
-          senderId);
+              senderId);
     } catch (NotificationClientException e) {
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
