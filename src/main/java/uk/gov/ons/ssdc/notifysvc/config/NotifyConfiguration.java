@@ -1,35 +1,53 @@
 package uk.gov.ons.ssdc.notifysvc.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.Getter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
 import uk.gov.service.notify.NotificationClient;
 
 @Getter
 @Configuration
-@ConfigurationProperties
 public class NotifyConfiguration {
 
-  public void setnotify(Map<String, Map<String, String>> notify) {
-    this.notify = notify;
-  }
+  @Value("${notifyserviceconfigfile}")
+  private String configFile;
 
-  private Map<String, Map<String, String>> notify;
+  public static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.objectMapper();
+
+  private Set<String> notifyServiceConfig = null;
+  private Map<String, Map<String, String>> initialConfig = null;
 
   @Bean
   public Map<String, Map<String, Object>> notificationClientApi() {
+    try (InputStream configFileStream = new FileInputStream(configFile)) {
+      initialConfig = OBJECT_MAPPER.readValue(configFileStream, Map.class);
+    } catch (JsonProcessingException | FileNotFoundException e) {
+      throw new RuntimeException(e);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
     Map<String, Map<String, Object>> notificationClients = new HashMap<>();
 
-    for (String serviceName : notify.keySet()) {
+    for (String serviceName : initialConfig.keySet()) {
       Map<String, Object> serviceConfig = new HashMap<>();
-      serviceConfig.put("sender-id", notify.get(serviceName).get("sender-id"));
+      serviceConfig.put("sender-id", initialConfig.get(serviceName).get("sender-id"));
       serviceConfig.put(
           "client",
           new NotificationClient(
-              notify.get(serviceName).get("api-key"), notify.get(serviceName).get("base-url")));
+              initialConfig.get(serviceName).get("api-key"),
+              initialConfig.get(serviceName).get("base-url")));
       notificationClients.put(serviceName, serviceConfig);
     }
 
