@@ -48,18 +48,18 @@ public class SmsFulfilmentEndpoint {
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
 
-  private final Map<String, Map<String, Object>> notificationClientApi;
+  private final Map<String, Map<String, Object>> notifyServicesList;
 
   @Autowired
   public SmsFulfilmentEndpoint(
       SmsRequestService smsRequestService,
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
-      Map<String, Map<String, Object>> notificationClientApi) {
+      Map<String, Map<String, Object>> notifyServicesList) {
     this.smsRequestService = smsRequestService;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServicesList = notifyServicesList;
   }
 
   @Operation(description = "SMS Fulfilment Request")
@@ -130,7 +130,7 @@ public class SmsFulfilmentEndpoint {
         request.getHeader().getOriginatingUser());
 
     String notifyServiceRef = smsTemplate.getNotifyServiceRef();
-    Map<String, Object> service = notificationClientApi.get(notifyServiceRef);
+    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
     String senderId = (String) service.get("sender-id");
     NotificationClient notificationClient = (NotificationClient) service.get("client");
 

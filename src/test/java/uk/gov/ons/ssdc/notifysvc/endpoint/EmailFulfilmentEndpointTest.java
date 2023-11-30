@@ -68,7 +68,7 @@ class EmailFulfilmentEndpointTest {
   @Mock private EmailRequestService emailRequestService;
   @Mock private EmailTemplateRepository emailTemplateRepository;
   @Mock private CaseRepository caseRepository;
-  @Mock private Map<String, Map<String, Object>> notificationClientApi;
+  @Mock private Map<String, Map<String, Object>> notifyServicesList;
   @Mock NotificationClient notificationClient;
 
   @InjectMocks private EmailFulfilmentEndpoint emailFulfilmentEndpoint;
@@ -102,7 +102,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -170,7 +170,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -235,7 +235,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.empty());
     when(emailRequestService.fetchNewUacQidPairIfRequired(emailTemplate.getTemplate()))
         .thenReturn(Optional.empty());
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO emailFulfilmentRequest =
         buildEmailFulfilmentRequest(
@@ -298,7 +298,7 @@ class EmailFulfilmentEndpointTest {
         .thenReturn(Optional.of(newUacQid));
     when(emailRequestService.validateEmailAddress(VALID_EMAIL_ADDRESS))
         .thenReturn(Optional.empty());
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     // Simulate an error when we attempt to send the email
     when(notificationClient.sendEmail(any(), any(), any(), any()))

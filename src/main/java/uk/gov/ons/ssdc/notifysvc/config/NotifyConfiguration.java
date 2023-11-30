@@ -24,9 +24,8 @@ public class NotifyConfiguration {
 
   private Map<String, Map<String, String>> initialConfig = null;
 
-  // TODO Rename to something else
   @Bean
-  public Map<String, Map<String, Object>> notificationClientApi() {
+  public Map<String, Map<String, Object>> notifyServicesList() {
     try (InputStream configFileStream = new FileInputStream(configFile)) {
       initialConfig = OBJECT_MAPPER.readValue(configFileStream, Map.class);
     } catch (JsonProcessingException | FileNotFoundException e) {

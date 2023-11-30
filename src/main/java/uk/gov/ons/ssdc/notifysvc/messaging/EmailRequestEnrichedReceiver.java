@@ -25,15 +25,15 @@ public class EmailRequestEnrichedReceiver {
 
   private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
-  private final Map<String, Map<String, Object>> notificationClientApi;
+  private final Map<String, Map<String, Object>> notifyServicesList;
 
   public EmailRequestEnrichedReceiver(
       EmailTemplateRepository emailTemplateRepository,
       CaseRepository caseRepository,
-      Map<String, Map<String, Object>> notificationClientApi) {
+      Map<String, Map<String, Object>> notifyServicesList) {
     this.emailTemplateRepository = emailTemplateRepository;
     this.caseRepository = caseRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServicesList = notifyServicesList;
   }
 
   @ServiceActivator(inputChannel = "emailRequestEnrichedInputChannel", adviceChain = "retryAdvice")
@@ -70,7 +70,7 @@ public class EmailRequestEnrichedReceiver {
             emailRequestEnriched.getQid(),
             emailRequestEnriched.getPersonalisation());
     String notifyServiceRef = emailTemplate.getNotifyServiceRef();
-    Map<String, Object> service = notificationClientApi.get(notifyServiceRef);
+    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
     NotificationClient notificationClient = (NotificationClient) service.get("client");
 
     try {

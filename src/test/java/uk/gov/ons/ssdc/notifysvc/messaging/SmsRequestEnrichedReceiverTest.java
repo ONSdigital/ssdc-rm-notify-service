@@ -34,7 +34,7 @@ import uk.gov.service.notify.NotificationClientException;
 class SmsRequestEnrichedReceiverTest {
   @Mock SmsTemplateRepository smsTemplateRepository;
   @Mock CaseRepository caseRepository;
-  @Mock private Map<String, Map<String, Object>> notificationClientApi;
+  @Mock private Map<String, Map<String, Object>> notifyServicesList;
   @Mock NotificationClient notificationClient;
   @InjectMocks SmsRequestEnrichedReceiver smsRequestEnrichedReceiver;
 
@@ -85,7 +85,7 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 
@@ -136,7 +136,7 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 
@@ -187,7 +187,7 @@ class SmsRequestEnrichedReceiverTest {
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(smsRequestEnrichedEvent);
 

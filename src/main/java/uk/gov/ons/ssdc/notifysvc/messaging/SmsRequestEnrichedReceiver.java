@@ -25,15 +25,15 @@ public class SmsRequestEnrichedReceiver {
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
-  private final Map<String, Map<String, Object>> notificationClientApi;
+  private final Map<String, Map<String, Object>> notifyServicesList;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      Map<String, Map<String, Object>> notificationClientApi) {
+      Map<String, Map<String, Object>> notifyServicesList) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServicesList = notifyServicesList;
   }
 
   @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
@@ -70,7 +70,7 @@ public class SmsRequestEnrichedReceiver {
             smsRequestEnriched.getQid(),
             smsRequestEnriched.getPersonalisation());
     String notifyServiceRef = smsTemplate.getNotifyServiceRef();
-    Map<String, Object> service = notificationClientApi.get(notifyServiceRef);
+    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
     String senderId = (String) service.get("sender-id");
     NotificationClient notificationClient = (NotificationClient) service.get("client");
 

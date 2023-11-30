@@ -68,7 +68,7 @@ class SmsFulfilmentEndpointTest {
   @Mock private SmsRequestService smsRequestService;
   @Mock private SmsTemplateRepository smsTemplateRepository;
   @Mock private CaseRepository caseRepository;
-  @Mock private Map<String, Map<String, Object>> notificationClientApi;
+  @Mock private Map<String, Map<String, Object>> notifyServicesList;
   @Mock NotificationClient notificationClient;
 
   @InjectMocks private SmsFulfilmentEndpoint smsFulfilmentEndpoint;
@@ -100,7 +100,7 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -166,7 +166,7 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -229,7 +229,7 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.empty());
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -289,7 +289,7 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     // Simulate an error when we attempt to send the SMS
     when(notificationClient.sendSms(any(), any(), any(), any()))

@@ -38,7 +38,7 @@ class EmailRequestEnrichedReceiverTest {
   @Mock EmailTemplateRepository emailTemplateRepository;
   @Mock CaseRepository caseRepository;
   @Mock EmailRequestService emailRequestService;
-  @Mock Map<String, Map<String, Object>> notificationClientApi;
+  @Mock Map<String, Map<String, Object>> notifyServicesList;
   @Mock NotificationClient notificationClient;
 
   @InjectMocks EmailRequestEnrichedReceiver emailRequestEnrichedReceiver;
@@ -91,7 +91,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
@@ -144,7 +144,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
@@ -195,7 +195,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notificationClientApi.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
