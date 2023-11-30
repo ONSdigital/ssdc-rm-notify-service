@@ -8,15 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
 import uk.gov.service.notify.NotificationClient;
 
-@Getter
 @Configuration
 public class NotifyConfiguration {
 
@@ -25,9 +22,9 @@ public class NotifyConfiguration {
 
   public static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.objectMapper();
 
-  private Set<String> notifyServiceConfig = null;
   private Map<String, Map<String, String>> initialConfig = null;
 
+  // TODO Rename to something else
   @Bean
   public Map<String, Map<String, Object>> notificationClientApi() {
     try (InputStream configFileStream = new FileInputStream(configFile)) {
