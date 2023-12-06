@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilmentEmptyResponseSuccess;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilmentResponse;
@@ -46,7 +47,7 @@ public class EmailFulfilmentEndpoint {
   private final EmailRequestService emailRequestService;
   private final CaseRepository caseRepository;
   private final EmailTemplateRepository emailTemplateRepository;
-  private final Map<String, Map<String, Object>> notifyServicesList;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   private static final Logger logger = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
 
@@ -55,11 +56,11 @@ public class EmailFulfilmentEndpoint {
       EmailRequestService emailRequestService,
       CaseRepository caseRepository,
       EmailTemplateRepository emailTemplateRepository,
-      Map<String, Map<String, Object>> notifyServicesList) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.emailRequestService = emailRequestService;
     this.caseRepository = caseRepository;
     this.emailTemplateRepository = emailTemplateRepository;
-    this.notifyServicesList = notifyServicesList;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @Operation(description = "Email Fulfilment Request")
@@ -199,8 +200,9 @@ public class EmailFulfilmentEndpoint {
       Map<String, String> emailTemplatePersonalization,
       String reference,
       String notifyServiceRef) {
-    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
-    NotificationClient notificationClient = (NotificationClient) service.get("client");
+
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
       notificationClient.sendEmail(

@@ -10,6 +10,7 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
@@ -25,15 +26,15 @@ public class SmsRequestEnrichedReceiver {
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
-  private final Map<String, Map<String, Object>> notifyServicesList;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      Map<String, Map<String, Object>> notifyServicesList) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
-    this.notifyServicesList = notifyServicesList;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
@@ -70,9 +71,9 @@ public class SmsRequestEnrichedReceiver {
             smsRequestEnriched.getQid(),
             smsRequestEnriched.getPersonalisation());
     String notifyServiceRef = smsTemplate.getNotifyServiceRef();
-    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
-    String senderId = (String) service.get("sender-id");
-    NotificationClient notificationClient = (NotificationClient) service.get("client");
+    String senderId = notifyServiceRefMapping.getSenderId(notifyServiceRef);
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
       notificationClient.sendSms(

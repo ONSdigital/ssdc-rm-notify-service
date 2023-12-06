@@ -11,7 +11,6 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
@@ -38,7 +38,7 @@ class EmailRequestEnrichedReceiverTest {
   @Mock EmailTemplateRepository emailTemplateRepository;
   @Mock CaseRepository caseRepository;
   @Mock EmailRequestService emailRequestService;
-  @Mock Map<String, Map<String, Object>> notifyServicesList;
+  @Mock NotifyServiceRefMapping notifyServiceRefMapping;
   @Mock NotificationClient notificationClient;
 
   @InjectMocks EmailRequestEnrichedReceiver emailRequestEnrichedReceiver;
@@ -78,10 +78,6 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnriched.setEmail("example@example.com");
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
-
     Map<String, String> personalisationValues =
         Map.ofEntries(
             entry(TEMPLATE_UAC_KEY, TEST_UAC),
@@ -91,7 +87,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
@@ -134,17 +130,13 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnriched.setEmail("example@example.com");
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
 
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
-
     Map<String, String> personalisationValues =
         Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
 
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
@@ -185,9 +177,6 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnriched.setQid(TEST_QID);
     emailRequestEnriched.setEmail("example@example.com");
     emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
 
     Map<String, String> personalisationValues =
         Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
@@ -195,7 +184,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 

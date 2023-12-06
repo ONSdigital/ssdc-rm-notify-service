@@ -10,6 +10,7 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
@@ -25,15 +26,15 @@ public class EmailRequestEnrichedReceiver {
 
   private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
-  private final Map<String, Map<String, Object>> notifyServicesList;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   public EmailRequestEnrichedReceiver(
       EmailTemplateRepository emailTemplateRepository,
       CaseRepository caseRepository,
-      Map<String, Map<String, Object>> notifyServicesList) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.emailTemplateRepository = emailTemplateRepository;
     this.caseRepository = caseRepository;
-    this.notifyServicesList = notifyServicesList;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @ServiceActivator(inputChannel = "emailRequestEnrichedInputChannel", adviceChain = "retryAdvice")
@@ -70,8 +71,8 @@ public class EmailRequestEnrichedReceiver {
             emailRequestEnriched.getQid(),
             emailRequestEnriched.getPersonalisation());
     String notifyServiceRef = emailTemplate.getNotifyServiceRef();
-    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
-    NotificationClient notificationClient = (NotificationClient) service.get("client");
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
       notificationClient.sendEmail(

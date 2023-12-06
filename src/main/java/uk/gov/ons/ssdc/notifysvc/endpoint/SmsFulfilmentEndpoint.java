@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.SmsFulfilment;
@@ -48,18 +49,18 @@ public class SmsFulfilmentEndpoint {
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
 
-  private final Map<String, Map<String, Object>> notifyServicesList;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   @Autowired
   public SmsFulfilmentEndpoint(
       SmsRequestService smsRequestService,
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
-      Map<String, Map<String, Object>> notifyServicesList) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.smsRequestService = smsRequestService;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
-    this.notifyServicesList = notifyServicesList;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @Operation(description = "SMS Fulfilment Request")
@@ -130,9 +131,9 @@ public class SmsFulfilmentEndpoint {
         request.getHeader().getOriginatingUser());
 
     String notifyServiceRef = smsTemplate.getNotifyServiceRef();
-    Map<String, Object> service = notifyServicesList.get(notifyServiceRef);
-    String senderId = (String) service.get("sender-id");
-    NotificationClient notificationClient = (NotificationClient) service.get("client");
+    String senderId = notifyServiceRefMapping.getSenderId(notifyServiceRef);
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     sendSms(
         request.getPayload().getSmsFulfilment().getPhoneNumber(),

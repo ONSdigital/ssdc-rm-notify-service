@@ -6,13 +6,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import uk.gov.ons.ssdc.notifysvc.utils.ObjectMapperFactory;
-import uk.gov.service.notify.NotificationClient;
 
 @Configuration
 public class NotifyConfiguration {
@@ -22,31 +20,28 @@ public class NotifyConfiguration {
 
   public static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.objectMapper();
 
-  private Map<String, Map<String, String>> initialConfig = null;
-
   @Bean
-  public Map<String, Map<String, Object>> notifyServicesList() {
+  public NotifyServiceRefMapping notifyServiceRefMapping() {
+    Map<String, Map<String, String>> rawJsonConfig;
+
     try (InputStream configFileStream = new FileInputStream(configFile)) {
-      initialConfig = OBJECT_MAPPER.readValue(configFileStream, Map.class);
+      rawJsonConfig = OBJECT_MAPPER.readValue(configFileStream, Map.class);
     } catch (JsonProcessingException | FileNotFoundException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
 
-    Map<String, Map<String, Object>> notificationClients = new HashMap<>();
+    NotifyServiceRefMapping notifyServiceRefMapping = new NotifyServiceRefMapping();
 
-    for (String serviceName : initialConfig.keySet()) {
-      Map<String, Object> serviceConfig = new HashMap<>();
-      serviceConfig.put("sender-id", initialConfig.get(serviceName).get("sender-id"));
-      serviceConfig.put(
-          "client",
-          new NotificationClient(
-              initialConfig.get(serviceName).get("api-key"),
-              initialConfig.get(serviceName).get("base-url")));
-      notificationClients.put(serviceName, serviceConfig);
+    for (String notifyServiceRef : rawJsonConfig.keySet()) {
+      notifyServiceRefMapping.addNotifyClient(
+          notifyServiceRef,
+          rawJsonConfig.get(notifyServiceRef).get("base-url"),
+          rawJsonConfig.get(notifyServiceRef).get("api-key"),
+          rawJsonConfig.get(notifyServiceRef).get("sender-id"));
     }
 
-    return notificationClients;
+    return notifyServiceRefMapping;
   }
 }
