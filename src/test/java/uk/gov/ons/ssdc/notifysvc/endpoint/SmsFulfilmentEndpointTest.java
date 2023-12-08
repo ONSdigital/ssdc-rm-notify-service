@@ -18,7 +18,6 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +37,7 @@ import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.CollectionExercise;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestPayloadDTO;
@@ -58,6 +58,7 @@ class SmsFulfilmentEndpointTest {
   private static final String VALID_PHONE_NUMBER = "07123456789";
   private static final String TEST_SOURCE = "TEST_SOURCE";
   private static final String TEST_CHANNEL = "TEST_CHANNEL";
+  private static final String TEST_SENDER = "TEST_SENDER";
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -68,7 +69,7 @@ class SmsFulfilmentEndpointTest {
   @Mock private SmsRequestService smsRequestService;
   @Mock private SmsTemplateRepository smsTemplateRepository;
   @Mock private CaseRepository caseRepository;
-  @Mock private Map<String, Map<String, Object>> notifyServicesList;
+  @Mock private NotifyServiceRefMapping notifyServiceRefMapping;
   @Mock NotificationClient notificationClient;
 
   @InjectMocks private SmsFulfilmentEndpoint smsFulfilmentEndpoint;
@@ -87,9 +88,6 @@ class SmsFulfilmentEndpointTest {
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
@@ -100,7 +98,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -138,7 +137,7 @@ class SmsFulfilmentEndpointTest {
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq((String) notifyConfig.get("sender-id")));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
@@ -150,9 +149,6 @@ class SmsFulfilmentEndpointTest {
   void testSmsFulfilmentHappyPathWithOnlyQid() throws Exception {
     // Given
     Case testCase = getTestCase();
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
 
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
@@ -166,7 +162,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -203,7 +200,7 @@ class SmsFulfilmentEndpointTest {
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq((String) notifyConfig.get("sender-id")));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
@@ -216,9 +213,6 @@ class SmsFulfilmentEndpointTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
@@ -229,7 +223,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.empty());
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -264,7 +259,7 @@ class SmsFulfilmentEndpointTest {
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq((String) notifyConfig.get("sender-id")));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues).isEmpty();
@@ -276,9 +271,6 @@ class SmsFulfilmentEndpointTest {
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
-    Map<String, Object> notifyConfig = new HashMap<>();
-    notifyConfig.put("sender-id", "senderid1234");
-    notifyConfig.put("client", notificationClient);
 
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
@@ -289,7 +281,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
-    when(notifyServicesList.get("test-service")).thenReturn(notifyConfig);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     // Simulate an error when we attempt to send the SMS
     when(notificationClient.sendSms(any(), any(), any(), any()))
@@ -337,7 +330,7 @@ class SmsFulfilmentEndpointTest {
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq((String) notifyConfig.get("sender-id")));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)

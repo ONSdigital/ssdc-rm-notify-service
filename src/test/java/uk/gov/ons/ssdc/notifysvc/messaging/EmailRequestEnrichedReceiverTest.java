@@ -202,7 +202,7 @@ class EmailRequestEnrichedReceiverTest {
   }
 
   @Test
-  public void testEmailTemplateNotFoundException() {
+  void testEmailTemplateNotFoundException() {
     // Given
     EventDTO emailRequestEnrichedEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
@@ -222,7 +222,7 @@ class EmailRequestEnrichedReceiverTest {
   }
 
   @Test
-  public void testCaseNotFoundException() {
+  void testCaseNotFoundException() {
     // Given
     Case testCase = new Case();
     testCase.setId(UUID.randomUUID());
