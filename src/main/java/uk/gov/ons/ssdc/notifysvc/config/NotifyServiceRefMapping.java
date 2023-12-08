@@ -1,5 +1,6 @@
 package uk.gov.ons.ssdc.notifysvc.config;
 
+import java.util.HashMap;
 import java.util.Map;
 import uk.gov.service.notify.NotificationClient;
 
@@ -7,6 +8,11 @@ public class NotifyServiceRefMapping {
 
   private Map<String, NotificationClient> notifyRefClientMapping;
   private Map<String, String> notifyRefSenderIdMapping;
+
+  public NotifyServiceRefMapping() {
+    this.notifyRefClientMapping = new HashMap<>();
+    this.notifyRefSenderIdMapping = new HashMap<>();
+  }
 
   public NotificationClient getNotifyClient(String notifyServiceRef) {
     return notifyRefClientMapping.get(notifyServiceRef);
