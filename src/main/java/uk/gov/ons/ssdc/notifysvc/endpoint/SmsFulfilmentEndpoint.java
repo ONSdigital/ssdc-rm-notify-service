@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.SmsFulfilment;
@@ -37,7 +37,7 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.SmsRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @RestController
@@ -45,24 +45,22 @@ import uk.gov.service.notify.NotificationClientException;
 public class SmsFulfilmentEndpoint {
   private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
-  @Value("${notify.sender-id}")
-  private String senderId;
-
   private final SmsRequestService smsRequestService;
   private final CaseRepository caseRepository;
   private final SmsTemplateRepository smsTemplateRepository;
-  private final NotificationClientApi notificationClientApi;
+
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   @Autowired
   public SmsFulfilmentEndpoint(
       SmsRequestService smsRequestService,
       CaseRepository caseRepository,
       SmsTemplateRepository smsTemplateRepository,
-      NotificationClientApi notificationClientApi) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.smsRequestService = smsRequestService;
     this.caseRepository = caseRepository;
     this.smsTemplateRepository = smsTemplateRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @Operation(description = "SMS Fulfilment Request")
@@ -132,8 +130,17 @@ public class SmsFulfilmentEndpoint {
         request.getHeader().getCorrelationId(),
         request.getHeader().getOriginatingUser());
 
+    String notifyServiceRef = smsTemplate.getNotifyServiceRef();
+    String senderId = notifyServiceRefMapping.getSenderId(notifyServiceRef);
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
+
     sendSms(
-        request.getPayload().getSmsFulfilment().getPhoneNumber(), smsTemplate, smsPersonalisation);
+        request.getPayload().getSmsFulfilment().getPhoneNumber(),
+        smsTemplate,
+        smsPersonalisation,
+        senderId,
+        notificationClient);
 
     return new ResponseEntity<>(createSmsSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
@@ -190,9 +197,13 @@ public class SmsFulfilmentEndpoint {
   }
 
   private void sendSms(
-      String phoneNumber, SmsTemplate smsTemplate, Map<String, String> smsTemplateValues) {
+      String phoneNumber,
+      SmsTemplate smsTemplate,
+      Map<String, String> smsTemplateValues,
+      String senderId,
+      NotificationClient notificationClient) {
     try {
-      notificationClientApi.sendSms(
+      notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(), phoneNumber, smsTemplateValues, senderId);
     } catch (NotificationClientException e) {
       logger.error("Error with Gov Notify when attempting to send SMS", e);

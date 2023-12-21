@@ -10,11 +10,12 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @MessageEndpoint
@@ -25,15 +26,15 @@ public class EmailRequestEnrichedReceiver {
 
   private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
-  private final NotificationClientApi notificationClientApi;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   public EmailRequestEnrichedReceiver(
       EmailTemplateRepository emailTemplateRepository,
       CaseRepository caseRepository,
-      NotificationClientApi notificationClientApi) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.emailTemplateRepository = emailTemplateRepository;
     this.caseRepository = caseRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @ServiceActivator(inputChannel = "emailRequestEnrichedInputChannel", adviceChain = "retryAdvice")
@@ -69,9 +70,12 @@ public class EmailRequestEnrichedReceiver {
             emailRequestEnriched.getUac(),
             emailRequestEnriched.getQid(),
             emailRequestEnriched.getPersonalisation());
+    String notifyServiceRef = emailTemplate.getNotifyServiceRef();
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
-      notificationClientApi.sendEmail(
+      notificationClient.sendEmail(
           emailTemplate.getNotifyTemplateId().toString(),
           emailRequestEnriched.getEmail(),
           personalisationTemplateValues,

@@ -28,7 +28,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,6 +37,7 @@ import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.CollectionExercise;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestHeaderDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.RequestPayloadDTO;
@@ -47,20 +47,18 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.SmsRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
 class SmsFulfilmentEndpointTest {
-
-  @Value("${notify.sender-id}")
-  private String senderId;
 
   private static final String SMS_FULFILMENT_ENDPOINT = "/sms-fulfilment";
 
   private static final String VALID_PHONE_NUMBER = "07123456789";
   private static final String TEST_SOURCE = "TEST_SOURCE";
   private static final String TEST_CHANNEL = "TEST_CHANNEL";
+  private static final String TEST_SENDER = "TEST_SENDER";
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -71,7 +69,8 @@ class SmsFulfilmentEndpointTest {
   @Mock private SmsRequestService smsRequestService;
   @Mock private SmsTemplateRepository smsTemplateRepository;
   @Mock private CaseRepository caseRepository;
-  @Mock private NotificationClientApi notificationClientApi;
+  @Mock private NotifyServiceRefMapping notifyServiceRefMapping;
+  @Mock NotificationClient notificationClient;
 
   @InjectMocks private SmsFulfilmentEndpoint smsFulfilmentEndpoint;
 
@@ -89,6 +88,7 @@ class SmsFulfilmentEndpointTest {
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
+
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
@@ -98,6 +98,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -130,12 +132,12 @@ class SmsFulfilmentEndpointTest {
 
     // Check the SMS request
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq(senderId));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
@@ -147,6 +149,7 @@ class SmsFulfilmentEndpointTest {
   void testSmsFulfilmentHappyPathWithOnlyQid() throws Exception {
     // Given
     Case testCase = getTestCase();
+
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
     String expectedHashedUac = HashHelper.hash(newUacQid.getUac());
@@ -159,6 +162,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -190,12 +195,12 @@ class SmsFulfilmentEndpointTest {
             smsFulfilmentRequest.getHeader().getOriginatingUser());
 
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq(senderId));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
@@ -208,6 +213,7 @@ class SmsFulfilmentEndpointTest {
     // Given
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {});
+
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
@@ -217,6 +223,8 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.empty());
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     RequestDTO smsFulfilmentRequest =
         buildSmsFulfilmentRequest(testCase.getId(), smsTemplate.getPackCode(), VALID_PHONE_NUMBER);
@@ -246,12 +254,12 @@ class SmsFulfilmentEndpointTest {
             smsFulfilmentRequest.getHeader().getOriginatingUser());
 
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq(senderId));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues).isEmpty();
@@ -263,6 +271,7 @@ class SmsFulfilmentEndpointTest {
     Case testCase = getTestCase();
     SmsTemplate smsTemplate = getTestSmsTemplate(new String[] {TEMPLATE_UAC_KEY, TEMPLATE_QID_KEY});
     UacQidCreatedPayloadDTO newUacQid = getUacQidCreated();
+
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
     when(smsTemplateRepository.findById(smsTemplate.getPackCode()))
         .thenReturn(Optional.of(smsTemplate));
@@ -272,9 +281,11 @@ class SmsFulfilmentEndpointTest {
     when(smsRequestService.fetchNewUacQidPairIfRequired(smsTemplate.getTemplate()))
         .thenReturn(Optional.of(newUacQid));
     when(smsRequestService.validatePhoneNumber(VALID_PHONE_NUMBER)).thenReturn(true);
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+    when(notifyServiceRefMapping.getSenderId("test-service")).thenReturn(TEST_SENDER);
 
     // Simulate an error when we attempt to send the SMS
-    when(notificationClientApi.sendSms(any(), any(), any(), any()))
+    when(notificationClient.sendSms(any(), any(), any(), any()))
         .thenThrow(new NotificationClientException("Test"));
 
     RequestDTO smsFulfilmentRequest =
@@ -314,12 +325,12 @@ class SmsFulfilmentEndpointTest {
 
     // Check the SMS request did still happen as expected
     ArgumentCaptor<Map<String, String>> templateValuesCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendSms(
             eq(smsTemplate.getNotifyTemplateId().toString()),
             eq(smsFulfilmentRequest.getPayload().getSmsFulfilment().getPhoneNumber()),
             templateValuesCaptor.capture(),
-            eq(senderId));
+            eq(TEST_SENDER));
 
     Map<String, String> actualSmsTemplateValues = templateValuesCaptor.getValue();
     assertThat(actualSmsTemplateValues)
@@ -356,7 +367,7 @@ class SmsFulfilmentEndpointTest {
         .andExpect(handler().handlerType(SmsFulfilmentEndpoint.class));
 
     // Then
-    verifyNoInteractions(notificationClientApi);
+    verifyNoInteractions(notificationClient);
   }
 
   @Test
@@ -509,6 +520,7 @@ class SmsFulfilmentEndpointTest {
     smsTemplate.setNotifyTemplateId(UUID.randomUUID());
     smsTemplate.setPackCode("TEST");
     smsTemplate.setTemplate(template);
+    smsTemplate.setNotifyServiceRef("test-service");
     return smsTemplate;
   }
 

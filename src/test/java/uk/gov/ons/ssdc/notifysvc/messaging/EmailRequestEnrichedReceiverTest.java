@@ -23,13 +23,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.UacQidCreatedPayloadDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EmailRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +38,8 @@ class EmailRequestEnrichedReceiverTest {
   @Mock EmailTemplateRepository emailTemplateRepository;
   @Mock CaseRepository caseRepository;
   @Mock EmailRequestService emailRequestService;
-  @Mock NotificationClientApi notificationClientApi;
+  @Mock NotifyServiceRefMapping notifyServiceRefMapping;
+  @Mock NotificationClient notificationClient;
 
   @InjectMocks EmailRequestEnrichedReceiver emailRequestEnrichedReceiver;
 
@@ -60,6 +62,7 @@ class EmailRequestEnrichedReceiverTest {
     emailTemplate.setTemplate(
         new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
+    emailTemplate.setNotifyServiceRef("test-service");
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
@@ -84,6 +87,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
@@ -91,7 +95,7 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnrichedReceiver.receiveMessage(eventMessage);
 
     // Then
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendEmail(
             emailTemplate.getNotifyTemplateId().toString(),
             emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched().getEmail(),
@@ -111,6 +115,7 @@ class EmailRequestEnrichedReceiverTest {
     emailTemplate.setTemplate(
         new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY, TEMPLATE_REQUEST_PREFIX + "foo"});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
+    emailTemplate.setNotifyServiceRef("test-service");
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
@@ -131,6 +136,7 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
@@ -138,7 +144,7 @@ class EmailRequestEnrichedReceiverTest {
     emailRequestEnrichedReceiver.receiveMessage(eventMessage);
 
     // Then
-    verify(notificationClientApi)
+    verify(notificationClient)
         .sendEmail(
             emailTemplate.getNotifyTemplateId().toString(),
             emailRequestEnrichedEvent.getPayload().getEmailRequestEnriched().getEmail(),
@@ -157,6 +163,7 @@ class EmailRequestEnrichedReceiverTest {
     emailTemplate.setPackCode("TEST_PACK_CODE");
     emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
     emailTemplate.setNotifyTemplateId(UUID.randomUUID());
+    emailTemplate.setNotifyServiceRef("test-service");
 
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac(TEST_UAC);
@@ -177,10 +184,11 @@ class EmailRequestEnrichedReceiverTest {
     when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
         .thenReturn(Optional.of(emailTemplate));
     when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
 
     Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
 
-    when(notificationClientApi.sendEmail(any(), any(), any(), any()))
+    when(notificationClient.sendEmail(any(), any(), any(), any()))
         .thenThrow(new NotificationClientException("Test Throw"));
 
     // When
@@ -194,7 +202,7 @@ class EmailRequestEnrichedReceiverTest {
   }
 
   @Test
-  public void testEmailTemplateNotFoundException() {
+  void testEmailTemplateNotFoundException() {
     // Given
     EventDTO emailRequestEnrichedEvent = buildEventDTO(emailRequestEnrichedTopic);
     EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
@@ -214,7 +222,7 @@ class EmailRequestEnrichedReceiverTest {
   }
 
   @Test
-  public void testCaseNotFoundException() {
+  void testCaseNotFoundException() {
     // Given
     Case testCase = new Case();
     testCase.setId(UUID.randomUUID());

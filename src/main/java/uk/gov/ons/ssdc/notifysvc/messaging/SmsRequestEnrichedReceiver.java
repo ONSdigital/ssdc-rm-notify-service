@@ -10,11 +10,12 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.SmsTemplate;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.EventDTO;
 import uk.gov.ons.ssdc.notifysvc.model.dto.event.SmsRequestEnriched;
 import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.SmsTemplateRepository;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @MessageEndpoint
@@ -23,20 +24,17 @@ public class SmsRequestEnrichedReceiver {
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
-  @Value("${notify.sender-id}")
-  private String senderId;
-
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
-  private final NotificationClientApi notificationClientApi;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   public SmsRequestEnrichedReceiver(
       SmsTemplateRepository smsTemplateRepository,
       CaseRepository caseRepository,
-      NotificationClientApi notificationClientApi) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.smsTemplateRepository = smsTemplateRepository;
     this.caseRepository = caseRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @ServiceActivator(inputChannel = "smsRequestEnrichedInputChannel", adviceChain = "retryAdvice")
@@ -72,9 +70,13 @@ public class SmsRequestEnrichedReceiver {
             smsRequestEnriched.getUac(),
             smsRequestEnriched.getQid(),
             smsRequestEnriched.getPersonalisation());
+    String notifyServiceRef = smsTemplate.getNotifyServiceRef();
+    String senderId = notifyServiceRefMapping.getSenderId(notifyServiceRef);
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
-      notificationClientApi.sendSms(
+      notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(),
           smsRequestEnriched.getPhoneNumber(),
           personalisationTemplateValues,

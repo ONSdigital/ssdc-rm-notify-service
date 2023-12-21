@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.ons.ssdc.common.model.entity.Case;
 import uk.gov.ons.ssdc.common.model.entity.EmailTemplate;
 import uk.gov.ons.ssdc.common.model.entity.Survey;
+import uk.gov.ons.ssdc.notifysvc.config.NotifyServiceRefMapping;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilment;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilmentEmptyResponseSuccess;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.EmailFulfilmentResponse;
@@ -36,7 +37,7 @@ import uk.gov.ons.ssdc.notifysvc.model.repository.CaseRepository;
 import uk.gov.ons.ssdc.notifysvc.model.repository.EmailTemplateRepository;
 import uk.gov.ons.ssdc.notifysvc.service.EmailRequestService;
 import uk.gov.ons.ssdc.notifysvc.utils.HashHelper;
-import uk.gov.service.notify.NotificationClientApi;
+import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 @RestController
@@ -46,7 +47,7 @@ public class EmailFulfilmentEndpoint {
   private final EmailRequestService emailRequestService;
   private final CaseRepository caseRepository;
   private final EmailTemplateRepository emailTemplateRepository;
-  private final NotificationClientApi notificationClientApi;
+  private final NotifyServiceRefMapping notifyServiceRefMapping;
 
   private static final Logger logger = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
 
@@ -55,11 +56,11 @@ public class EmailFulfilmentEndpoint {
       EmailRequestService emailRequestService,
       CaseRepository caseRepository,
       EmailTemplateRepository emailTemplateRepository,
-      NotificationClientApi notificationClientApi) {
+      NotifyServiceRefMapping notifyServiceRefMapping) {
     this.emailRequestService = emailRequestService;
     this.caseRepository = caseRepository;
     this.emailTemplateRepository = emailTemplateRepository;
-    this.notificationClientApi = notificationClientApi;
+    this.notifyServiceRefMapping = notifyServiceRefMapping;
   }
 
   @Operation(description = "Email Fulfilment Request")
@@ -112,6 +113,7 @@ public class EmailFulfilmentEndpoint {
             caze,
             newUacQidPair,
             request.getPayload().getEmailFulfilment().getPersonalisation());
+    String notifyServiceRef = emailTemplate.getNotifyServiceRef();
 
     // NOTE: Here we are sending the enriched event BEFORE we make the call to send the email. This
     // is to be certain that the record of the UAC link is not lost. If we were to send the email
@@ -133,7 +135,8 @@ public class EmailFulfilmentEndpoint {
         request.getPayload().getEmailFulfilment().getEmail(),
         emailTemplate,
         emailPersonalisation,
-        request.getHeader().getCorrelationId().toString());
+        request.getHeader().getCorrelationId().toString(),
+        notifyServiceRef);
 
     return new ResponseEntity<>(createEmailSuccessResponse(newUacQidPair), HttpStatus.OK);
   }
@@ -195,9 +198,14 @@ public class EmailFulfilmentEndpoint {
       String emailAddress,
       EmailTemplate emailTemplate,
       Map<String, String> emailTemplatePersonalization,
-      String reference) {
+      String reference,
+      String notifyServiceRef) {
+
+    NotificationClient notificationClient =
+        notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
+
     try {
-      notificationClientApi.sendEmail(
+      notificationClient.sendEmail(
           emailTemplate.getNotifyTemplateId().toString(),
           emailAddress,
           emailTemplatePersonalization,
