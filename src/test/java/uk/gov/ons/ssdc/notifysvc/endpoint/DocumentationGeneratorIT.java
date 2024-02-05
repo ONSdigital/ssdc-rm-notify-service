@@ -31,7 +31,7 @@ public class DocumentationGeneratorIT {
   @Test
   public void generateDocs() throws IOException, InterruptedException {
     RestTemplate restTemplate = new RestTemplate();
-    String url = "http://localhost:" + port + "/v3/api-docs/";
+    String url = "http://localhost:" + port + "/v3/api-docs";
     String apiSpec = restTemplate.getForObject(url, String.class);
     assertThat(apiSpec).isNotBlank();
 
