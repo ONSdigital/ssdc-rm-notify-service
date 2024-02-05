@@ -101,7 +101,7 @@ public class SmsFulfilmentEndpoint {
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
           new SmsFulfilmentResponseError(responseStatusException.getReason()),
-          responseStatusException.getStatus());
+          responseStatusException.getStatusCode());
     }
 
     Optional<UacQidCreatedPayloadDTO> newUacQidPair =

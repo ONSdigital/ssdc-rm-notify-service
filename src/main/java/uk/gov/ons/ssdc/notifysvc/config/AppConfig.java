@@ -1,8 +1,8 @@
 package uk.gov.ons.ssdc.notifysvc.config;
 
 import com.godaddy.logging.LoggingConfigs;
+import jakarta.annotation.PostConstruct;
 import java.util.TimeZone;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 

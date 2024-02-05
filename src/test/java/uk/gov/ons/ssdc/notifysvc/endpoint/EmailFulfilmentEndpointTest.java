@@ -441,7 +441,7 @@ class EmailFulfilmentEndpointTest {
                     invalidRequest, testCase, emailTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   @Test
@@ -462,7 +462,7 @@ class EmailFulfilmentEndpointTest {
                     invalidRequest, testCase, emailTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   @Test
@@ -487,7 +487,7 @@ class EmailFulfilmentEndpointTest {
                     invalidRequest, testCase, emailTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage()).contains("pack code is not allowed on this survey");
   }
 
@@ -510,7 +510,7 @@ class EmailFulfilmentEndpointTest {
                     invalidRequest, testCase, emailTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .contains(
             "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
@@ -535,7 +535,7 @@ class EmailFulfilmentEndpointTest {
                     invalidRequest, testCase, emailTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .contains(
             "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
@@ -560,7 +560,7 @@ class EmailFulfilmentEndpointTest {
                     invalidRequest, testCase, emailTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .contains(
             "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
