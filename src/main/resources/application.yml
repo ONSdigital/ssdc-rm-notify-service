@@ -67,10 +67,11 @@ management:
     tags:
       application: Notify Service
       pod: ${HOSTNAME}
-    export:
-      stackdriver:
-        project-id: dummy-project-id
+  stackdriver:
+    metrics:
+      export:
         enabled: false
+        project-id: dummy-project-id
         step: PT1M
 
 messagelogging:
