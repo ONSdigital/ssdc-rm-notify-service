@@ -295,8 +295,7 @@ class SmsFulfilmentEndpointTest {
     // error
 
     String expectedErrorMsg =
-        "500 INTERNAL_SERVER_ERROR \"Error with Gov Notify when attempting to send SMS\";"
-            + " nested exception is uk.gov.service.notify.NotificationClientException: Test";
+        "500 INTERNAL_SERVER_ERROR \"Error with Gov Notify when attempting to send SMS\"";
 
     mockMvc
         .perform(
@@ -408,7 +407,7 @@ class SmsFulfilmentEndpointTest {
                     invalidRequest, testCase, smsTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .contains(
             "400 BAD_REQUEST \"The template for this pack code is not allowed on this survey\"");
@@ -432,7 +431,7 @@ class SmsFulfilmentEndpointTest {
                     invalidRequest, testCase, smsTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .isEqualTo(
             "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
@@ -456,7 +455,7 @@ class SmsFulfilmentEndpointTest {
                     invalidRequest, testCase, smsTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .isEqualTo(
             "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");
@@ -480,7 +479,7 @@ class SmsFulfilmentEndpointTest {
                     invalidRequest, testCase, smsTemplate));
 
     // Then
-    assertThat(thrown.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(thrown.getMessage())
         .isEqualTo(
             "400 BAD_REQUEST \"Invalid request header: correlationId, channel and source are mandatory\"");

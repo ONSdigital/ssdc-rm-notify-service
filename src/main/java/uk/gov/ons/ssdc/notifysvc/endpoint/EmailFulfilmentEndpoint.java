@@ -101,7 +101,7 @@ public class EmailFulfilmentEndpoint {
     } catch (ResponseStatusException responseStatusException) {
       return new ResponseEntity<>(
           new EmailFulfilmentResponseError(responseStatusException.getReason()),
-          responseStatusException.getStatus());
+          responseStatusException.getStatusCode());
     }
 
     Optional<UacQidCreatedPayloadDTO> newUacQidPair =

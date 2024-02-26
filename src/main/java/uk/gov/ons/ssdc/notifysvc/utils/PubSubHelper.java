@@ -19,7 +19,7 @@ public class PubSubHelper {
 
   public void publishAndConfirm(String topic, EventDTO payload) {
     try {
-      pubSubTemplate.publish(topic, objectMapper.writeValueAsBytes(payload)).completable().get();
+      pubSubTemplate.publish(topic, objectMapper.writeValueAsBytes(payload)).get();
     } catch (ExecutionException e) {
       throw new RuntimeException("Error publishing message to PubSub topic ", e);
     } catch (JsonProcessingException e) {
