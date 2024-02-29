@@ -1,5 +1,5 @@
 ---
-name: Java Checks and Tests
+name: Checks and Tests
 on:
   push:
     branches: [ main ]
