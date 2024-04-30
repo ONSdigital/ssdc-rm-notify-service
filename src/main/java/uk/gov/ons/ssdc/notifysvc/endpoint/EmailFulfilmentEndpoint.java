@@ -2,8 +2,6 @@ package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +49,7 @@ public class EmailFulfilmentEndpoint {
   private final EmailTemplateRepository emailTemplateRepository;
   private final NotifyServiceRefMapping notifyServiceRefMapping;
 
-  private static final Logger logger = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
+  private static final Logger log = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
 
   @Autowired
   public EmailFulfilmentEndpoint(
@@ -211,7 +211,10 @@ public class EmailFulfilmentEndpoint {
           emailTemplatePersonalization,
           reference);
     } catch (NotificationClientException e) {
-      logger.error("Error with Gov Notify when attempting to send email", e);
+      log.atError()
+          .setMessage("Error with Gov Notify when attempting to send email")
+          .setCause(e)
+          .log();
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
           "Error with Gov Notify when attempting to send email",
