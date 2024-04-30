@@ -49,7 +49,7 @@ public class EmailFulfilmentEndpoint {
   private final EmailTemplateRepository emailTemplateRepository;
   private final NotifyServiceRefMapping notifyServiceRefMapping;
 
-  private static final Logger logger = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
+  private static final Logger log = LoggerFactory.getLogger(EmailFulfilmentEndpoint.class);
 
   @Autowired
   public EmailFulfilmentEndpoint(
@@ -211,7 +211,10 @@ public class EmailFulfilmentEndpoint {
           emailTemplatePersonalization,
           reference);
     } catch (NotificationClientException e) {
-      logger.error("Error with Gov Notify when attempting to send email", e);
+      log.atError()
+          .setMessage("Error with Gov Notify when attempting to send email")
+          .setCause(e)
+          .log();
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR,
           "Error with Gov Notify when attempting to send email",

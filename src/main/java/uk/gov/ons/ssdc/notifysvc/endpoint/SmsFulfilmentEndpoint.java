@@ -43,7 +43,7 @@ import uk.gov.service.notify.NotificationClientException;
 @RestController
 @RequestMapping(value = "/sms-fulfilment")
 public class SmsFulfilmentEndpoint {
-  private static final Logger logger = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
+  private static final Logger log = LoggerFactory.getLogger(SmsFulfilmentEndpoint.class);
 
   private final SmsRequestService smsRequestService;
   private final CaseRepository caseRepository;
@@ -206,7 +206,10 @@ public class SmsFulfilmentEndpoint {
       notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(), phoneNumber, smsTemplateValues, senderId);
     } catch (NotificationClientException e) {
-      logger.error("Error with Gov Notify when attempting to send SMS", e);
+      log.atError()
+          .setMessage("Error with Gov Notify when attempting to send SMS")
+          .setCause(e)
+          .log();
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Error with Gov Notify when attempting to send SMS", e);
     }
