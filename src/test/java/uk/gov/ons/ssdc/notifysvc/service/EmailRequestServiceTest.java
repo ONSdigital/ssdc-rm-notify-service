@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
@@ -97,7 +96,7 @@ class EmailRequestServiceTest {
     UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
     newUacQidCreated.setUac("TEST_UAC");
     newUacQidCreated.setUac("TEST_QID");
-    when(uacQidServiceClient.generateUacQid(QID_TYPE)).thenReturn(newUacQidCreated);
+    when(uacQidServiceClient.generateUacQid()).thenReturn(newUacQidCreated);
 
     // When
     Optional<UacQidCreatedPayloadDTO> actualUacQidCreated =
