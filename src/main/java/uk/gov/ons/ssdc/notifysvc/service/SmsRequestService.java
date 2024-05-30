@@ -1,6 +1,5 @@
 package uk.gov.ons.ssdc.notifysvc.service;
 
-import static uk.gov.ons.ssdc.notifysvc.utils.Constants.QID_TYPE;
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.doesTemplateRequireNewUacQid;
 
 import java.time.Clock;
@@ -43,7 +42,7 @@ public class SmsRequestService {
 
   public Optional<UacQidCreatedPayloadDTO> fetchNewUacQidPairIfRequired(String[] smsTemplate) {
     if (doesTemplateRequireNewUacQid(smsTemplate)) {
-      return Optional.of(uacQidServiceClient.generateUacQid(QID_TYPE));
+      return Optional.of(uacQidServiceClient.generateUacQid());
     }
     return Optional.empty();
   }
