@@ -58,7 +58,8 @@ public class EmailRequestEnrichedReceiver {
         .addKeyValue("caseId", emailRequestEnriched.getCaseId())
         .addKeyValue("packCode", emailRequestEnriched.getPackCode())
         .addKeyValue("messageId", event.getHeader().getMessageId())
-        .addKeyValue("correlationId", event.getHeader().getCorrelationId());
+        .addKeyValue("correlationId", event.getHeader().getCorrelationId())
+        .log();
 
     EmailTemplate emailTemplate =
         emailTemplateRepository
@@ -105,6 +106,7 @@ public class EmailRequestEnrichedReceiver {
         .addKeyValue("packCode", emailRequestEnriched.getPackCode())
         .addKeyValue("messageId", event.getHeader().getMessageId())
         .addKeyValue("correlationId", event.getHeader().getCorrelationId())
-        .addKeyValue("processingTimeMillis", System.currentTimeMillis() - startTime);
+        .addKeyValue("processingTimeMillis", System.currentTimeMillis() - startTime)
+        .log();
   }
 }

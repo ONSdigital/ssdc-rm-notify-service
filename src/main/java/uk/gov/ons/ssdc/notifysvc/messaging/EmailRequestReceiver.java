@@ -67,7 +67,8 @@ public class EmailRequestReceiver {
         .addKeyValue("caseId", emailRequest.getCaseId())
         .addKeyValue("packCode", emailRequest.getPackCode())
         .addKeyValue("messageId", emailRequestHeader.getMessageId())
-        .addKeyValue("correlationId", emailRequestHeader.getCorrelationId());
+        .addKeyValue("correlationId", emailRequestHeader.getCorrelationId())
+        .log();
 
     validateEmailAddress(emailRequest.getEmail());
 
@@ -112,7 +113,8 @@ public class EmailRequestReceiver {
         .addKeyValue("packCode", emailRequest.getPackCode())
         .addKeyValue("messageId", emailRequestHeader.getMessageId())
         .addKeyValue("correlationId", emailRequestHeader.getCorrelationId())
-        .addKeyValue("processingTimeMillis", System.currentTimeMillis() - startTime);
+        .addKeyValue("processingTimeMillis", System.currentTimeMillis() - startTime)
+        .log();
   }
 
   private EventDTO buildEmailRequestEnrichedEvent(
