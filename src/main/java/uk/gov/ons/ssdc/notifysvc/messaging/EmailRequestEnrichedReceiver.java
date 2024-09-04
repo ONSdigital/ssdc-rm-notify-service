@@ -4,7 +4,6 @@ import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
