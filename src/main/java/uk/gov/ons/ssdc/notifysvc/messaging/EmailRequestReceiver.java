@@ -5,6 +5,8 @@ import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -27,6 +29,8 @@ public class EmailRequestReceiver {
 
   @Value("${queueconfig.email-request-enriched-topic}")
   private String emailRequestEnrichedTopic;
+
+  private static final Logger log = LoggerFactory.getLogger(EmailRequestReceiver.class);
 
   private final CaseRepository caseRepository;
   private final EmailTemplateRepository emailTemplateRepository;
@@ -54,9 +58,17 @@ public class EmailRequestReceiver {
 
   @ServiceActivator(inputChannel = "emailRequestInputChannel", adviceChain = "retryAdvice")
   public void receiveMessage(Message<byte[]> message) {
+    long startTime = System.currentTimeMillis();
     EventDTO emailRequestEvent = convertJsonBytesToEvent(message.getPayload());
     EventHeaderDTO emailRequestHeader = emailRequestEvent.getHeader();
     EmailRequest emailRequest = emailRequestEvent.getPayload().getEmailRequest();
+    log.atDebug()
+        .setMessage("Starting processing email request message")
+        .addKeyValue("caseId", emailRequest.getCaseId())
+        .addKeyValue("packCode", emailRequest.getPackCode())
+        .addKeyValue("messageId", emailRequestHeader.getMessageId())
+        .addKeyValue("correlationId", emailRequestHeader.getCorrelationId())
+        .log();
 
     validateEmailAddress(emailRequest.getEmail());
 
@@ -94,6 +106,15 @@ public class EmailRequestReceiver {
     // This enriched message can then safely be retried multiple times without potentially
     // generating and linking more, unnecessary UAC/QID pairs
     pubSubHelper.publishAndConfirm(emailRequestEnrichedTopic, emailRequestEnrichedEvent);
+
+    log.atDebug()
+        .setMessage("Finished processing email request message")
+        .addKeyValue("caseId", emailRequest.getCaseId())
+        .addKeyValue("packCode", emailRequest.getPackCode())
+        .addKeyValue("messageId", emailRequestHeader.getMessageId())
+        .addKeyValue("correlationId", emailRequestHeader.getCorrelationId())
+        .addKeyValue("processingTimeMillis", System.currentTimeMillis() - startTime)
+        .log();
   }
 
   private EventDTO buildEmailRequestEnrichedEvent(

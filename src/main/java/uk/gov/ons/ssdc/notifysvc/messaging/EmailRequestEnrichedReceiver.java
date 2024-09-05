@@ -4,6 +4,8 @@ import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -23,6 +25,8 @@ public class EmailRequestEnrichedReceiver {
 
   @Value("${email-request-enriched-delay}")
   private int emailRequestEnrichedDelay;
+
+  private static final Logger log = LoggerFactory.getLogger(EmailRequestEnrichedReceiver.class);
 
   private final EmailTemplateRepository emailTemplateRepository;
   private final CaseRepository caseRepository;
@@ -44,9 +48,19 @@ public class EmailRequestEnrichedReceiver {
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted during throttling delay", e);
     }
+    long startTime = System.currentTimeMillis();
 
     EventDTO event = convertJsonBytesToEvent(message.getPayload());
     EmailRequestEnriched emailRequestEnriched = event.getPayload().getEmailRequestEnriched();
+
+    log.atDebug()
+        .setMessage("Starting processing enriched email request message")
+        .addKeyValue("caseId", emailRequestEnriched.getCaseId())
+        .addKeyValue("packCode", emailRequestEnriched.getPackCode())
+        .addKeyValue("messageId", event.getHeader().getMessageId())
+        .addKeyValue("correlationId", event.getHeader().getCorrelationId())
+        .log();
+
     EmailTemplate emailTemplate =
         emailTemplateRepository
             .findById(emailRequestEnriched.getPackCode())
@@ -85,5 +99,14 @@ public class EmailRequestEnrichedReceiver {
           "Error with Gov Notify when attempting to send email (from enriched email request event)",
           e);
     }
+
+    log.atDebug()
+        .setMessage("Finished processing enriched email request message")
+        .addKeyValue("caseId", emailRequestEnriched.getCaseId())
+        .addKeyValue("packCode", emailRequestEnriched.getPackCode())
+        .addKeyValue("messageId", event.getHeader().getMessageId())
+        .addKeyValue("correlationId", event.getHeader().getCorrelationId())
+        .addKeyValue("processingTimeMillis", System.currentTimeMillis() - startTime)
+        .log();
   }
 }
