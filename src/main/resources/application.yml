@@ -83,5 +83,7 @@ email-request-enriched-delay: 0  # milliseconds
 logging:
   profile: DEV
   level:
-    root: INFO
+    root: INFO # NB: This must never be set to a lower level than INFO as it can leak data into logs
     com.google.cloud.spring.pubsub.integration.inbound.PubSubInboundChannelAdapter: ERROR
+    uk.gov.ons.ssdc.notifysvc.messaging.EmailRequestEnrichedReceiver: DEBUG # To show our debug timing logs
+    uk.gov.ons.ssdc.notifysvc.messaging.EmailRequestReceiver: DEBUG # To show our debug timing logs
