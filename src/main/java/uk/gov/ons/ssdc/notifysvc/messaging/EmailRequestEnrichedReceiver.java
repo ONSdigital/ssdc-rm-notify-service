@@ -101,7 +101,7 @@ public class EmailRequestEnrichedReceiver {
     }
 
     log.atDebug()
-        .setMessage("Starting processing enriched email request message")
+        .setMessage("Finished processing enriched email request message")
         .addKeyValue("caseId", emailRequestEnriched.getCaseId())
         .addKeyValue("packCode", emailRequestEnriched.getPackCode())
         .addKeyValue("messageId", event.getHeader().getMessageId())
