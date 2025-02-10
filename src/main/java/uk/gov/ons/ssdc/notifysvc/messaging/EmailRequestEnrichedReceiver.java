@@ -89,6 +89,13 @@ public class EmailRequestEnrichedReceiver {
         notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
+      log.atError()
+          .setMessage("HTTP call to send an email")
+          .addKeyValue("method", "receiveMessage")
+          .addKeyValue("caseId", emailRequestEnriched.getCaseId())
+          .addKeyValue("messageId", event.getHeader().getMessageId())
+          .log();
+
       notificationClient.sendEmail(
           emailTemplate.getNotifyTemplateId().toString(),
           emailRequestEnriched.getEmail(),

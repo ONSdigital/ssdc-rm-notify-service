@@ -203,6 +203,11 @@ public class SmsFulfilmentEndpoint {
       String senderId,
       NotificationClient notificationClient) {
     try {
+      log.atError()
+          .setMessage("HTTP call to send an SMS")
+          .addKeyValue("method", "sendSms")
+          .log();
+
       notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(), phoneNumber, smsTemplateValues, senderId);
     } catch (NotificationClientException e) {
