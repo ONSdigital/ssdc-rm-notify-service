@@ -4,8 +4,6 @@ import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -25,8 +23,6 @@ public class SmsRequestEnrichedReceiver {
 
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
-
-  private static final Logger log = LoggerFactory.getLogger(SmsRequestEnrichedReceiver.class);
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
