@@ -80,13 +80,6 @@ public class SmsRequestEnrichedReceiver {
         notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
-      log.atError()
-          .setMessage("HTTP call to send an SMS")
-          .addKeyValue("method", "receiveMessage")
-          .addKeyValue("caseId", smsRequestEnriched.getCaseId())
-          .addKeyValue("messageId", event.getHeader().getMessageId())
-          .log();
-
       notificationClient.sendSms(
           smsTemplate.getNotifyTemplateId().toString(),
           smsRequestEnriched.getPhoneNumber(),
