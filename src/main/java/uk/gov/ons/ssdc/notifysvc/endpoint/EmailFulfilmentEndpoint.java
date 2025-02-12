@@ -205,6 +205,11 @@ public class EmailFulfilmentEndpoint {
         notifyServiceRefMapping.getNotifyClient(notifyServiceRef);
 
     try {
+      log.atError()
+          .setMessage("HTTP call to send an email")
+          .addKeyValue("method", "sendEmail")
+          .log();
+
       notificationClient.sendEmail(
           emailTemplate.getNotifyTemplateId().toString(),
           emailAddress,
