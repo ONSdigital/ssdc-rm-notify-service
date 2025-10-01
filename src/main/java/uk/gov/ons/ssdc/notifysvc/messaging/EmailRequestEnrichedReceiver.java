@@ -26,6 +26,12 @@ public class EmailRequestEnrichedReceiver {
   @Value("${email-request-enriched-delay}")
   private int emailRequestEnrichedDelay;
 
+  @Value("${errorhandeling.rate-limit-error-http-status}")
+  private int rateLimitErrorHttpStatus;
+
+  @Value("${errorhandeling.rate-limiter-exception-message}")
+  private String rateLimiterExceptionMessage;
+
   private static final Logger log = LoggerFactory.getLogger(EmailRequestEnrichedReceiver.class);
 
   private final EmailTemplateRepository emailTemplateRepository;
@@ -95,6 +101,9 @@ public class EmailRequestEnrichedReceiver {
           personalisationTemplateValues,
           event.getHeader().getCorrelationId().toString()); // Use the correlation ID as reference
     } catch (NotificationClientException e) {
+      if (e.getHttpResult() == rateLimitErrorHttpStatus) {
+        throw new RuntimeException(rateLimiterExceptionMessage, e);
+      }
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send email (from enriched email request event)",
           e);

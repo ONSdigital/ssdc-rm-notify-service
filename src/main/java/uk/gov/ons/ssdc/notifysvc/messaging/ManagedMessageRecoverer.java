@@ -26,6 +26,9 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
   @Value("${messagelogging.logstacktraces}")
   private boolean logStackTraces;
 
+  @Value("${errorhandeling.rate-limiter-exception-message}")
+  private String rateLimiterExceptionMessage;
+
   private final ExceptionManagerClient exceptionManagerClient;
 
   public ManagedMessageRecoverer(ExceptionManagerClient exceptionManagerClient) {
@@ -161,12 +164,35 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
     }
 
     if (logStackTraces) {
+      // Having a separate event for when we are rate limited - makes it easier to track
+      if (cause.getCause() != null
+          && cause.getCause().getMessage() != null
+          && cause.getCause().getMessage().contains(rateLimiterExceptionMessage)) {
+        log.atError()
+            .setMessage("Could not process message - rate limited")
+            .setCause(cause)
+            .addKeyValue("message_hash", messageHash)
+            .log();
+        return;
+      }
       log.atError()
           .setMessage("Could not process message")
           .setCause(cause)
           .addKeyValue("message_hash", messageHash)
           .log();
     } else {
+      // Having a separate event for when we are rate limited - makes it easier to track
+      if (cause.getCause() != null
+          && cause.getCause().getMessage() != null
+          && cause.getCause().getMessage().contains(rateLimiterExceptionMessage)) {
+        log.atError()
+            .setMessage("Could not process message - rate limited")
+            .addKeyValue("cause", cause.getMessage())
+            .addKeyValue("root_cause", stackTraceRootCause)
+            .addKeyValue("message_hash", messageHash)
+            .log();
+        return;
+      }
       log.atError()
           .setMessage("Could not process message")
           .addKeyValue("cause", cause.getMessage())

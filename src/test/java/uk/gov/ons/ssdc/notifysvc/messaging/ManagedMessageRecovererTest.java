@@ -16,6 +16,7 @@ import com.google.cloud.spring.pubsub.support.BasicAcknowledgeablePubsubMessage;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +28,7 @@ import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.retry.RetryContext;
+import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.ons.ssdc.notifysvc.client.ExceptionManagerClient;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.ExceptionReportResponse;
 import uk.gov.ons.ssdc.notifysvc.model.dto.api.SkippedMessage;
@@ -41,6 +43,12 @@ class ManagedMessageRecovererTest {
   @Mock private ExceptionManagerClient exceptionManagerClient;
 
   @InjectMocks private ManagedMessageRecoverer underTest;
+
+  @BeforeEach
+  public void setup() {
+    ReflectionTestUtils.setField(
+        underTest, "rateLimiterExceptionMessage", "TEST RATE LIMITER MESSAGE");
+  }
 
   @Test
   public void testRecover() {

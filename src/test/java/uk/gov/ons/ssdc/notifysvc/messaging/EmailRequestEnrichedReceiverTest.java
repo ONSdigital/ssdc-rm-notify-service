@@ -11,6 +11,7 @@ import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -190,6 +191,63 @@ class EmailRequestEnrichedReceiverTest {
 
     when(notificationClient.sendEmail(any(), any(), any(), any()))
         .thenThrow(new NotificationClientException("Test Throw"));
+
+    // When
+    RuntimeException thrown =
+        assertThrows(
+            RuntimeException.class,
+            () -> emailRequestEnrichedReceiver.receiveMessage(eventMessage));
+    assertThat(thrown.getMessage())
+        .isEqualTo(
+            "Error with Gov Notify when attempting to send email (from enriched email request event)");
+  }
+
+  @Test
+  void testReceiveMessageSendRateLimitException()
+      throws NotificationClientException, IllegalAccessException, NoSuchFieldException {
+
+    // Given
+    Case testCase = new Case();
+    testCase.setId(UUID.randomUUID());
+
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setPackCode("TEST_PACK_CODE");
+    emailTemplate.setTemplate(new String[] {TEMPLATE_QID_KEY, TEMPLATE_UAC_KEY});
+    emailTemplate.setNotifyTemplateId(UUID.randomUUID());
+    emailTemplate.setNotifyServiceRef("test-service");
+
+    UacQidCreatedPayloadDTO newUacQidCreated = new UacQidCreatedPayloadDTO();
+    newUacQidCreated.setUac(TEST_UAC);
+    newUacQidCreated.setQid(TEST_QID);
+
+    EventDTO emailRequestEnrichedEvent = buildEventDTO(emailRequestEnrichedTopic);
+    EmailRequestEnriched emailRequestEnriched = new EmailRequestEnriched();
+    emailRequestEnriched.setCaseId(testCase.getId());
+    emailRequestEnriched.setPackCode("TEST_PACK_CODE");
+    emailRequestEnriched.setUac(TEST_UAC);
+    emailRequestEnriched.setQid(TEST_QID);
+    emailRequestEnriched.setEmail("example@example.com");
+    emailRequestEnrichedEvent.getPayload().setEmailRequestEnriched(emailRequestEnriched);
+
+    Map<String, String> personalisationValues =
+        Map.ofEntries(entry(TEMPLATE_UAC_KEY, TEST_UAC), entry(TEMPLATE_QID_KEY, TEST_QID));
+
+    when(emailTemplateRepository.findById(emailTemplate.getPackCode()))
+        .thenReturn(Optional.of(emailTemplate));
+    when(caseRepository.findById(testCase.getId())).thenReturn(Optional.of(testCase));
+    when(notifyServiceRefMapping.getNotifyClient("test-service")).thenReturn(notificationClient);
+
+    Message<byte[]> eventMessage = constructMessageWithValidTimeStamp(emailRequestEnrichedEvent);
+
+    NotificationClientException notificationClientException =
+        new NotificationClientException("Test Throw");
+
+    Field field = NotificationClientException.class.getDeclaredField("httpResult");
+    field.setAccessible(true);
+    field.set(notificationClientException, 429);
+
+    when(notificationClient.sendEmail(any(), any(), any(), any()))
+        .thenThrow(notificationClientException);
 
     // When
     RuntimeException thrown =

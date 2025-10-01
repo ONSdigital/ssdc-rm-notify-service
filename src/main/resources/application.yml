@@ -77,8 +77,12 @@ management:
 messagelogging:
   logstacktraces: false
 
-sms-request-enriched-delay: 0  # milliseconds
-email-request-enriched-delay: 0  # milliseconds
+sms-request-enriched-delay: 50  # milliseconds
+email-request-enriched-delay: 50  # milliseconds
+
+errorhandeling:
+  rate-limit-error-http-status: 429
+  rate-limiter-exception-message: "Error: Rate limit exceeded when trying attempting to send email (from enriched email request event)"
 
 logging:
   profile: DEV
