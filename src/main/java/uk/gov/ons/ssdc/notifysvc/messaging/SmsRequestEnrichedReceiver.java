@@ -24,6 +24,12 @@ public class SmsRequestEnrichedReceiver {
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
+  @Value("${errorhandeling.rate-limit-error-http-status}")
+  private int rateLimitErrorHttpStatus;
+
+  @Value("${errorhandeling.rate-limiter-exception-message}")
+  private String rateLimiterExceptionMessage;
+
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
   private final NotifyServiceRefMapping notifyServiceRefMapping;
@@ -82,6 +88,10 @@ public class SmsRequestEnrichedReceiver {
           personalisationTemplateValues,
           senderId);
     } catch (NotificationClientException e) {
+      if (e.getHttpResult() == rateLimitErrorHttpStatus) {
+        throw new RuntimeException(
+            rateLimiterExceptionMessage + " SMS (from enriched SMS request event)", e);
+      }
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);
     }

@@ -102,7 +102,8 @@ public class EmailRequestEnrichedReceiver {
           event.getHeader().getCorrelationId().toString()); // Use the correlation ID as reference
     } catch (NotificationClientException e) {
       if (e.getHttpResult() == rateLimitErrorHttpStatus) {
-        throw new RuntimeException(rateLimiterExceptionMessage, e);
+        throw new RuntimeException(
+            rateLimiterExceptionMessage + " email (from enriched email request event)", e);
       }
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send email (from enriched email request event)",
