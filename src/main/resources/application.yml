@@ -80,7 +80,7 @@ messagelogging:
 sms-request-enriched-delay: 50  # milliseconds
 email-request-enriched-delay: 50  # milliseconds
 
-errorhandeling:
+errorhandling:
   rate-limit-error-http-status: 429
   rate-limiter-exception-message: "Error: Rate limit exceeded when trying attempting to send"
 
