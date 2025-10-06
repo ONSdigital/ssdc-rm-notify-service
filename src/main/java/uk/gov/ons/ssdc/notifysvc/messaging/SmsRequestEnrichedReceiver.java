@@ -1,5 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMITER_EXCEPTION_MESSAGE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMIT_ERROR_HTTP_STATUS;
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
@@ -23,12 +25,6 @@ public class SmsRequestEnrichedReceiver {
 
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
-
-  @Value("${errorhandling.rate-limit-error-http-status}")
-  private int rateLimitErrorHttpStatus;
-
-  @Value("${errorhandling.rate-limiter-exception-message}")
-  private String rateLimiterExceptionMessage;
 
   private final SmsTemplateRepository smsTemplateRepository;
   private final CaseRepository caseRepository;
@@ -88,9 +84,9 @@ public class SmsRequestEnrichedReceiver {
           personalisationTemplateValues,
           senderId);
     } catch (NotificationClientException e) {
-      if (e.getHttpResult() == rateLimitErrorHttpStatus) {
+      if (e.getHttpResult() == RATE_LIMIT_ERROR_HTTP_STATUS) {
         throw new RuntimeException(
-            rateLimiterExceptionMessage + " SMS (from enriched SMS request event)", e);
+            RATE_LIMITER_EXCEPTION_MESSAGE + " SMS (from enriched SMS request event)", e);
       }
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send SMS (from enriched SMS request event)", e);

@@ -10,4 +10,7 @@ public class Constants {
   public static final String TEMPLATE_QID_KEY = "__qid__";
   public static final String TEMPLATE_SENSITIVE_PREFIX = "__sensitive__.";
   public static final String TEMPLATE_REQUEST_PREFIX = "__request__.";
+  public static final String RATE_LIMITER_EXCEPTION_MESSAGE =
+      "Error: Rate limit exceeded when trying attempting to send";
+  public static final int RATE_LIMIT_ERROR_HTTP_STATUS = 429;
 }

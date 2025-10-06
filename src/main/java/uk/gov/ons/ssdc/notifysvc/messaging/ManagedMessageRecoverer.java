@@ -1,5 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMITER_EXCEPTION_MESSAGE;
+
 import com.google.cloud.spring.pubsub.support.BasicAcknowledgeablePubsubMessage;
 import com.google.cloud.spring.pubsub.support.GcpPubSubHeaders;
 import com.google.protobuf.ByteString;
@@ -25,9 +27,6 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
 
   @Value("${messagelogging.logstacktraces}")
   private boolean logStackTraces;
-
-  @Value("${errorhandling.rate-limiter-exception-message}")
-  private String rateLimiterExceptionMessage;
 
   private final ExceptionManagerClient exceptionManagerClient;
 
@@ -167,7 +166,7 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
       // Having a separate event for when we are rate limited - makes it easier to track
       if (cause.getCause() != null
           && cause.getCause().getMessage() != null
-          && cause.getCause().getMessage().contains(rateLimiterExceptionMessage)) {
+          && cause.getCause().getMessage().contains(RATE_LIMITER_EXCEPTION_MESSAGE)) {
         log.atError()
             .setMessage("Could not process message - rate limited")
             .setCause(cause)
@@ -184,7 +183,7 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
       // Having a separate event for when we are rate limited - makes it easier to track
       if (cause.getCause() != null
           && cause.getCause().getMessage() != null
-          && cause.getCause().getMessage().contains(rateLimiterExceptionMessage)) {
+          && cause.getCause().getMessage().contains(RATE_LIMITER_EXCEPTION_MESSAGE)) {
         log.atError()
             .setMessage("Could not process message - rate limited")
             .addKeyValue("cause", cause.getMessage())

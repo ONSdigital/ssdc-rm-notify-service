@@ -1,5 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMITER_EXCEPTION_MESSAGE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMIT_ERROR_HTTP_STATUS;
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
 
@@ -25,12 +27,6 @@ public class EmailRequestEnrichedReceiver {
 
   @Value("${email-request-enriched-delay}")
   private int emailRequestEnrichedDelay;
-
-  @Value("${errorhandling.rate-limit-error-http-status}")
-  private int rateLimitErrorHttpStatus;
-
-  @Value("${errorhandling.rate-limiter-exception-message}")
-  private String rateLimiterExceptionMessage;
 
   private static final Logger log = LoggerFactory.getLogger(EmailRequestEnrichedReceiver.class);
 
@@ -101,9 +97,9 @@ public class EmailRequestEnrichedReceiver {
           personalisationTemplateValues,
           event.getHeader().getCorrelationId().toString()); // Use the correlation ID as reference
     } catch (NotificationClientException e) {
-      if (e.getHttpResult() == rateLimitErrorHttpStatus) {
+      if (e.getHttpResult() == RATE_LIMIT_ERROR_HTTP_STATUS) {
         throw new RuntimeException(
-            rateLimiterExceptionMessage + " email (from enriched email request event)", e);
+            RATE_LIMITER_EXCEPTION_MESSAGE + " email (from enriched email request event)", e);
       }
       throw new RuntimeException(
           "Error with Gov Notify when attempting to send email (from enriched email request event)",
