@@ -77,8 +77,8 @@ management:
 messagelogging:
   logstacktraces: false
 
-sms-request-enriched-delay: 0  # milliseconds
-email-request-enriched-delay: 0  # milliseconds
+sms-request-enriched-delay: 50  # milliseconds
+email-request-enriched-delay: 50  # milliseconds
 
 logging:
   profile: DEV
