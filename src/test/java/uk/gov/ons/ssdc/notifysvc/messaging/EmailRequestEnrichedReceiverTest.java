@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.buildEventDTO;
 import static uk.gov.ons.ssdc.notifysvc.testUtils.MessageConstructor.constructMessageWithValidTimeStamp;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMITER_EXCEPTION_MESSAGE;
+import static uk.gov.ons.ssdc.notifysvc.utils.Constants.RATE_LIMIT_ERROR_HTTP_STATUS;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_QID_KEY;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_REQUEST_PREFIX;
 import static uk.gov.ons.ssdc.notifysvc.utils.Constants.TEMPLATE_UAC_KEY;
@@ -244,7 +246,7 @@ class EmailRequestEnrichedReceiverTest {
 
     Field field = NotificationClientException.class.getDeclaredField("httpResult");
     field.setAccessible(true);
-    field.set(notificationClientException, 429);
+    field.set(notificationClientException, RATE_LIMIT_ERROR_HTTP_STATUS);
 
     when(notificationClient.sendEmail(any(), any(), any(), any()))
         .thenThrow(notificationClientException);
@@ -255,8 +257,7 @@ class EmailRequestEnrichedReceiverTest {
             RuntimeException.class,
             () -> emailRequestEnrichedReceiver.receiveMessage(eventMessage));
     assertThat(thrown.getMessage())
-        .isEqualTo(
-            "Error with Gov Notify when attempting to send email (from enriched email request event)");
+        .isEqualTo(RATE_LIMITER_EXCEPTION_MESSAGE + " email (from enriched email request event)");
   }
 
   @Test
