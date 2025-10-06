@@ -173,13 +173,13 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
             .setCause(cause)
             .addKeyValue("message_hash", messageHash)
             .log();
-        return;
+      } else {
+        log.atError()
+            .setMessage("Could not process message")
+            .setCause(cause)
+            .addKeyValue("message_hash", messageHash)
+            .log();
       }
-      log.atError()
-          .setMessage("Could not process message")
-          .setCause(cause)
-          .addKeyValue("message_hash", messageHash)
-          .log();
     } else {
       // Having a separate event for when we are rate limited - makes it easier to track
       if (cause.getCause() != null
@@ -191,14 +191,14 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
             .addKeyValue("root_cause", stackTraceRootCause)
             .addKeyValue("message_hash", messageHash)
             .log();
-        return;
+      } else {
+        log.atError()
+            .setMessage("Could not process message")
+            .addKeyValue("cause", cause.getMessage())
+            .addKeyValue("root_cause", stackTraceRootCause)
+            .addKeyValue("message_hash", messageHash)
+            .log();
       }
-      log.atError()
-          .setMessage("Could not process message")
-          .addKeyValue("cause", cause.getMessage())
-          .addKeyValue("root_cause", stackTraceRootCause)
-          .addKeyValue("message_hash", messageHash)
-          .log();
     }
   }
 
