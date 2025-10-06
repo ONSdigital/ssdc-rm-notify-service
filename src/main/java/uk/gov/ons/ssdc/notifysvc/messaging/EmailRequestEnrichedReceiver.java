@@ -26,10 +26,10 @@ public class EmailRequestEnrichedReceiver {
   @Value("${email-request-enriched-delay}")
   private int emailRequestEnrichedDelay;
 
-  @Value("${errorhandeling.rate-limit-error-http-status}")
+  @Value("${errorhandling.rate-limit-error-http-status}")
   private int rateLimitErrorHttpStatus;
 
-  @Value("${errorhandeling.rate-limiter-exception-message}")
+  @Value("${errorhandling.rate-limiter-exception-message}")
   private String rateLimiterExceptionMessage;
 
   private static final Logger log = LoggerFactory.getLogger(EmailRequestEnrichedReceiver.class);

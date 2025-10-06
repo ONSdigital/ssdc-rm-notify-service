@@ -24,10 +24,10 @@ public class SmsRequestEnrichedReceiver {
   @Value("${sms-request-enriched-delay}")
   private int smsRequestEnrichedDelay;
 
-  @Value("${errorhandeling.rate-limit-error-http-status}")
+  @Value("${errorhandling.rate-limit-error-http-status}")
   private int rateLimitErrorHttpStatus;
 
-  @Value("${errorhandeling.rate-limiter-exception-message}")
+  @Value("${errorhandling.rate-limiter-exception-message}")
   private String rateLimiterExceptionMessage;
 
   private final SmsTemplateRepository smsTemplateRepository;

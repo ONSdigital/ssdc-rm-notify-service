@@ -26,7 +26,7 @@ public class ManagedMessageRecoverer implements RecoveryCallback<Object> {
   @Value("${messagelogging.logstacktraces}")
   private boolean logStackTraces;
 
-  @Value("${errorhandeling.rate-limiter-exception-message}")
+  @Value("${errorhandling.rate-limiter-exception-message}")
   private String rateLimiterExceptionMessage;
 
   private final ExceptionManagerClient exceptionManagerClient;
