@@ -18,8 +18,6 @@ services:
     restart: always
     ports:
       - "18166:8164"
-    external_links:
-      - postgres-notify-service-it
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-notify-service-it:5432/rm?sslmode=disable
       - SPRING_PROFILES_ACTIVE=dev
