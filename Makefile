@@ -24,7 +24,7 @@ test:
 	CONTAINER_CLI=$(DOCKER) mvn clean verify jacoco:report
 
 docker-build:
-	$(DOCKER) build . -t europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-notify-service:latest
+	$(DOCKER) build . --platform linux/amd64 -t europe-west2-docker.pkg.dev/ssdc-rm-ci/docker/ssdc-rm-notify-service:latest
 
 rebuild-java-healthcheck:
 	$(MAKE) -C src/test/resources/java_healthcheck rebuild-java-healthcheck
