@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.endpoint;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.buildPersonalisationFromTemplate;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.doesTemplateRequireNewUacQid;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -102,6 +103,16 @@ public class EmailFulfilmentEndpoint {
       return new ResponseEntity<>(
           new EmailFulfilmentResponseError(responseStatusException.getReason()),
           responseStatusException.getStatusCode());
+    }
+
+    if (doesTemplateRequireNewUacQid(emailTemplate.getTemplate())) {
+      log.atInfo()
+          .setMessage("Generating UAC/QID for email fulfilment request")
+          .addKeyValue("method", "generateUacQid")
+          .addKeyValue("caseId", request.getPayload().getEmailFulfilment().getCaseId())
+          .addKeyValue("packCode", request.getPayload().getEmailFulfilment().getPackCode())
+          .addKeyValue("correlationId", request.getHeader().getCorrelationId())
+          .log();
     }
 
     Optional<UacQidCreatedPayloadDTO> newUacQidPair =
