@@ -1,6 +1,7 @@
 package uk.gov.ons.ssdc.notifysvc.messaging;
 
 import static uk.gov.ons.ssdc.notifysvc.utils.JsonHelper.convertJsonBytesToEvent;
+import static uk.gov.ons.ssdc.notifysvc.utils.PersonalisationTemplateHelper.doesTemplateRequireNewUacQid;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -82,6 +83,17 @@ public class EmailRequestReceiver {
 
     if (!caseRepository.existsById(emailRequest.getCaseId())) {
       throw new RuntimeException("Case not found with ID: " + emailRequest.getCaseId());
+    }
+
+    if (doesTemplateRequireNewUacQid(emailTemplate.getTemplate())) {
+      log.atInfo()
+          .setMessage("Generating UAC/QID for email request")
+          .addKeyValue("method", "generateUacQid")
+          .addKeyValue("caseId", emailRequest.getCaseId())
+          .addKeyValue("packCode", emailRequest.getPackCode())
+          .addKeyValue("messageId", emailRequestHeader.getMessageId())
+          .addKeyValue("correlationId", emailRequestHeader.getCorrelationId())
+          .log();
     }
 
     Optional<UacQidCreatedPayloadDTO> newUacQidPair =
