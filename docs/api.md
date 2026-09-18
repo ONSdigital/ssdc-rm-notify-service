@@ -69,7 +69,7 @@ const inputBody = '{
       "personalisation": {
         "name": "Joe Bloggs"
       },
-      "uacMetadata": {}
+      "uacMetadata": null
     },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
@@ -78,7 +78,7 @@ const inputBody = '{
         "name": "Joe Bloggs"
       },
       "phoneNumber": "+447123456789",
-      "uacMetadata": {}
+      "uacMetadata": null
     }
   }
 }';
@@ -228,7 +228,7 @@ Email Fulfilment Request
       "personalisation": {
         "name": "Joe Bloggs"
       },
-      "uacMetadata": {}
+      "uacMetadata": null
     },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
@@ -237,7 +237,7 @@ Email Fulfilment Request
         "name": "Joe Bloggs"
       },
       "phoneNumber": "+447123456789",
-      "uacMetadata": {}
+      "uacMetadata": null
     }
   }
 }
@@ -312,7 +312,7 @@ const inputBody = '{
       "personalisation": {
         "name": "Joe Bloggs"
       },
-      "uacMetadata": {}
+      "uacMetadata": null
     },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
@@ -321,7 +321,7 @@ const inputBody = '{
         "name": "Joe Bloggs"
       },
       "phoneNumber": "+447123456789",
-      "uacMetadata": {}
+      "uacMetadata": null
     }
   }
 }';
@@ -471,7 +471,7 @@ SMS Fulfilment Request
       "personalisation": {
         "name": "Joe Bloggs"
       },
-      "uacMetadata": {}
+      "uacMetadata": null
     },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
@@ -480,7 +480,7 @@ SMS Fulfilment Request
         "name": "Joe Bloggs"
       },
       "phoneNumber": "+447123456789",
-      "uacMetadata": {}
+      "uacMetadata": null
     }
   }
 }
@@ -532,7 +532,7 @@ This operation does not require authentication
   "personalisation": {
     "name": "Joe Bloggs"
   },
-  "uacMetadata": {}
+  "uacMetadata": null
 }
 
 ```
@@ -544,9 +544,9 @@ This operation does not require authentication
 |caseId|string(uuid)|false|none|The case, which must exist in RM|
 |email|string|false|none|The target email address, to which we will send a fulfilment|
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
-|personalisation|object¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
-|» **additionalProperties**|string¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
-|uacMetadata|object|false|none|Metadata for UACQIDLinks|
+|personalisation|object,null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
+|» **additionalProperties**|string|false|none|none|
+|uacMetadata|any|false|none|Metadata for UACQIDLinks|
 
 <h2 id="tocS_EmailFulfilmentResponseError">EmailFulfilmentResponseError</h2>
 <!-- backwards compatibility -->
@@ -613,7 +613,7 @@ This operation does not require authentication
       "personalisation": {
         "name": "Joe Bloggs"
       },
-      "uacMetadata": {}
+      "uacMetadata": null
     },
     "smsFulfilment": {
       "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
@@ -622,7 +622,7 @@ This operation does not require authentication
         "name": "Joe Bloggs"
       },
       "phoneNumber": "+447123456789",
-      "uacMetadata": {}
+      "uacMetadata": null
     }
   }
 }
@@ -678,7 +678,7 @@ This operation does not require authentication
     "personalisation": {
       "name": "Joe Bloggs"
     },
-    "uacMetadata": {}
+    "uacMetadata": null
   },
   "smsFulfilment": {
     "caseId": "af51d69f-996a-4891-a745-aadfcdec225a",
@@ -687,7 +687,7 @@ This operation does not require authentication
       "name": "Joe Bloggs"
     },
     "phoneNumber": "+447123456789",
-    "uacMetadata": {}
+    "uacMetadata": null
   }
 }
 
@@ -715,7 +715,7 @@ This operation does not require authentication
     "name": "Joe Bloggs"
   },
   "phoneNumber": "+447123456789",
-  "uacMetadata": {}
+  "uacMetadata": null
 }
 
 ```
@@ -726,10 +726,10 @@ This operation does not require authentication
 |---|---|---|---|---|
 |caseId|string(uuid)|false|none|The case, which must exist in RM|
 |packCode|string|false|none|The pack code, which must exist in RM and the pack code must be allowed on the survey the case belongs to|
-|personalisation|object¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
-|» **additionalProperties**|string¦null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
+|personalisation|object,null|false|none|Optional personalisation key/value pairs to include in the sent email. Keys must match `__request__.` prefixed fields in the selected template, or they will be ignored|
+|» **additionalProperties**|string|false|none|none|
 |phoneNumber|string|false|none|The phone number, which must be a UK number consisting of 9 digits, preceded by a `7` and optionally a UK country code or zero (`0`, `044` or `+44`).|
-|uacMetadata|object|false|none|Metadata for UACQIDLinks|
+|uacMetadata|any|false|none|Metadata for UACQIDLinks|
 
 <h2 id="tocS_SmsFulfilmentResponseError">SmsFulfilmentResponseError</h2>
 <!-- backwards compatibility -->
