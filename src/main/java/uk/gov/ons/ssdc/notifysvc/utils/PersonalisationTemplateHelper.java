@@ -23,10 +23,10 @@ public class PersonalisationTemplateHelper {
 
     for (String templateItem : template) {
 
-      if (templateItem.equals(TEMPLATE_UAC_KEY)) {
+      if (TEMPLATE_UAC_KEY.equals(templateItem)) {
         templateValues.put(TEMPLATE_UAC_KEY, uac);
 
-      } else if (templateItem.equals(TEMPLATE_QID_KEY)) {
+      } else if (TEMPLATE_QID_KEY.equals(templateItem)) {
         templateValues.put(TEMPLATE_QID_KEY, qid);
 
       } else if (templateItem.startsWith(TEMPLATE_SENSITIVE_PREFIX)) {
