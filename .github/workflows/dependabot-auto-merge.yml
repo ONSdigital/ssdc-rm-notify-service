@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  issues: write  # for labels
+  issues: write # for labels
   pull-requests: write
 
 jobs:
@@ -34,20 +34,43 @@ jobs:
       # security-major gets only one and waits for a human to supply the second.
       # Anything else is unknown to this policy and gets no bot approval at all,
       # so it needs the full two human reviews.
-      - name: Decide how this group is handled
+      # A PR with no group at all is the exception. A bump that moves nothing before a
+      # fourth segment (1.2.3.20260712 -> 1.2.3.20260807) is neither "minor" nor
+      # "patch", so it matches no group and arrives on its own. fetch-metadata still
+      # classifies it, so the policy comes from the update type instead. dependabot.yml
+      # cannot fix this: a group with no update-types counts as less specific than one
+      # with them, and ends up matching nothing at all.
+      - name: Decide how this PR is handled
         id: policy
         env:
           GROUP: ${{ steps.dependabot-metadata.outputs.dependency-group }}
+          UPDATE_TYPE: ${{ steps.dependabot-metadata.outputs.update-type }}
+          GHSA: ${{ steps.dependabot-metadata.outputs.ghsa-id }}
         run: |
+          label=""
           case "${GROUP}" in
-            security-patch-minor|version-patch-minor) known=true; unattended=true ;;
-            security-major) known=true; unattended=false ;;
+            security-patch-minor) known=true; unattended=true;  label=security-update ;;
+            version-patch-minor)  known=true; unattended=true;  label=version-update ;;
+            security-major)       known=true; unattended=false; label=security-update ;;
+            "")
+              if [ -n "${GHSA}" ]; then label=security-update; else label=version-update; fi
+              case "${UPDATE_TYPE}" in
+                version-update:semver-patch|version-update:semver-minor)
+                  known=true; unattended=true ;;
+                *) known=false; unattended=false ;;
+              esac
+              ;;
             *) known=false; unattended=false ;;
           esac
-          echo "known=${known}" >> "$GITHUB_OUTPUT"
-          echo "unattended=${unattended}" >> "$GITHUB_OUTPUT"
+          {
+            echo "known=${known}"
+            echo "unattended=${unattended}"
+            echo "label=${label}"
+          } >> "$GITHUB_OUTPUT"
           if [ "${known}" = "false" ]; then
-            echo "::warning::Dependabot group '${GROUP:-<none>}' is not covered by the auto-merge policy; leaving this PR for two human reviews."
+            echo "::warning::Dependabot PR (group '${GROUP:-<none>}', update type '${UPDATE_TYPE:-<none>}') is not covered by the auto-merge policy; leaving it for two human reviews."
+          elif [ -z "${GROUP}" ]; then
+            echo "::notice::Dependabot PR has no group; treating '${UPDATE_TYPE}' as unattended."
           fi
 
       - name: Ensure PR type labels exist
@@ -55,15 +78,11 @@ jobs:
           gh label create security-update --repo "${GH_REPO}" --color B60205 --description "Dependabot security update" --force
           gh label create version-update --repo "${GH_REPO}" --color 1D76DB --description "Dependabot version update" --force
 
-      - name: Label grouped security PRs
-        if: |
-          steps.dependabot-metadata.outputs.dependency-group == 'security-patch-minor' ||
-          steps.dependabot-metadata.outputs.dependency-group == 'security-major'
-        run: gh pr edit "${PR_URL}" --add-label "security-update"
-
-      - name: Label grouped version PRs
-        if: steps.dependabot-metadata.outputs.dependency-group == 'version-patch-minor'
-        run: gh pr edit "${PR_URL}" --add-label "version-update"
+      - name: Label the PR
+        if: steps.policy.outputs.label != ''
+        env:
+          LABEL: ${{ steps.policy.outputs.label }}
+        run: gh pr edit "${PR_URL}" --add-label "${LABEL}"
 
       - name: Approve as github-actions[bot]
         if: steps.policy.outputs.known == 'true'
