@@ -1,0 +1,99 @@
+# Handle auto-merging PRs coming from Dependabot.
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write # for labels
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.actor == 'dependabot[bot]' &&
+      github.triggering_actor == 'dependabot[bot]'
+    env:
+      GH_REPO: ${{ github.repository }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The ruleset requires two approvals, and it's not possible to add exceptions for
+      # Dependabot, so the policy is implemented this way:
+      # groups that merge unattended get both approvals from bots,
+      # security-major gets only one and waits for a human to supply the second.
+      # Anything else is unknown to this policy and gets no bot approval at all,
+      # so it needs the full two human reviews.
+      # A PR with no group at all is the exception. A bump that moves nothing before a
+      # fourth segment (1.2.3.20260712 -> 1.2.3.20260807) is neither "minor" nor
+      # "patch", so it matches no group and arrives on its own. fetch-metadata still
+      # classifies it, so the policy comes from the update type instead. dependabot.yml
+      # cannot fix this: a group with no update-types counts as less specific than one
+      # with them, and ends up matching nothing at all.
+      - name: Decide how this PR is handled
+        id: policy
+        env:
+          GROUP: ${{ steps.dependabot-metadata.outputs.dependency-group }}
+          UPDATE_TYPE: ${{ steps.dependabot-metadata.outputs.update-type }}
+          GHSA: ${{ steps.dependabot-metadata.outputs.ghsa-id }}
+        run: |
+          label=""
+          case "${GROUP}" in
+            security-patch-minor) known=true; unattended=true;  label=security-update ;;
+            version-patch-minor)  known=true; unattended=true;  label=version-update ;;
+            security-major)       known=true; unattended=false; label=security-update ;;
+            "")
+              if [ -n "${GHSA}" ]; then label=security-update; else label=version-update; fi
+              case "${UPDATE_TYPE}" in
+                version-update:semver-patch|version-update:semver-minor)
+                  known=true; unattended=true ;;
+                *) known=false; unattended=false ;;
+              esac
+              ;;
+            *) known=false; unattended=false ;;
+          esac
+          {
+            echo "known=${known}"
+            echo "unattended=${unattended}"
+            echo "label=${label}"
+          } >> "$GITHUB_OUTPUT"
+          if [ "${known}" = "false" ]; then
+            echo "::warning::Dependabot PR (group '${GROUP:-<none>}', update type '${UPDATE_TYPE:-<none>}') is not covered by the auto-merge policy; leaving it for two human reviews."
+          elif [ -z "${GROUP}" ]; then
+            echo "::notice::Dependabot PR has no group; treating '${UPDATE_TYPE}' as unattended."
+          fi
+
+      - name: Ensure PR type labels exist
+        run: |
+          gh label create security-update --repo "${GH_REPO}" --color B60205 --description "Dependabot security update" --force
+          gh label create version-update --repo "${GH_REPO}" --color 1D76DB --description "Dependabot version update" --force
+
+      - name: Label the PR
+        if: steps.policy.outputs.label != ''
+        env:
+          LABEL: ${{ steps.policy.outputs.label }}
+        run: gh pr edit "${PR_URL}" --add-label "${LABEL}"
+
+      - name: Approve as github-actions[bot]
+        if: steps.policy.outputs.known == 'true'
+        run: gh pr review --approve "${PR_URL}"
+
+      - name: Approve as ons-srm-bot
+        if: steps.policy.outputs.unattended == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.ONS_SRM_BOT_TOKEN }}
+        run: gh pr review --approve "${PR_URL}"
+
+      - name: Enable auto-merge
+        if: steps.policy.outputs.known == 'true'
+        run: gh pr merge --auto --squash "${PR_URL}"
